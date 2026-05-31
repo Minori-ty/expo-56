@@ -6,7 +6,7 @@ CREATE TABLE `anime` (
 	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
 	`updated_at` integer DEFAULT (unixepoch()) NOT NULL,
 	`first_episode_timestamp` integer NOT NULL,
-	`event_id` text
+	`event_ids` text DEFAULT '[]' NOT NULL
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `anime_name_unique` ON `anime` (`name`);

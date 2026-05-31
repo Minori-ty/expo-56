@@ -17,6 +17,9 @@ export const animeTable = sqliteTable('anime', {
         .default(sql`(unixepoch())`),
     /** unix时间戳 */
     firstEpisodeTimestamp: integer('first_episode_timestamp').notNull(),
-    /** 日历的id */
-    eventId: text('event_id'),
+    /** 日历事件ID数组 */
+    eventIds: text('event_ids', { mode: 'json' })
+        .$type<string[]>()
+        .notNull()
+        .default(sql`'[]'`),
 })

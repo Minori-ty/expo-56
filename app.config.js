@@ -1,0 +1,68 @@
+const config = {
+    expo: {
+        name: 'expo-56',
+        slug: 'expo-56',
+        version: '1.0.0',
+        orientation: 'portrait',
+        icon: './assets/images/icon.png',
+        scheme: 'expo56',
+        userInterfaceStyle: 'automatic',
+        ios: {
+            icon: './assets/expo.icon',
+        },
+        android: {
+            adaptiveIcon: {
+                backgroundColor: '#E6F4FE',
+                foregroundImage: './assets/images/android-icon-foreground.png',
+                backgroundImage: './assets/images/android-icon-background.png',
+                monochromeImage: './assets/images/android-icon-monochrome.png',
+            },
+            predictiveBackGestureEnabled: false,
+            permissions: ['READ_CALENDAR', 'WRITE_CALENDAR'],
+        },
+        web: {
+            output: 'static',
+            favicon: './assets/images/favicon.png',
+        },
+        plugins: [
+            'expo-router',
+            [
+                'expo-splash-screen',
+                {
+                    backgroundColor: '#208AEF',
+                    android: {
+                        image: './assets/images/splash-icon.png',
+                        imageWidth: 76,
+                    },
+                },
+            ],
+            [
+                'expo-sqlite',
+                {
+                    enableFTS: true,
+                    useSQLCipher: true,
+                    android: {
+                        // Override the shared configuration for Android
+                        enableFTS: false,
+                        useSQLCipher: false,
+                    },
+                    ios: {
+                        // You can also override the shared configurations for iOS
+                        customBuildFlags: ['-DSQLITE_ENABLE_DBSTAT_VTAB=1 -DSQLITE_ENABLE_SNAPSHOT=1'],
+                    },
+                },
+            ],
+            [
+                'expo-calendar',
+                {
+                    calendarPermission: '申请获取日历权限，以便添加动漫更新事件',
+                },
+            ],
+        ],
+        experiments: {
+            typedRoutes: true,
+            reactCompiler: true,
+        },
+    },
+}
+export default config
