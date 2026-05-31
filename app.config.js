@@ -19,6 +19,8 @@ const config = {
             },
             predictiveBackGestureEnabled: false,
             permissions: ['READ_CALENDAR', 'WRITE_CALENDAR'],
+            package: 'com.minority.expo56',
+            edgeToEdgeEnabled: true,
         },
         web: {
             output: 'static',
