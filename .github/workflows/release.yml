@@ -1,0 +1,121 @@
+name: release
+
+on:
+    push:
+        branches:
+            - master
+
+permissions:
+    contents: write
+    pull-requests: write
+    repository-projects: write
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        env:
+            EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+            NODE_ENV: production
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 10 # 获取最近10个提交
+
+            - name: 检查 EXPO_TOKEN 是否存在
+              run: |
+                  if [ -z "$EXPO_TOKEN" ]; then
+                    echo "EXPO_TOKEN 未设置"
+                    exit 1
+                  else
+                    echo "EXPO_TOKEN 已设置"
+                  fi
+
+            - name: 启动java 17
+              uses: actions/setup-java@v4
+              with:
+                  distribution: 'temurin'
+                  java-version: 17
+
+            - name: 配置 Android SDK 缓存
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.android
+                      ~/.gradle
+                  key: android-sdk-${{ runner.os }}-${{ hashFiles('**/build.gradle*', '**/settings.gradle*', '**/gradle-wrapper.properties') }}
+                  restore-keys: |
+                      android-sdk-${{ runner.os }}-
+
+            - name: 安装 Android SDK
+              uses: android-actions/setup-android@v3
+
+            - name: 安装 安卓开发工具
+              run: |
+                  sdkmanager "platforms;android-35" \
+                             "build-tools;35.0.0" \
+                             "ndk;27.1.12297006"
+
+            - name: 配置 node_modules 缓存
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      **/node_modules
+                  key: node-modules-${{ runner.os }}-node20-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}
+                  restore-keys: |
+                      node-modules-${{ runner.os }}-node20-
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+                  cache: 'npm'
+
+            - name: 安装 npm 依赖
+              run: |
+                  npm i -g eas-cli expo expo-doctor expo-cli typescript
+                  npm i
+
+            - name: 打包expo应用
+              run: |
+                  npm run build
+
+            - name: 获取版本号
+              id: version
+              run: echo "VERSION=$(npm pkg get version | tr -d '\"')" >> $GITHUB_ENV
+
+            - name: 重命名apk
+              run: |
+                  # 获取第一个 apk 文件名
+                  APK_FILE=$(ls *.apk | head -n 1)
+                  # 重命名
+                  mv "$APK_FILE" "v${{ env.VERSION }}.apk"
+
+            - name: 获取当前时间
+              run: |
+                  # 使用 date 命令格式化时间
+                  export TZ='Asia/Shanghai'
+                  current_time=$(date +"%Y-%m-%d %H:%M")
+                  echo "FORMATTED_TIME=$current_time" >> $GITHUB_ENV
+
+            - name: 获取最近10个提交信息并存储到环境变量
+              id: get-commits
+              run: |
+                  # 将提交信息收集到环境变量，保留换行符
+                  COMMIT_MESSAGES=$(git log -n 10 --pretty=format:"- %s by %an in %h")
+                  echo "COMMIT_MESSAGES<<EOF" >> $GITHUB_ENV
+                  echo "$COMMIT_MESSAGES" >> $GITHUB_ENV
+                  echo "EOF" >> $GITHUB_ENV
+                  echo "提交信息已存储到环境变量"
+
+            - name: 发布 Release
+              uses: softprops/action-gh-release@v2
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  name: v${{ env.VERSION }}
+                  tag_name: v${{ env.VERSION }}
+                  body: |
+                      # 发布版本 v${{ env.VERSION }}
+                      ***时间 ${{ env.FORMATTED_TIME }}***
+                      ## What's Changed
+                      ${{ env.COMMIT_MESSAGES }}
+                  files: 'v${{ env.VERSION }}.apk'

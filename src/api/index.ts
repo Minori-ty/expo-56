@@ -106,7 +106,7 @@ export async function addAnime(input: AddAnimeInput): Promise<void> {
 
     if (status !== EStatus.completed) {
         await ensureCalendarPermission()
-        const calendarId = await getDefaultCalendarId()
+        const calendarId = getDefaultCalendarId()
         const startEp = calcStartEpisode(firstEpisodeTimestamp, totalEpisode)
 
         if (startEp <= totalEpisode) {
@@ -213,7 +213,7 @@ export async function addCalendarEvents(animeId: number): Promise<void> {
     if (!record) throw new Error('动漫不存在')
 
     await ensureCalendarPermission()
-    const calendarId = await getDefaultCalendarId()
+    const calendarId = getDefaultCalendarId()
 
     const startEp = calcStartEpisode(record.firstEpisodeTimestamp, record.totalEpisode)
 
