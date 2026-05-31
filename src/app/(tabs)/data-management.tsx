@@ -3,17 +3,13 @@ import { View, Text, ScrollView } from "@/tw";
 export default function DataManagement() {
   return (
     <ScrollView className="flex-1 bg-white dark:bg-black">
-      <View className="flex-1 items-center justify-center p-8 pt-20">
-        <Text className="text-6xl mb-4">📊</Text>
-        <Text className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          数据管理
-        </Text>
-        <Text className="text-base text-gray-500 dark:text-gray-400 text-center">
+      <View className="flex-1 items-center justify-center p-8">
+        <Text className="text-base text-gray-500 dark:text-gray-400 text-center mb-8">
           导入导出追番数据，备份与恢复
         </Text>
 
         {/* Placeholder — data actions */}
-        <View className="mt-8 w-full gap-3">
+        <View className="w-full gap-3">
           <View className="p-4 rounded-xl bg-blue-50 dark:bg-blue-950">
             <Text className="text-lg font-semibold text-blue-600 dark:text-blue-400">
               📥 导入数据
