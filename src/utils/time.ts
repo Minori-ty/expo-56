@@ -8,22 +8,22 @@ const EPISODE_INTERVAL_DAYS = 7
 
 /**
  * 获取第 n 集的播出时间
- * @param first 第1集播出时间戳
+ * @param firstEpisodeTimestamp 第1集播出时间戳
  * @param episodeIndex 第几集（从1开始）
  * @returns 该集播出时间（dayjs对象）
  */
-export function getEpisodeTime(first: number, episodeIndex: number) {
-    return dayjs(first).add((episodeIndex - 1) * EPISODE_INTERVAL_DAYS, 'day')
+export function getEpisodeTime(firstEpisodeTimestamp: number, episodeIndex: number) {
+    return dayjs(firstEpisodeTimestamp).add((episodeIndex - 1) * EPISODE_INTERVAL_DAYS, 'day')
 }
 
 /**
  * 获取最后一集的播出时间
- * @param first 第1集播出时间戳
- * @param total 总集数
+ * @param firstEpisodeTimestamp 第1集播出时间戳
+ * @param totalEpisode 总集数
  * @returns 最后一集播出时间（dayjs对象）
  */
-export function getLastEpisodeTime(first: number, total: number) {
-    return getEpisodeTime(first, total)
+export function getLastEpisodeTime(firstEpisodeTimestamp: number, totalEpisode: number) {
+    return getEpisodeTime(firstEpisodeTimestamp, totalEpisode)
 }
 
 /**
