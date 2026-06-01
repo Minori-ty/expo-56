@@ -34,7 +34,7 @@ jobs:
               uses: actions/setup-java@v4
               with:
                   distribution: 'temurin'
-                  java-version: 17
+                  java-version: 21
 
             - name: 配置 Android SDK 缓存
               uses: actions/cache@v4
@@ -51,18 +51,18 @@ jobs:
 
             - name: 安装 安卓开发工具
               run: |
-                  sdkmanager "platforms;android-35" \
-                             "build-tools;35.0.0" \
-                             "ndk;27.1.12297006"
+                  sdkmanager "platforms;android-36" \
+                             "build-tools;36.0.0" \
+                             "ndk;27.3.13750724"
 
             - name: 配置 node_modules 缓存
               uses: actions/cache@v4
               with:
                   path: |
                       **/node_modules
-                  key: node-modules-${{ runner.os }}-node20-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}
+                  key: node-modules-${{ runner.os }}-node22-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}
                   restore-keys: |
-                      node-modules-${{ runner.os }}-node20-
+                      node-modules-${{ runner.os }}-node22-
 
             - uses: actions/setup-node@v4
               with:
@@ -71,7 +71,7 @@ jobs:
 
             - name: 安装 npm 依赖
               run: |
-                  npm i -g eas-cli expo expo-doctor expo-cli typescript
+                  npm i -g eas-cli
                   npm i
 
             - name: 打包expo应用
