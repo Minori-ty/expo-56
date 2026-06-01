@@ -53,7 +53,8 @@ jobs:
               run: |
                   sdkmanager "platforms;android-36" \
                              "build-tools;36.0.0" \
-                             "ndk;27.3.13750724"
+                             "ndk;27.1.12297006" \
+                             "cmake;3.22.1"
 
             - name: 配置 node_modules 缓存
               uses: actions/cache@v4
