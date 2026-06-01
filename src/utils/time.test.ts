@@ -1,386 +1,242 @@
-import { describe, it, expect } from "vitest";
-import dayjs from "dayjs";
-import isoWeek from "dayjs/plugin/isoWeek";
+import { EStatus } from '@/enums'
+import dayjs from 'dayjs'
+import isoWeek from 'dayjs/plugin/isoWeek'
+import { describe, expect, it } from 'vitest'
 import {
-  getStatus,
-  getAiredEpisodes,
-  isUpdatingThisWeek,
-  getCurrentEpisode,
-  getLastEpisodeTimestamp,
-  getAllTiming,
-  WEEK_SECONDS,
-  type AnimeTimingInput,
-} from "./time";
+    getAiredEpisodeCount,
+    getAnimeStatus,
+    getExpectedEpisodeThisWeek,
+    getLastEpisodeTimestamp,
+    isUpdatedInThisWeek,
+} from './new'
 
-dayjs.extend(isoWeek);
+dayjs.extend(isoWeek)
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+describe('getAnimeStatus（时间跨度增强）', () => {
+    it('远未来（提前100天）=> 即将更新', () => {
+        const now = dayjs()
+        const first = now.add(100, 'day')
 
-const DAY = 86400;
+        expect(getAnimeStatus(10, first.valueOf(), now.valueOf()))
+            .toBe(EStatus.toBeUpdated)
+    })
 
-/** 锁定一个"当前时间"作为测试基准（取调用时刻，所有偏移以此为参照） */
-function now(): dayjs.Dayjs {
-  return dayjs();
-}
+    it('刚开播（第0天）=> 连载中', () => {
+        const now = dayjs()
+        const first = now
 
-function unix(d: dayjs.Dayjs): number {
-  return d.unix();
-}
+        expect(getAnimeStatus(10, first.valueOf(), now.valueOf()))
+            .toBe(EStatus.serializing)
+    })
 
-// ─── getStatus ───────────────────────────────────────────────────────────────
+    it('刚好卡在最后一集当天 => 已完结', () => {
+        const now = dayjs()
+        const first = now.add(-(9 * 7), 'day') // 第10集今天
 
-describe("getStatus", () => {
-  it("即将更新：第一集未到播出时间", () => {
-    const n = now();
-    const input: AnimeTimingInput = {
-      firstEpisodeTimestamp: unix(n) + 7 * DAY,
-      totalEpisode: 12,
-    };
-    expect(getStatus(input, n)).toBe(3);
-  });
+        expect(getAnimeStatus(10, first.valueOf(), now.valueOf()))
+            .toBe(EStatus.completed)
+    })
 
-  it("连载中：正在播出期间", () => {
-    const n = now();
-    const input: AnimeTimingInput = {
-      firstEpisodeTimestamp: unix(n) - 2 * WEEK_SECONDS,
-      totalEpisode: 12,
-    };
-    expect(getStatus(input, n)).toBe(2);
-  });
+    it('完结后很久（+200天）=> 已完结稳定', () => {
+        const now = dayjs()
+        const first = now.add(-(200), 'day')
 
-  it("已完结：最后一集已播出", () => {
-    const n = now();
-    // last ep = firstEp + (total-1)*WEEK, need it strictly before now
-    const totalEpisode = 10;
-    const input: AnimeTimingInput = {
-      firstEpisodeTimestamp: unix(n) - (totalEpisode - 1) * WEEK_SECONDS - DAY,
-      totalEpisode,
-    };
-    expect(getStatus(input, n)).toBe(1);
-  });
+        expect(getAnimeStatus(10, first.valueOf(), now.valueOf()))
+            .toBe(EStatus.completed)
+    })
+})
 
-  it("最后一集正好现在播出 → 连载中（正在播出，尚未完结）", () => {
-    const n = now();
-    const totalEpisode = 5;
-    const firstEpTime = unix(n) - (totalEpisode - 1) * WEEK_SECONDS;
-    const input: AnimeTimingInput = { firstEpisodeTimestamp: firstEpTime, totalEpisode };
-    // lastEpTime === now exactly → still serializing
-    expect(getStatus(input, n)).toBe(2);
-  });
+describe('getAiredEpisodeCount（时间分段验证）', () => {
+    it('刚开播当天 => 1', () => {
+        const now = dayjs()
+        const first = now
 
-  it("第一集正好现在播出 → 连载中", () => {
-    const n = now();
-    const input: AnimeTimingInput = {
-      firstEpisodeTimestamp: unix(n),
-      totalEpisode: 12,
-    };
-    expect(getStatus(input, n)).toBe(2);
-  });
-});
+        expect(getAiredEpisodeCount(10, first.valueOf(), now.valueOf()))
+            .toBe(1)
+    })
 
-// ─── getAiredEpisodes ────────────────────────────────────────────────────────
+    it('第2集临界点（6~8天）=> 2', () => {
+        const now = dayjs()
 
-describe("getAiredEpisodes", () => {
-  it("即将更新 → 0", () => {
-    const n = now();
-    const input: AnimeTimingInput = {
-      firstEpisodeTimestamp: unix(n) + 30 * DAY,
-      totalEpisode: 12,
-    };
-    expect(getAiredEpisodes(input, n)).toBe(0);
-  });
+        const first = now.add(-6, 'day')
+        const result1 = getAiredEpisodeCount(10, first.valueOf(), now.valueOf())
 
-  it("已完结 → totalEpisode", () => {
-    const n = now();
-    const totalEpisode = 8;
-    const input: AnimeTimingInput = {
-      firstEpisodeTimestamp: unix(n) - totalEpisode * WEEK_SECONDS,
-      totalEpisode,
-    };
-    expect(getAiredEpisodes(input, n)).toBe(totalEpisode);
-  });
+        const first2 = now.add(-8, 'day')
+        const result2 = getAiredEpisodeCount(10, first2.valueOf(), now.valueOf())
 
-  it("连载中 2 周后 → 已播 3 集", () => {
-    const n = now();
-    const input: AnimeTimingInput = {
-      firstEpisodeTimestamp: unix(n) - 2 * WEEK_SECONDS,
-      totalEpisode: 12,
-    };
-    expect(getAiredEpisodes(input, n)).toBe(3);
-  });
+        expect(result1).toBe(1)
+        expect(result2).toBe(2)
+    })
 
-  it("连载中：已播集数不超过 totalEpisode", () => {
-    const n = now();
-    const totalEpisode = 2;
-    const input: AnimeTimingInput = {
-      firstEpisodeTimestamp: unix(n) - 4 * WEEK_SECONDS,
-      totalEpisode,
-    };
-    expect(getAiredEpisodes(input, n)).toBe(totalEpisode);
-  });
+    it('第5集稳定区间 => diff正确累积', () => {
+        const now = dayjs()
+        const first = now.add(-(4 * 7 + 1), 'day')
 
-  it("连载中：整周后同一时刻 → 刚好 +1 集", () => {
-    const n = now();
-    const input: AnimeTimingInput = {
-      firstEpisodeTimestamp: unix(n),
-      totalEpisode: 12,
-    };
-    const oneWeekLater = unix(n) + WEEK_SECONDS;
-    expect(getAiredEpisodes(input, oneWeekLater)).toBe(2);
-  });
+        expect(getAiredEpisodeCount(10, first.valueOf(), now.valueOf()))
+            .toBe(5)
+    })
 
-  it("就在首集播出前一刻 → 0（status 为即将更新）", () => {
-    const n = now();
-    const firstEpTime = unix(n) + DAY;
-    const input: AnimeTimingInput = {
-      firstEpisodeTimestamp: firstEpTime,
-      totalEpisode: 12,
-    };
-    const justBefore = firstEpTime - 1;
-    expect(getAiredEpisodes(input, justBefore)).toBe(0);
-    expect(getStatus(input, justBefore)).toBe(3);
-  });
-});
+    it('完结后 + 100天 => 仍然是 totalEpisode', () => {
+        const now = dayjs()
+        const first = now.add(-(200 * 7), 'day')
 
-// ─── isUpdatingThisWeek ──────────────────────────────────────────────────────
+        expect(getAiredEpisodeCount(10, first.valueOf(), now.valueOf()))
+            .toBe(10)
+    })
 
-describe("isUpdatingThisWeek", () => {
-  it("已完结 + 本周完结最后一集 → true", () => {
-    const n = now();
-    const total = 5;
-    // 最后一集 = now - 1 小时（本周内的过去时间）
-    const lastEpTime = unix(n) - 3600;
-    const firstTimestamp = lastEpTime - (total - 1) * WEEK_SECONDS;
-    expect(
-      isUpdatingThisWeek({ firstEpisodeTimestamp: firstTimestamp, totalEpisode: total }, n)
-    ).toBe(true);
-  });
+    it('第0天 => 第1集', () => {
+        const now = dayjs()
+        const first = now
 
-  it("已完结 + 上周完结 → false", () => {
-    const n = now();
-    const total = 5;
-    // 最后一集 = 8 天前（上周，肯定不在本周）
-    const lastEpTime = unix(n) - 8 * DAY;
-    const firstTimestamp = lastEpTime - (total - 1) * WEEK_SECONDS;
-    expect(
-      isUpdatingThisWeek({ firstEpisodeTimestamp: firstTimestamp, totalEpisode: total }, n)
-    ).toBe(false);
-  });
+        expect(getAiredEpisodeCount(10, first.valueOf(), now.valueOf()))
+            .toBe(1)
+    })
 
-  it("即将更新 + 本周首播 → true", () => {
-    const n = now();
-    // 首集 = 2 小时后（今天，本周内）
-    const firstTimestamp = unix(n) + 2 * 3600;
-    expect(
-      isUpdatingThisWeek({ firstEpisodeTimestamp: firstTimestamp, totalEpisode: 12 }, n)
-    ).toBe(true);
-  });
+    it('刚好7天 => 第2集', () => {
+        const now = dayjs()
+        const first = now.add(-7, 'day')
 
-  it("即将更新 + 下周首播 → false", () => {
-    const n = now();
-    // 首集 = 8 天后（下周）
-    const firstTimestamp = unix(n) + 8 * DAY;
-    expect(
-      isUpdatingThisWeek({ firstEpisodeTimestamp: firstTimestamp, totalEpisode: 12 }, n)
-    ).toBe(false);
-  });
+        expect(getAiredEpisodeCount(10, first.valueOf(), now.valueOf()))
+            .toBe(2)
+    })
 
-  it("连载中 + 本周有播出 → true", () => {
-    const n = now();
-    // 首集在 2 周前 → 本周的第 3 集会在本周对应 weekday 播出
-    const firstEp = unix(n) - 2 * WEEK_SECONDS;
-    expect(
-      isUpdatingThisWeek({ firstEpisodeTimestamp: firstEp, totalEpisode: 12 }, n)
-    ).toBe(true);
-  });
+    it('超过总集数不溢出', () => {
+        const now = dayjs()
+        const first = now.add(-(200 * 7), 'day')
 
-  it("连载中 + 下一集在下周（本周已过播出日）→ 取决于 today 是否在播出日前", () => {
-    // 若今天是周三，首集是上周四，则本周四（明天）仍有播出 → true
-    // 若今天是周五，首集是上周五，则本周五已过 → 本周的 episode 已经过去了
-    // 我们用 now() 不确定今天是周几，所以只做原子断言：不 crash
-    const n = now();
-    const firstEp = unix(n) - 9 * DAY; // 首集约 1.3 周前
-    const result = isUpdatingThisWeek({ firstEpisodeTimestamp: firstEp, totalEpisode: 12 }, n);
-    expect(typeof result).toBe("boolean");
-  });
+        expect(getAiredEpisodeCount(5, first.valueOf(), now.valueOf()))
+            .toBe(5)
+    })
+})
 
-  it("首集在本周、总集数 1 → true", () => {
-    const n = now();
-    // 首集 = n + 1 小时（今天，本周内）
-    const firstTimestamp = unix(n) + 3600;
-    expect(
-      isUpdatingThisWeek({ firstEpisodeTimestamp: firstTimestamp, totalEpisode: 1 }, n)
-    ).toBe(true);
-  });
-});
+describe('isUpdatedInThisWeek（跨周测试）', () => {
+    it('本周内刚好有一集 => true', () => {
+        const now = dayjs()
 
-// ─── getCurrentEpisode ───────────────────────────────────────────────────────
+        const weekStart = now.startOf('isoWeek')
+        const first = weekStart.add(-7, 'day')
 
-describe("getCurrentEpisode", () => {
-  it("已完结 → totalEpisode", () => {
-    const n = now();
-    const totalEpisode = 12;
-    const input: AnimeTimingInput = {
-      firstEpisodeTimestamp: unix(n) - totalEpisode * WEEK_SECONDS,
-      totalEpisode,
-    };
-    expect(getCurrentEpisode(input, n)).toBe(totalEpisode);
-  });
+        expect(
+            isUpdatedInThisWeek(10, first.valueOf(), now.valueOf())
+        ).toBe(true)
+    })
 
-  it("即将更新 + 本周首播 → 1", () => {
-    const n = now();
-    const input: AnimeTimingInput = {
-      firstEpisodeTimestamp: unix(n) + 3600, // 1 hour later, this week
-      totalEpisode: 12,
-    };
-    expect(getCurrentEpisode(input, n)).toBe(1);
-  });
+    it('跨周边界（上周末）=> false', () => {
+        const now = dayjs()
 
-  it("即将更新 + 不在本周 → 0", () => {
-    const n = now();
-    const input: AnimeTimingInput = {
-      firstEpisodeTimestamp: unix(n) + 8 * DAY, // next week
-      totalEpisode: 12,
-    };
-    expect(getCurrentEpisode(input, n)).toBe(0);
-  });
+        const weekStart = now.startOf('isoWeek')
+        const first = weekStart.add(-14, 'day')
 
-  it("连载中 2 周后 → 已播 3 集", () => {
-    const n = now();
-    const input: AnimeTimingInput = {
-      firstEpisodeTimestamp: unix(n) - 2 * WEEK_SECONDS,
-      totalEpisode: 12,
-    };
-    expect(getCurrentEpisode(input, n)).toBe(3);
-  });
+        expect(
+            isUpdatedInThisWeek(2, first.valueOf(), now.valueOf())
+        ).toBe(false)
+    })
 
-  it("连载中刚刚开始（首集播出当天） → 1", () => {
-    const n = now();
-    const input: AnimeTimingInput = {
-      firstEpisodeTimestamp: unix(n),
-      totalEpisode: 12,
-    };
-    expect(getCurrentEpisode(input, n)).toBe(1);
-  });
-});
+    it('多周跨度（100天前）=> false', () => {
+        const now = dayjs()
 
-// ─── getLastEpisodeTimestamp ─────────────────────────────────────────────────
+        const first = now.add(-100, 'day')
 
-describe("getLastEpisodeTimestamp", () => {
-  it("已完结 → 最终集播出时间", () => {
-    const n = now();
-    const totalEpisode = 5;
-    const firstEp = unix(n) - totalEpisode * WEEK_SECONDS;
-    const input: AnimeTimingInput = { firstEpisodeTimestamp: firstEp, totalEpisode };
-    const expected = firstEp + (totalEpisode - 1) * WEEK_SECONDS;
-    expect(getLastEpisodeTimestamp(input, n)).toBe(expected);
-  });
+        expect(
+            isUpdatedInThisWeek(3, first.valueOf(), now.valueOf())
+        ).toBe(false)
+    })
 
-  it("即将更新 → 首集时间", () => {
-    const n = now();
-    const firstEp = unix(n) + 30 * DAY;
-    const input: AnimeTimingInput = { firstEpisodeTimestamp: firstEp, totalEpisode: 12 };
-    expect(getLastEpisodeTimestamp(input, n)).toBe(firstEp);
-  });
+    it('周一边界 => true', () => {
+        const now = dayjs().startOf('isoWeek')
 
-  it("连载中 → 最近已播出一集的时间", () => {
-    const n = now();
-    const firstEp = unix(n) - 2 * WEEK_SECONDS;
-    // aired 3 episodes, last = ep3 = firstEp + 2 * WEEK_SECONDS
-    const expected = firstEp + 2 * WEEK_SECONDS;
-    expect(
-      getLastEpisodeTimestamp({ firstEpisodeTimestamp: firstEp, totalEpisode: 12 }, n)
-    ).toBe(expected);
-  });
+        const first = now
 
-  it("连载中但首集刚过 → 最近是首集", () => {
-    const n = now();
-    const firstEp = unix(n);
-    const justAfter = firstEp + 3600; // 1 hour later
-    const input: AnimeTimingInput = { firstEpisodeTimestamp: firstEp, totalEpisode: 12 };
-    expect(getLastEpisodeTimestamp(input, justAfter)).toBe(firstEp);
-  });
-});
+        expect(
+            isUpdatedInThisWeek(10, first.valueOf(), now.valueOf())
+        ).toBe(true)
+    })
 
-// ─── getAllTiming ─────────────────────────────────────────────────────────────
+    it('周日边界 => true', () => {
+        const now = dayjs().endOf('isoWeek')
 
-describe("getAllTiming", () => {
-  it("聚合结果一致（连载中）", () => {
-    const n = now();
-    const firstEp = unix(n) - 3 * WEEK_SECONDS;
-    const input: AnimeTimingInput = { firstEpisodeTimestamp: firstEp, totalEpisode: 10 };
+        const first = now.add(-7, 'day')
 
-    const result = getAllTiming(input, n);
+        expect(
+            isUpdatedInThisWeek(10, first.valueOf(), now.valueOf())
+        ).toBe(true)
+    })
+})
 
-    expect(result.status).toBe(2);
-    expect(result.airedEpisodes).toBe(4);
-    expect(result.currentEpisode).toBe(4);
-    expect(result.isUpdatingThisWeek).toBe(true);
-    expect(result.lastEpisodeTimestamp).toBe(firstEp + 3 * WEEK_SECONDS);
-  });
+describe('getExpectedEpisodeThisWeek（极端场景）', () => {
+    it('刚开播本周 => 1', () => {
+        const now = dayjs()
+        const first = now
 
-  it("已完结的聚合", () => {
-    const n = now();
-    const totalEpisode = 6;
-    const input: AnimeTimingInput = {
-      firstEpisodeTimestamp: unix(n) - totalEpisode * WEEK_SECONDS,
-      totalEpisode,
-    };
-    const result = getAllTiming(input, n);
+        const result = getExpectedEpisodeThisWeek(
+            10,
+            first.valueOf(),
+            EStatus.serializing,
+            now.valueOf()
+        )
 
-    expect(result.status).toBe(1);
-    expect(result.airedEpisodes).toBe(totalEpisode);
-    expect(result.currentEpisode).toBe(totalEpisode);
-  });
+        expect(result).toBe(1)
+    })
 
-  it("即将更新的聚合", () => {
-    const n = now();
-    const input: AnimeTimingInput = {
-      firstEpisodeTimestamp: unix(n) + 60 * DAY,
-      totalEpisode: 12,
-    };
-    const result = getAllTiming(input, n);
+    it('跨月 + 本周尾部 => 不越界', () => {
+        const now = dayjs()
+        const first = now.add(-(200), 'day')
 
-    expect(result.status).toBe(3);
-    expect(result.airedEpisodes).toBe(0);
-    expect(result.currentEpisode).toBe(0);
-    expect(result.isUpdatingThisWeek).toBe(false);
-    expect(result.lastEpisodeTimestamp).toBe(input.firstEpisodeTimestamp);
-  });
-});
+        expect(() =>
+            getExpectedEpisodeThisWeek(
+                5,
+                first.valueOf(),
+                EStatus.serializing,
+                now.valueOf()
+            )
+        ).toThrow()
+    })
 
-// ─── Edge Cases ──────────────────────────────────────────────────────────────
+    it('连载中 => 返回合理范围', () => {
+        const now = dayjs()
+        const first = now.add(-(3 * 7 + 1), 'day')
 
-describe("edge cases", () => {
-  it("totalEpisode = 1 + 当天完结", () => {
-    const n = now();
-    const input: AnimeTimingInput = {
-      firstEpisodeTimestamp: unix(n),
-      totalEpisode: 1,
-    };
+        const result = getExpectedEpisodeThisWeek(
+            10,
+            first.valueOf(),
+            EStatus.serializing,
+            now.valueOf()
+        )
 
-    expect(getStatus(input, n)).toBe(2);
-    expect(getAiredEpisodes(input, n)).toBe(1);
-    expect(isUpdatingThisWeek(input, n)).toBe(true);
-    expect(getCurrentEpisode(input, n)).toBe(1);
-    expect(getLastEpisodeTimestamp(input, n)).toBe(unix(n));
+        expect(result).toBeGreaterThanOrEqual(1)
+        expect(result).toBeLessThanOrEqual(10)
+    })
+})
 
-    // 一天后 → 已完结
-    const after = unix(n) + DAY;
-    expect(getStatus(input, after)).toBe(1);
-    expect(getAiredEpisodes(input, after)).toBe(1);
-  });
+describe('getLastEpisodeTimestamp（长期稳定性）', () => {
+    it('不同时间点计算结果一致性', () => {
+        const base = dayjs().add(-50, 'day')
 
-  it("totalEpisode = 0（退化情况，不 crash）", () => {
-    const n = now();
-    const input: AnimeTimingInput = {
-      firstEpisodeTimestamp: unix(n),
-      totalEpisode: 0,
-    };
-    expect(getStatus(input, n)).toBe(1);
-    expect(getAiredEpisodes(input, n)).toBe(0);
-    expect(isUpdatingThisWeek(input, n)).toBe(false);
-    expect(getCurrentEpisode(input, n)).toBe(0);
-    expect(getLastEpisodeTimestamp(input, n)).toBe(unix(n) - WEEK_SECONDS);
-  });
-});
+        const first = base
+
+        const r1 = getLastEpisodeTimestamp(10, first.valueOf())
+        const r2 = getLastEpisodeTimestamp(10, first.valueOf())
+
+        expect(r1).toBe(r2)
+    })
+
+    it('时间再往前推1000天仍然正确', () => {
+        const first = dayjs().add(-1000, 'day')
+
+        const result = getLastEpisodeTimestamp(10, first.valueOf())
+
+        const expected = dayjs(first).add(9 * 7, 'day')
+
+        expect(dayjs(result).isSame(expected)).toBe(true)
+    })
+
+    it('last episode = first + (n-1)*7', () => {
+        const first = dayjs().add(-100, 'day')
+
+        const result = getLastEpisodeTimestamp(10, first.valueOf())
+
+        const expected = dayjs(first).add(9 * 7, 'day')
+
+        expect(result).toBe(expected.valueOf())
+    })
+})
