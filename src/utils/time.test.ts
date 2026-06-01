@@ -8,7 +8,7 @@ import {
     getExpectedEpisodeThisWeek,
     getLastEpisodeTimestamp,
     isUpdatedInThisWeek,
-} from './new'
+} from './time'
 
 dayjs.extend(isoWeek)
 
