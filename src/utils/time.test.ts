@@ -181,15 +181,13 @@ describe('getExpectedEpisodeThisWeek（极端场景）', () => {
     it('跨月 + 本周尾部 => 不越界', () => {
         const now = dayjs()
         const first = now.add(-(200), 'day')
-
-        expect(() =>
-            getExpectedEpisodeThisWeek(
-                5,
-                first.valueOf(),
-                EStatus.serializing,
-                now.valueOf()
-            )
-        ).toThrow()
+        const result = getExpectedEpisodeThisWeek(
+            5,
+            first.valueOf(),
+            EStatus.serializing,
+            now.valueOf()
+        )
+        expect(result).toBe(5)
     })
 
     it('连载中 => 返回合理范围', () => {
