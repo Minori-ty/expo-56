@@ -1,26 +1,30 @@
 import { EStatus } from '@/enums'
 import dayjs from 'dayjs'
-import isoWeek from 'dayjs/plugin/isoWeek'
 
-dayjs.extend(isoWeek)
-
-const EPISODE_INTERVAL_DAYS = 7
+const INTERVAL = 7 * 24 * 60 * 60 * 1000
 
 /**
  * 获取第 n 集的播出时间
- * @param firstEpisodeTimestamp 第1集播出时间戳
- * @param episodeIndex 第几集（从1开始）
- * @returns 该集播出时间（dayjs对象）
+ *
+ * 基于固定 7 天更新周期计算，每集时间按线性递增：
+ * first + (n - 1) * 7天
+ *
+ * @param firstEpisodeTimestamp 首集播出时间戳
+ * @param episodeIndex 第几集（从 1 开始）
+ * @returns dayjs 时间对象
  */
 export function getEpisodeTime(firstEpisodeTimestamp: number, episodeIndex: number) {
-    return dayjs(firstEpisodeTimestamp).add((episodeIndex - 1) * EPISODE_INTERVAL_DAYS, 'day')
+    return dayjs(firstEpisodeTimestamp + (episodeIndex - 1) * INTERVAL)
 }
 
 /**
  * 获取最后一集的播出时间
- * @param firstEpisodeTimestamp 第1集播出时间戳
+ *
+ * 等价于第 totalEpisode 集的播出时间
+ *
+ * @param firstEpisodeTimestamp 首集播出时间戳
  * @param totalEpisode 总集数
- * @returns 最后一集播出时间（dayjs对象）
+ * @returns dayjs 时间对象
  */
 export function getLastEpisodeTime(firstEpisodeTimestamp: number, totalEpisode: number) {
     return getEpisodeTime(firstEpisodeTimestamp, totalEpisode)
@@ -28,29 +32,31 @@ export function getLastEpisodeTime(firstEpisodeTimestamp: number, totalEpisode: 
 
 /**
  * 判断番剧当前更新状态
- * - 即将更新：首集未播
- * - 连载中：在首尾之间
- * - 已完结：超过最后一集播出时间
+ *
+ * 状态规则：
+ * - 未开播：当前时间早于首播时间
+ * - 连载中：当前集数 < 总集数
+ * - 已完结：当前集数 >= 总集数
+ *
+ * 更新周期：固定 7 天一集
  *
  * @param totalEpisode 总集数
  * @param firstEpisodeTimestamp 首集播出时间戳
  * @param now 当前时间戳
- * @returns 更新状态枚举值
+ * @returns 更新状态枚举
  */
 export function getAnimeStatus(
     totalEpisode: number,
     firstEpisodeTimestamp: number,
     now: number = Date.now()
 ) {
-    const nowDay = dayjs(now)
-    const first = dayjs(firstEpisodeTimestamp)
-    const last = getLastEpisodeTime(firstEpisodeTimestamp, totalEpisode)
-
-    if (nowDay.isBefore(first)) {
+    if (now < firstEpisodeTimestamp) {
         return EStatus.toBeUpdated
     }
 
-    if (nowDay.isAfter(last) || nowDay.isSame(last)) {
+    const aired = Math.floor((now - firstEpisodeTimestamp) / INTERVAL) + 1
+
+    if (aired >= totalEpisode) {
         return EStatus.completed
     }
 
@@ -59,11 +65,15 @@ export function getAnimeStatus(
 
 /**
  * 获取当前已更新集数
- * - 即将更新：0
- * - 已完结：totalEpisode
- * - 连载中：根据时间差推导
  *
- * 边界范围：0 <= result <= totalEpisode
+ * 计算方式：
+ * - 以首播时间为起点
+ * - 每 7 天更新一集
+ * - 向下取整计算已播集数
+ *
+ * 边界：
+ * - 未开播：0
+ * - 最大不超过 totalEpisode
  *
  * @param totalEpisode 总集数
  * @param firstEpisodeTimestamp 首集播出时间戳
@@ -75,71 +85,55 @@ export function getAiredEpisodeCount(
     firstEpisodeTimestamp: number,
     now: number = Date.now()
 ) {
-    const nowDay = dayjs(now)
-    const first = dayjs(firstEpisodeTimestamp)
-    const last = getLastEpisodeTime(firstEpisodeTimestamp, totalEpisode)
+    if (now < firstEpisodeTimestamp) return 0
 
-    if (nowDay.isBefore(first)) return 0
-    if (nowDay.isAfter(last) || nowDay.isSame(last)) return totalEpisode
+    const diffDays = dayjs(now).diff(firstEpisodeTimestamp, 'day')
 
-    const diffDays = nowDay.diff(first, 'day')
-    const count = Math.floor(diffDays / EPISODE_INTERVAL_DAYS) + 1
+    const count = Math.floor(diffDays / 7) + 1
 
     return Math.max(0, Math.min(totalEpisode, count))
 }
 
 /**
  * 判断番剧是否在本周有更新
- * - 本周范围：周一 ~ 周日（dayjs week）
- * - 只要任意一集落在本周范围内即为 true
+ *
+ * 在 7 天固定周期模型中：
+ * - 如果当前周期已推进，则认为“本周期发生更新”
+ *
+ * 实现方式：
+ * - 比较当前已播集数与上一时间点已播集数
  *
  * @param totalEpisode 总集数
  * @param firstEpisodeTimestamp 首集播出时间戳
  * @param now 当前时间戳
- * @returns 是否本周更新
+ * @returns 是否在当前周期更新
  */
 export function isUpdatedInThisWeek(
     totalEpisode: number,
     firstEpisodeTimestamp: number,
     now: number = Date.now()
 ) {
-    const nowDay = dayjs(now)
+    if (now < firstEpisodeTimestamp) return false
 
-    const weekStart = nowDay.startOf('isoWeek')
-    const weekEnd = nowDay.endOf('isoWeek')
+    const airedNow = getAiredEpisodeCount(totalEpisode, firstEpisodeTimestamp, now)
+    const airedPrev = getAiredEpisodeCount(totalEpisode, firstEpisodeTimestamp, now - INTERVAL)
 
-    const first = dayjs(firstEpisodeTimestamp)
-
-    const firstIndex = Math.max(
-        1,
-        weekStart.diff(first, 'day') / EPISODE_INTERVAL_DAYS + 1
-    )
-
-    const lastIndex = Math.min(
-        totalEpisode,
-        weekEnd.diff(first, 'day') / EPISODE_INTERVAL_DAYS + 1
-    )
-
-    return lastIndex >= 1 && firstIndex <= totalEpisode
+    return airedNow > airedPrev
 }
 
 /**
- * 获取番剧在本周“应该更新到的集数”
+ * 获取番剧在当前周期“应展示”的最新集数
  *
  * 规则：
- * - 即将更新：1
- * - 连载中：根据本周结束时进度计算
- * - 已完结：totalEpisode
- * - 不在本周更新：抛错
- *
- * 边界：
- * - 1 <= result <= totalEpisode
+ * - 未开播：返回 1
+ * - 已完结：返回 totalEpisode
+ * - 连载中：返回当前已播集数
  *
  * @param totalEpisode 总集数
  * @param firstEpisodeTimestamp 首集播出时间戳
- * @param status 当前状态
+ * @param status 当前番剧状态
  * @param now 当前时间戳
- * @returns 本周应更新集数
+ * @returns 当前应展示的集数
  */
 export function getExpectedEpisodeThisWeek(
     totalEpisode: number,
@@ -147,33 +141,17 @@ export function getExpectedEpisodeThisWeek(
     status: number,
     now: number = Date.now()
 ) {
-    const nowDay = dayjs(now)
-
-    const weekEnd = nowDay.endOf('isoWeek')
-
-    // 不在本周更新
-    if (!isUpdatedInThisWeek(totalEpisode, firstEpisodeTimestamp, now)) {
-        throw new Error('该番剧本周不更新')
-    }
-
-    // 即将更新
-    if (status === EStatus.toBeUpdated) {
+    if (now < firstEpisodeTimestamp) {
         return 1
     }
 
-    // 已完结
     if (status === EStatus.completed) {
         return totalEpisode
     }
 
-    // 连载中：计算本周结束时已更新集数
-    const endCount = getAiredEpisodeCount(
-        totalEpisode,
-        firstEpisodeTimestamp,
-        weekEnd.valueOf()
-    )
+    const count = getAiredEpisodeCount(totalEpisode, firstEpisodeTimestamp, now)
 
-    return Math.max(1, Math.min(totalEpisode, endCount))
+    return Math.max(1, Math.min(totalEpisode, count))
 }
 
 /**
