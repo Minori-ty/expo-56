@@ -95,18 +95,16 @@ export function getAiredEpisodeCount(
 }
 
 /**
- * 判断番剧是否在本周有更新
+ * 番剧在当前自然周是否会更新
  *
- * 在 7 天固定周期模型中：
- * - 如果当前周期已推进，则认为“本周期发生更新”
+ * 自然周定义：
+ * 周一 00:00:00 ~ 周日 23:59:59
  *
- * 实现方式：
- * - 比较当前已播集数与上一时间点已播集数
- *
- * @param totalEpisode 总集数
- * @param firstEpisodeTimestamp 首集播出时间戳
- * @param now 当前时间戳
- * @returns 是否在当前周期更新
+ * 规则：
+ * - 本周有任意一集播出（过去或未来） => true
+ * - 已完结但在本周有最后一集 => true
+ * - 很久之前完结且本周无更新 => false
+ * - 下周/下下周更新 => false
  */
 export function isUpdatedInThisWeek(
     totalEpisode: number,
@@ -114,11 +112,27 @@ export function isUpdatedInThisWeek(
     now: number = Date.now()
 ) {
     if (now < firstEpisodeTimestamp) return false
+    const weekStart = dayjs(now).startOf('isoWeek')
+    const weekEnd = dayjs(now).endOf('isoWeek')
 
-    const airedNow = getAiredEpisodeCount(totalEpisode, firstEpisodeTimestamp, now)
-    const airedPrev = getAiredEpisodeCount(totalEpisode, firstEpisodeTimestamp, now - INTERVAL)
+    const first = dayjs(firstEpisodeTimestamp)
 
-    return airedNow > airedPrev
+    // 本周可能涉及的 episode index 区间（核心）
+    const startIndex =
+        Math.floor(weekStart.diff(first, 'millisecond') / INTERVAL) + 1
+
+    const endIndex =
+        Math.floor(weekEnd.diff(first, 'millisecond') / INTERVAL) + 1
+
+    // 裁剪到合法集数范围
+    const from = Math.max(1, startIndex)
+    const to = Math.min(totalEpisode, endIndex)
+
+    // 没有任何有效集数落在本周
+    if (from > to) return false
+
+    // 本质：本周是否存在至少一集
+    return true
 }
 
 /**
