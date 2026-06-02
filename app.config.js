@@ -58,6 +58,9 @@ const config = {
                 'expo-calendar',
                 {
                     calendarPermission: '申请获取日历权限，以便添加动漫更新事件',
+                    remindersPermission: '该应用需要访问您的提醒事项。',
+                    writeOnlyCalendarPermission: '该应用需要向您的日历添加事件。',
+                    writeOnlyAccess: false,
                 },
             ],
         ],
