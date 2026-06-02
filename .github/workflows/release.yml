@@ -48,25 +48,32 @@ jobs:
 
             - name: Setup Gradle
               uses: gradle/actions/setup-gradle@v4
+              with:
+                  cache-overwrite-existing: false
+                  cache-cleanup: on-success
+                  gradle-home-cache-includes: |
+                      caches
+                      wrapper
+                      build-cache
+
+            - name: Cache Android Gradle project   # ⭐ 新增
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.gradle/caches
+                      ~/.gradle/wrapper
+                      android/.gradle
+                  key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/settings.gradle*') }}
+                  restore-keys: |
+                      gradle-${{ runner.os }}-
 
             - name: 安装 Android SDK
               uses: android-actions/setup-android@v3
-
-            # - name: 配置 Android SDK 缓存
-            #   uses: actions/cache@v4
-            #   with:
-            #       path: |
-            #           ~/.gradle/caches
-            #           ~/.gradle/wrapper
-            #       key: android-sdk-${{ runner.os }}-${{ hashFiles('**/build.gradle*', '**/settings.gradle*', '**/gradle-wrapper.properties') }}
-            #       restore-keys: |
-            #           android-sdk-${{ runner.os }}-
 
             - name: 安装 安卓开发工具
               run: |
                   sdkmanager "platforms;android-36" \
                              "build-tools;36.0.0" \
-                             "ndk;27.0.12077973" \
                              "ndk;27.1.12297006" \
                              "cmake;3.22.1"
 
