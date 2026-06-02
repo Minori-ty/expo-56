@@ -1,19 +1,18 @@
 import * as Calendar from 'expo-calendar'
-import { StorageAccessFramework } from 'expo-file-system/legacy'
+import { StorageAccessFramework } from 'expo-file-system'
 
 /**
  * 获取日历权限
  * @returns
  */
 export async function getCalendarPermission() {
-    console.log(Calendar.getCalendarPermissions)
     try {
-        const settings = await Calendar.getCalendarPermissions()
+        const settings = await Calendar.getCalendarPermissionsAsync()
         if (settings.granted) {
             return true
         }
 
-        const status = await Calendar.requestCalendarPermissions()
+        const status = await Calendar.requestCalendarPermissionsAsync()
         return status.granted
     } catch (error) {
         alert('获取日历权限失败' + error)
