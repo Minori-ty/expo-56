@@ -1,5 +1,5 @@
 import * as Calendar from 'expo-calendar'
-import { StorageAccessFramework } from 'expo-file-system'
+import { File } from 'expo-file-system'
 
 /**
  * 获取日历权限
@@ -7,12 +7,12 @@ import { StorageAccessFramework } from 'expo-file-system'
  */
 export async function getCalendarPermission() {
     try {
-        const settings = await Calendar.getCalendarPermissionsAsync()
+        const settings = await Calendar.getCalendarPermissions()
         if (settings.granted) {
             return true
         }
 
-        const status = await Calendar.requestCalendarPermissionsAsync()
+        const status = await Calendar.requestCalendarPermissions()
         return status.granted
     } catch (error) {
         alert('获取日历权限失败' + error)
@@ -26,14 +26,15 @@ export async function getCalendarPermission() {
  */
 export async function getFileExportsPermission() {
     try {
-        const settings = await StorageAccessFramework.requestDirectoryPermissionsAsync()
-        if (settings.granted) {
-            return settings.directoryUri
+        // 弹出系统文件选择器（Android）
+        const file = await File.pickFileAsync();
+
+        if (!file.result) {
+            return null;
         }
-        alert('获取文件存储权限失败')
-        return false
+        return file.result.uri;
     } catch (error) {
-        alert('获取文件存储权限失败' + error)
-        return false
+        console.error(error);
+        return null;
     }
 }
