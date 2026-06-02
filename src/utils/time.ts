@@ -1,6 +1,8 @@
 import { EStatus } from '@/enums'
 import dayjs from 'dayjs'
+import isoWeek from 'dayjs/plugin/isoWeek'
 
+dayjs.extend(isoWeek)
 const INTERVAL = 7 * 24 * 60 * 60 * 1000
 
 /**
