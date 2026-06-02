@@ -107,6 +107,11 @@ export function getAiredEpisodeCount(
  * - 已完结但在本周有最后一集 => true
  * - 很久之前完结且本周无更新 => false
  * - 下周/下下周更新 => false
+ *
+ * @param totalEpisode 番剧总集数
+ * @param firstEpisodeTimestamp 第一集播出时间戳（毫秒）
+ * @param now 当前时间戳（毫秒），默认取当前时间
+ * @returns 本周是否存在至少一集更新
  */
 export function isUpdatedInThisWeek(
     totalEpisode: number,
