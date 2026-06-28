@@ -155,6 +155,7 @@ function TabViewComponent({ updateWeekday }: { updateWeekday: typeof EWeekday.va
                     colors={[themeColorPurple]}
                 />
             }
+            className="bg-white"
         >
             {sortedTimes.map((time, index) => {
                 return <AnimeCardItem time={time} animeList={mapSchedule[time]} key={index} />

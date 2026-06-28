@@ -6,6 +6,7 @@ import { notificationAsync, NotificationFeedbackType } from 'expo-haptics'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
 import React, { useEffect, useMemo, useRef } from 'react'
 import { type SubmitHandler } from 'react-hook-form'
+import { BackHandler } from 'react-native'
 
 import { handleUpdateAnimeById } from '@/api'
 import { getAnimeByNameExceptItself, parseAnimeData } from '@/api/anime'
@@ -124,7 +125,7 @@ export default function EditAnime() {
         }
     }
 
-    const { mutate: updateAnimeMution } = useMutation({
+    const { mutate: updateAnimeMution, isPending } = useMutation({
         mutationFn: handleUpdateAnimeById,
         onSuccess: () => {
             queryClient.invalidateQueries({
@@ -141,6 +142,13 @@ export default function EditAnime() {
             alert(err)
         },
     })
+
+    // 提交时禁止安卓返回键
+    useEffect(() => {
+        if (!isPending) return
+        const subscription = BackHandler.addEventListener('hardwareBackPress', () => true)
+        return () => subscription.remove()
+    }, [isPending])
     /**
      * 校验动漫名是否存在
      */
@@ -157,5 +165,5 @@ export default function EditAnime() {
         return <Loading />
     }
 
-    return <BaseAnimeForm formData={formData} onSubmit={onSubmit} ref={baseFormRef} />
+    return <BaseAnimeForm formData={formData} onSubmit={onSubmit} ref={baseFormRef} isSubmitting={isPending} />
 }

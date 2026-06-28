@@ -6,8 +6,18 @@ import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
 import { Enum } from 'enum-plus'
 import { useNavigation, useRouter } from 'expo-router'
 import { debounce } from 'lodash-es'
-import React, { createContext, memo, useCallback, useContext, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { Dimensions, StyleSheet } from 'react-native'
+import React, {
+    createContext,
+    memo,
+    useCallback,
+    useContext,
+    useEffect,
+    useLayoutEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react'
+import { ActivityIndicator, BackHandler, Dimensions, StyleSheet } from 'react-native'
 
 import { handleDeleteAnime } from '@/api'
 import { parseAnimeData } from '@/api/anime'
@@ -99,7 +109,7 @@ export default function MyFollows() {
         return !updatedAt
     }, [updatedAt])
 
-    const { mutate: handleDeleteAnimeMutation } = useMutation({
+    const { mutate: handleDeleteAnimeMutation, isPending: isDeleting } = useMutation({
         mutationFn: handleDeleteAnime,
         onSuccess: () => {
             queryClient.invalidateQueries({
@@ -107,6 +117,13 @@ export default function MyFollows() {
             })
         },
     })
+
+    // 删除时禁止安卓返回键
+    useEffect(() => {
+        if (!isDeleting) return
+        const subscription = BackHandler.addEventListener('hardwareBackPress', () => true)
+        return () => subscription.remove()
+    }, [isDeleting])
 
     const handlePress = useCallback(() => {
         const debouncePush = debounce(
@@ -155,6 +172,12 @@ export default function MyFollows() {
                 {list.length > 0 ? <AnimeContainer list={list} /> : <Empty />}
             </myFollowsContext.Provider>
 
+            {isDeleting ? (
+                <View className="absolute inset-0 z-50 items-center justify-center bg-white/70">
+                    <ActivityIndicator size="large" color={themeColorPurple} />
+                </View>
+            ) : null}
+
             <BottomSheetModal
                 ref={bottomSheetModalRef}
                 enableContentPanningGesture={false}
@@ -198,6 +221,7 @@ const AnimeContainer = memo(function AnimeContainer({ list }: IAnimeContainerPro
     }
     return (
         <FlatList
+            className="bg-white pb-4"
             data={list}
             keyExtractor={(item) => item.id.toString()}
             numColumns={3}

@@ -2,8 +2,9 @@ import { useMutation } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import { notificationAsync, NotificationFeedbackType } from 'expo-haptics'
 import { router, useNavigation } from 'expo-router'
-import React, { useLayoutEffect, useRef } from 'react'
+import React, { useEffect, useLayoutEffect, useRef } from 'react'
 import { type SubmitHandler } from 'react-hook-form'
+import { BackHandler } from 'react-native'
 
 import { handleAddAnime } from '@/api'
 import { getAnimeByName } from '@/api/anime'
@@ -67,7 +68,7 @@ export default function AddAnime() {
         }
     }
 
-    const { mutate: handleAddAnimeMution } = useMutation({
+    const { mutate: handleAddAnimeMution, isPending } = useMutation({
         mutationFn: handleAddAnime,
         onSuccess: () => {
             queryClient.invalidateQueries({
@@ -84,6 +85,13 @@ export default function AddAnime() {
         },
     })
 
+    // 提交时禁止安卓返回键
+    useEffect(() => {
+        if (!isPending) return
+        const subscription = BackHandler.addEventListener('hardwareBackPress', () => true)
+        return () => subscription.remove()
+    }, [isPending])
+
     /**
      * 校验动漫名是否存在
      */
@@ -97,5 +105,5 @@ export default function AddAnime() {
         return false
     }
 
-    return <BaseAnimeForm formData={formDefaultValues} onSubmit={onSubmit} ref={baseFormRef} />
+    return <BaseAnimeForm formData={formDefaultValues} onSubmit={onSubmit} ref={baseFormRef} isSubmitting={isPending} />
 }
