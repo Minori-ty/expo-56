@@ -81,9 +81,9 @@ jobs:
                              "ndk;27.1.12297006" \
                              "cmake;3.22.1"
 
-            - name: 增加权限
-              run: |
-                  chmod +x android/gradlew
+            # - name: 增加权限  #使用cd android && ./gradlew assembleRelease才加目录权限，否则没有这个目录报错
+            #   run: |
+            #       chmod +x android/gradlew
 
             - name: 打包expo应用
               run: |
@@ -93,10 +93,25 @@ jobs:
               id: version
               run: echo "VERSION=$(npm pkg get version | tr -d '\"')" >> $GITHUB_ENV
 
-            - name: 重命名apk
+            # - name: 重命名apk #使用cd android && ./gradlew assembleRelease命令才是这个位置
+            #   run: |
+            #       # 直接定位到打包输出目录的 apk 并重命名到根目录
+            #       mv "android/app/build/outputs/apk/release/app-release.apk" "v${{ env.VERSION }}.apk"
+
+            - name: 重命名apk # 文件在根目录
               run: |
-                  # 直接定位到打包输出目录的 apk 并重命名到根目录
-                  mv "android/app/build/outputs/apk/release/app-release.apk" "v${{ env.VERSION }}.apk"
+                  # 仅在当前根目录下查找第一个 .apk 文件（不递归子目录）
+                  APK_FILE=$(ls -1 *.apk 2>/dev/null | head -n 1)
+
+                  if [ -z "$APK_FILE" ]; then
+                    echo "❌ 根目录下未找到任何 APK 文件"
+                    ls -la # 打印当前目录文件列表以供排查
+                    exit 1
+                  fi
+
+                  echo "✅ 找到 APK 文件: $APK_FILE"
+                  # 重命名
+                  mv "$APK_FILE" "v${{ env.VERSION }}.apk"
 
             - name: 获取当前时间
               run: |
