@@ -1,8 +1,10 @@
+import pkg from './package.json' with { type: 'json' }
+
 const config = {
     expo: {
-        name: 'expo-56',
-        slug: 'expo-56',
-        version: '1.0.0',
+        name: pkg.name,
+        slug: pkg.name,
+        version: pkg.version,
         orientation: 'portrait',
         icon: './assets/images/icon.png',
         scheme: 'expo56',
