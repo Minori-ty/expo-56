@@ -3,11 +3,10 @@ import { type ClassValue } from 'clsx'
 import dayjs from 'dayjs'
 import { eq } from 'drizzle-orm'
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
-import { Image } from 'expo-image'
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router'
 import { debounce } from 'lodash-es'
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react'
-import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { StyleSheet } from 'react-native'
 import DateTimePicker, {
     type CalendarComponents,
     type CalendarDay,
@@ -18,13 +17,15 @@ import DateTimePicker, {
 import { handleGetAnimeById } from '@/api/anime'
 import { addCalendarByAnimeId, deleteCalendarByAnimeId } from '@/api/calendar'
 import Loading from '@/components/lottie/Loading'
-import 'dayjs/locale/zh-cn'
-
 import Icon from '@/components/ui/Icon'
 import { db } from '@/db'
+import 'dayjs/locale/zh-cn'
+
 import { animeTable } from '@/db/schema'
 import { EStatus, EWeekday } from '@/enums'
 import { blurhash, themeColorPurple } from '@/styles'
+import { RefreshControl, ScrollView, Text, TouchableOpacity, View } from '@/tw'
+import { Image } from '@/tw/image'
 import { cn } from '@/utils/cn'
 import { queryClient } from '@/utils/react-query'
 import { getAiredEpisodeCount, getAnimeStatus } from '@/utils/time'

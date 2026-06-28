@@ -1,11 +1,9 @@
 import dayjs from 'dayjs'
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
-import { Image } from 'expo-image'
 import { router } from 'expo-router'
 import { debounce } from 'lodash-es'
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
-import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { StyleSheet } from 'react-native'
 import { SceneMap, TabBar, TabView } from 'react-native-tab-view'
 
 import { parseAnimeData } from '@/api/anime'
@@ -15,6 +13,8 @@ import { db } from '@/db'
 import { animeTable } from '@/db/schema'
 import { EStatus, EWeekday } from '@/enums'
 import { blurhash, themeColorPurple } from '@/styles'
+import { RefreshControl, SafeAreaView, ScrollView, Text, TouchableOpacity, View } from '@/tw'
+import { Image } from '@/tw/image'
 import type { TAnimeList } from '@/types'
 import {
     getAiredEpisodeCount,
@@ -45,15 +45,12 @@ const routes = EWeekday.items.map((item) => {
     }
 })
 
-const renderScene = SceneMap({
-    [EWeekday.monday]: () => <TabViewComponent updateWeekday={EWeekday.monday} />,
-    [EWeekday.tuesday]: () => <TabViewComponent updateWeekday={EWeekday.tuesday} />,
-    [EWeekday.wednesday]: () => <TabViewComponent updateWeekday={EWeekday.wednesday} />,
-    [EWeekday.thursday]: () => <TabViewComponent updateWeekday={EWeekday.thursday} />,
-    [EWeekday.friday]: () => <TabViewComponent updateWeekday={EWeekday.friday} />,
-    [EWeekday.saturday]: () => <TabViewComponent updateWeekday={EWeekday.saturday} />,
-    [EWeekday.sunday]: () => <TabViewComponent updateWeekday={EWeekday.sunday} />,
-})
+// Build SceneMap dynamically from EWeekday.items so keys match route keys
+const scenes: Record<string, () => React.JSX.Element> = {}
+for (const item of EWeekday.items) {
+    scenes[item.key] = () => <TabViewComponent updateWeekday={item.value} />
+}
+const renderScene = SceneMap(scenes)
 export default function Index() {
     const [index, setIndex] = useState<number>(dayjs().isoWeekday() - 1)
 
@@ -81,7 +78,7 @@ export default function Index() {
     }, [updatedAt])
 
     return (
-        <SafeAreaView edges={['top']} className="flex-1 bg-white">
+        <SafeAreaView className="flex-1 bg-white">
             <scheduleContext.Provider value={{ list, isLoading }}>
                 <TabView
                     navigationState={{ index, routes }}

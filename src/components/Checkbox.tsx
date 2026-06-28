@@ -3,7 +3,8 @@
 import { type ClassValue } from 'clsx'
 import { Check, Minus } from 'lucide-react-native'
 import { useState } from 'react'
-import { Text, TouchableOpacity, View } from 'react-native'
+
+import { Text, TouchableOpacity, View } from '@/tw'
 
 type CheckboxState = 'unchecked' | 'checked' | 'indeterminate'
 

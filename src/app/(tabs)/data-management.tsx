@@ -4,8 +4,6 @@ import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
 import { debounce, differenceBy } from 'lodash-es'
 import { Calendar, Download, FileText, Trash2, Upload } from 'lucide-react-native'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 import { z } from 'zod'
 
@@ -18,6 +16,7 @@ import PageHeader from '@/components/PageHeader'
 import { db } from '@/db'
 import { animeTable } from '@/db/schema'
 import { themeColorPurple } from '@/styles'
+import { RefreshControl, SafeAreaView, ScrollView, Text, TouchableOpacity, View } from '@/tw'
 import { deleteJsonFile, deleteJsonFileList, DIR, exportJsonFile, importJsonFile, scanJsonFile } from '@/utils/file'
 import { queryClient } from '@/utils/react-query'
 
@@ -324,7 +323,7 @@ export default function DataManagement() {
     }
     return (
         <>
-            <SafeAreaView edges={['top']} className="flex-1 bg-gray-50">
+            <SafeAreaView className="flex-1 bg-gray-50">
                 <ScrollView
                     showsVerticalScrollIndicator={false}
                     refreshControl={

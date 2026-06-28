@@ -4,22 +4,10 @@ import { type ClassValue } from 'clsx'
 import dayjs from 'dayjs'
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
 import { Enum } from 'enum-plus'
-import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
 import { debounce } from 'lodash-es'
 import React, { createContext, memo, useCallback, useContext, useMemo, useRef, useState } from 'react'
-import {
-    Dimensions,
-    FlatList,
-    Pressable,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { Dimensions, StyleSheet } from 'react-native'
 
 import { handleDeleteAnime } from '@/api'
 import { parseAnimeData } from '@/api/anime'
@@ -31,6 +19,8 @@ import { db } from '@/db'
 import { animeTable } from '@/db/schema'
 import { EStatus } from '@/enums'
 import { blurhash, themeColorPurple } from '@/styles'
+import { FlatList, Pressable, RefreshControl, SafeAreaView, ScrollView, Text, TouchableOpacity, View } from '@/tw'
+import { Image } from '@/tw/image'
 import { TAnimeList } from '@/types'
 import { cn } from '@/utils/cn'
 import { queryClient } from '@/utils/react-query'
@@ -141,7 +131,7 @@ export default function MyFollows() {
     }
 
     return (
-        <SafeAreaView edges={['top']} className="flex-1 bg-white pt-4">
+        <SafeAreaView className="flex-1 bg-white pt-4">
             <myFollowsContext.Provider value={{ isLoading, handleDeleteAnimeMutation }}>
                 <PageHeader
                     title="我的追番"

@@ -6,11 +6,16 @@ import {
     Pressable as RNPressable,
     ScrollView as RNScrollView,
     TouchableHighlight as RNTouchableHighlight,
+    TouchableOpacity as RNTouchableOpacity,
     TextInput as RNTextInput,
+    FlatList as RNFlatList,
+    Button as RNButton,
+    RefreshControl as RNRefreshControl,
     StyleSheet,
 } from 'react-native'
 import { useCssElement, useNativeVariable as useFunctionalVariable } from 'react-native-css'
 import Animated from 'react-native-reanimated'
+import { SafeAreaView as RNSafeAreaView } from 'react-native-safe-area-context'
 
 // CSS Variable hook — on web returns the CSS variable reference directly
 export const useCSSVariable =
@@ -105,3 +110,51 @@ export const TouchableHighlight = (props: React.ComponentProps<typeof RNTouchabl
     return useCssElement(XXTouchableHighlight, props, { className: 'style' })
 }
 TouchableHighlight.displayName = 'CSS(TouchableHighlight)'
+
+// ─── TouchableOpacity ────────────────────────────────────────────────────────
+
+export const TouchableOpacity = (props: React.ComponentProps<typeof RNTouchableOpacity> & { className?: string }) => {
+    // @ts-expect-error: Complex union type from useCssElement
+    return useCssElement(RNTouchableOpacity, props, { className: 'style' })
+}
+TouchableOpacity.displayName = 'CSS(TouchableOpacity)'
+
+// ─── FlatList ────────────────────────────────────────────────────────────────
+
+export const FlatList = <T,>(
+    props: React.ComponentProps<typeof RNFlatList<T>> & {
+        className?: string
+        contentContainerClassName?: string
+    },
+) => {
+    // @ts-expect-error: Complex union type from useCssElement
+    return useCssElement(RNFlatList<T>, props, {
+        className: 'style',
+        contentContainerClassName: 'contentContainerStyle',
+    })
+}
+FlatList.displayName = 'CSS(FlatList)'
+
+// ─── Button ──────────────────────────────────────────────────────────────────
+
+export const Button = (props: React.ComponentProps<typeof RNButton> & { className?: string }) => {
+    // @ts-expect-error: Complex union type from useCssElement
+    return useCssElement(RNButton, props, { className: 'style' })
+}
+Button.displayName = 'CSS(Button)'
+
+// ─── SafeAreaView ────────────────────────────────────────────────────────────
+
+export const SafeAreaView = (props: React.ComponentProps<typeof RNSafeAreaView> & { className?: string }) => {
+    // @ts-expect-error: Complex union type from useCssElement
+    return useCssElement(RNSafeAreaView, props, { className: 'style' })
+}
+SafeAreaView.displayName = 'CSS(SafeAreaView)'
+
+// ─── RefreshControl ──────────────────────────────────────────────────────────
+
+export const RefreshControl = (props: React.ComponentProps<typeof RNRefreshControl> & { className?: string }) => {
+    // @ts-expect-error: Complex union type from useCssElement
+    return useCssElement(RNRefreshControl, props, { className: 'style' })
+}
+RefreshControl.displayName = 'CSS(RefreshControl)'
