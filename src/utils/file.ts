@@ -1,6 +1,7 @@
-import { animeTable } from '@/db/schema'
 import { File, Paths } from 'expo-file-system'
 import type { DeepExpand } from 'types-tools'
+
+import { animeTable } from '@/db/schema'
 
 /** 应用文档目录 */
 export const DIR = Paths.document

@@ -15,10 +15,5 @@
     // package.json 排序：开启（统一依赖顺序）
     "sortPackageJson": true,
     // 忽略目录：与 oxlint 保持一致，避免格式/校验双标
-    "ignorePatterns": [
-        "node_modules",
-        "dist",
-        ".claude",
-        ".agents"
-    ]
+    "ignorePatterns": ["node_modules", "dist", ".claude", ".agents"]
 }

@@ -1,14 +1,16 @@
+import { eq } from 'drizzle-orm'
+
 import { db } from '@/db'
 import { animeTable } from '@/db/schema'
 import { addCalendarEvents, deleteCalendarEvents } from '@/utils/calendar'
-import { eq } from 'drizzle-orm'
+
 import { getAnimeById } from './anime'
 
 /**
  * 为动漫添加日历事件（多个独立事件，每集一个）
  */
 export async function addCalendarByAnimeId(animeId: number) {
-    return await db.transaction(async tx => {
+    return await db.transaction(async (tx) => {
         const result = await getAnimeById(tx, animeId)
         if (!result) {
             console.log('该id对应的动漫不存在')
@@ -33,7 +35,7 @@ export async function addCalendarByAnimeId(animeId: number) {
  * 删除动漫的所有日历事件
  */
 export async function deleteCalendarByAnimeId(animeId: number) {
-    return await db.transaction(async tx => {
+    return await db.transaction(async (tx) => {
         const result = await getAnimeById(tx, animeId)
         if (!result) {
             console.log('该id对应的动漫不存在')

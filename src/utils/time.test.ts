@@ -1,7 +1,9 @@
-import { EStatus } from '@/enums'
 import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
 import { describe, expect, it } from 'vitest'
+
+import { EStatus } from '@/enums'
+
 import {
     getAiredEpisodeCount,
     getAnimeStatus,
@@ -17,32 +19,28 @@ describe('getAnimeStatus（时间跨度增强）', () => {
         const now = dayjs()
         const first = now.add(100, 'day')
 
-        expect(getAnimeStatus(10, first.valueOf(), now.valueOf()))
-            .toBe(EStatus.toBeUpdated)
+        expect(getAnimeStatus(10, first.valueOf(), now.valueOf())).toBe(EStatus.toBeUpdated)
     })
 
     it('刚开播（第0天）=> 连载中', () => {
         const now = dayjs()
         const first = now
 
-        expect(getAnimeStatus(10, first.valueOf(), now.valueOf()))
-            .toBe(EStatus.serializing)
+        expect(getAnimeStatus(10, first.valueOf(), now.valueOf())).toBe(EStatus.serializing)
     })
 
     it('刚好卡在最后一集当天 => 已完结', () => {
         const now = dayjs()
         const first = now.add(-(9 * 7), 'day') // 第10集今天
 
-        expect(getAnimeStatus(10, first.valueOf(), now.valueOf()))
-            .toBe(EStatus.completed)
+        expect(getAnimeStatus(10, first.valueOf(), now.valueOf())).toBe(EStatus.completed)
     })
 
     it('完结后很久（+200天）=> 已完结稳定', () => {
         const now = dayjs()
-        const first = now.add(-(200), 'day')
+        const first = now.add(-200, 'day')
 
-        expect(getAnimeStatus(10, first.valueOf(), now.valueOf()))
-            .toBe(EStatus.completed)
+        expect(getAnimeStatus(10, first.valueOf(), now.valueOf())).toBe(EStatus.completed)
     })
 })
 
@@ -51,8 +49,7 @@ describe('getAiredEpisodeCount（时间分段验证）', () => {
         const now = dayjs()
         const first = now
 
-        expect(getAiredEpisodeCount(10, first.valueOf(), now.valueOf()))
-            .toBe(1)
+        expect(getAiredEpisodeCount(10, first.valueOf(), now.valueOf())).toBe(1)
     })
 
     it('第2集临界点（6~8天）=> 2', () => {
@@ -72,40 +69,35 @@ describe('getAiredEpisodeCount（时间分段验证）', () => {
         const now = dayjs()
         const first = now.add(-(4 * 7 + 1), 'day')
 
-        expect(getAiredEpisodeCount(10, first.valueOf(), now.valueOf()))
-            .toBe(5)
+        expect(getAiredEpisodeCount(10, first.valueOf(), now.valueOf())).toBe(5)
     })
 
     it('完结后 + 100天 => 仍然是 totalEpisode', () => {
         const now = dayjs()
         const first = now.add(-(200 * 7), 'day')
 
-        expect(getAiredEpisodeCount(10, first.valueOf(), now.valueOf()))
-            .toBe(10)
+        expect(getAiredEpisodeCount(10, first.valueOf(), now.valueOf())).toBe(10)
     })
 
     it('第0天 => 第1集', () => {
         const now = dayjs()
         const first = now
 
-        expect(getAiredEpisodeCount(10, first.valueOf(), now.valueOf()))
-            .toBe(1)
+        expect(getAiredEpisodeCount(10, first.valueOf(), now.valueOf())).toBe(1)
     })
 
     it('刚好7天 => 第2集', () => {
         const now = dayjs()
         const first = now.add(-7, 'day')
 
-        expect(getAiredEpisodeCount(10, first.valueOf(), now.valueOf()))
-            .toBe(2)
+        expect(getAiredEpisodeCount(10, first.valueOf(), now.valueOf())).toBe(2)
     })
 
     it('超过总集数不溢出', () => {
         const now = dayjs()
         const first = now.add(-(200 * 7), 'day')
 
-        expect(getAiredEpisodeCount(5, first.valueOf(), now.valueOf()))
-            .toBe(5)
+        expect(getAiredEpisodeCount(5, first.valueOf(), now.valueOf())).toBe(5)
     })
 })
 
@@ -116,9 +108,7 @@ describe('isUpdatedInThisWeek（跨周测试）', () => {
         const weekStart = now.startOf('isoWeek')
         const first = weekStart.add(-7, 'day')
 
-        expect(
-            isUpdatedInThisWeek(10, first.valueOf(), now.valueOf())
-        ).toBe(true)
+        expect(isUpdatedInThisWeek(10, first.valueOf(), now.valueOf())).toBe(true)
     })
 
     it('跨周边界（上周末）=> false', () => {
@@ -127,9 +117,7 @@ describe('isUpdatedInThisWeek（跨周测试）', () => {
         const weekStart = now.startOf('isoWeek')
         const first = weekStart.add(-14, 'day')
 
-        expect(
-            isUpdatedInThisWeek(2, first.valueOf(), now.valueOf())
-        ).toBe(false)
+        expect(isUpdatedInThisWeek(2, first.valueOf(), now.valueOf())).toBe(false)
     })
 
     it('多周跨度（100天前）=> false', () => {
@@ -137,9 +125,7 @@ describe('isUpdatedInThisWeek（跨周测试）', () => {
 
         const first = now.add(-100, 'day')
 
-        expect(
-            isUpdatedInThisWeek(3, first.valueOf(), now.valueOf())
-        ).toBe(false)
+        expect(isUpdatedInThisWeek(3, first.valueOf(), now.valueOf())).toBe(false)
     })
 
     it('周一边界 => true', () => {
@@ -147,9 +133,7 @@ describe('isUpdatedInThisWeek（跨周测试）', () => {
 
         const first = now
 
-        expect(
-            isUpdatedInThisWeek(10, first.valueOf(), now.valueOf())
-        ).toBe(true)
+        expect(isUpdatedInThisWeek(10, first.valueOf(), now.valueOf())).toBe(true)
     })
 
     it('周日边界 => true', () => {
@@ -157,9 +141,7 @@ describe('isUpdatedInThisWeek（跨周测试）', () => {
 
         const first = now.add(-7, 'day')
 
-        expect(
-            isUpdatedInThisWeek(10, first.valueOf(), now.valueOf())
-        ).toBe(true)
+        expect(isUpdatedInThisWeek(10, first.valueOf(), now.valueOf())).toBe(true)
     })
 })
 
@@ -168,25 +150,15 @@ describe('getExpectedEpisodeThisWeek（极端场景）', () => {
         const now = dayjs()
         const first = now
 
-        const result = getExpectedEpisodeThisWeek(
-            10,
-            first.valueOf(),
-            EStatus.serializing,
-            now.valueOf()
-        )
+        const result = getExpectedEpisodeThisWeek(10, first.valueOf(), EStatus.serializing, now.valueOf())
 
         expect(result).toBe(1)
     })
 
     it('跨月 + 本周尾部 => 不越界', () => {
         const now = dayjs()
-        const first = now.add(-(200), 'day')
-        const result = getExpectedEpisodeThisWeek(
-            5,
-            first.valueOf(),
-            EStatus.serializing,
-            now.valueOf()
-        )
+        const first = now.add(-200, 'day')
+        const result = getExpectedEpisodeThisWeek(5, first.valueOf(), EStatus.serializing, now.valueOf())
         expect(result).toBe(5)
     })
 
@@ -194,12 +166,7 @@ describe('getExpectedEpisodeThisWeek（极端场景）', () => {
         const now = dayjs()
         const first = now.add(-(3 * 7 + 1), 'day')
 
-        const result = getExpectedEpisodeThisWeek(
-            10,
-            first.valueOf(),
-            EStatus.serializing,
-            now.valueOf()
-        )
+        const result = getExpectedEpisodeThisWeek(10, first.valueOf(), EStatus.serializing, now.valueOf())
 
         expect(result).toBeGreaterThanOrEqual(1)
         expect(result).toBeLessThanOrEqual(10)

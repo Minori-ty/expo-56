@@ -1,7 +1,8 @@
-import { cn } from '@/utils/cn'
 import { type ClassValue } from 'clsx'
 import React, { Fragment } from 'react'
 import { Text, View } from 'react-native'
+
+import { cn } from '@/utils/cn'
 
 interface IProps {
     title: string

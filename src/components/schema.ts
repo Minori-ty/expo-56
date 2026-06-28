@@ -1,6 +1,7 @@
-import { EStatus, EWeekday } from '@/enums'
 import dayjs from 'dayjs'
 import { z, ZodIssueCode } from 'zod'
+
+import { EStatus, EWeekday } from '@/enums'
 
 const statusSchema = z.discriminatedUnion('status', [
     z.object({

@@ -1,3 +1,13 @@
+import dayjs from 'dayjs'
+import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
+import { Image } from 'expo-image'
+import { router } from 'expo-router'
+import { debounce } from 'lodash-es'
+import { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { SceneMap, TabBar, TabView } from 'react-native-tab-view'
+
 import { parseAnimeData } from '@/api/anime'
 import Empty from '@/components/lottie/Empty'
 import Loading from '@/components/lottie/Loading'
@@ -13,15 +23,6 @@ import {
     getSundayTimestampInThisWeek,
     isCurrentWeekdayUpdateTimePassed,
 } from '@/utils/time'
-import dayjs from 'dayjs'
-import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
-import { Image } from 'expo-image'
-import { router } from 'expo-router'
-import { debounce } from 'lodash-es'
-import { createContext, useCallback, useContext, useMemo, useState } from 'react'
-import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { SceneMap, TabBar, TabView } from 'react-native-tab-view'
 
 interface IScheduleContext {
     list: TAnimeList

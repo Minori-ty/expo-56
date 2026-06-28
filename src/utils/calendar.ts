@@ -1,6 +1,8 @@
+import * as Calendar from 'expo-calendar'
+
 import { EStatus } from '@/enums'
 import { getCalendarPermission } from '@/permissions'
-import * as Calendar from 'expo-calendar'
+
 import { getAnimeStatus, getAiredEpisodeCount, getEpisodeTime } from './time'
 
 /**
@@ -8,7 +10,7 @@ import { getAnimeStatus, getAiredEpisodeCount, getEpisodeTime } from './time'
  */
 async function getWritableCalendar() {
     const calendars = await Calendar.getCalendars()
-    return calendars.find(cal => cal.allowsModifications) ?? null
+    return calendars.find((cal) => cal.allowsModifications) ?? null
 }
 
 /**

@@ -1,8 +1,9 @@
-import type { IAnime } from '@/api/anime'
 import type { ExtractTablesWithRelations } from 'drizzle-orm'
 import type { SQLiteTransaction } from 'drizzle-orm/sqlite-core'
 import type { SQLiteRunResult } from 'expo-sqlite'
 import type { DeepExpand } from 'types-tools'
+
+import type { IAnime } from '@/api/anime'
 
 export type TTx = SQLiteTransaction<
     'sync',

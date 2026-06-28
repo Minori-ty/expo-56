@@ -1,6 +1,7 @@
-import { EStatus } from '@/enums'
 import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
+
+import { EStatus } from '@/enums'
 
 dayjs.extend(isoWeek)
 const INTERVAL = 7 * 24 * 60 * 60 * 1000
@@ -47,11 +48,7 @@ export function getLastEpisodeTime(firstEpisodeTimestamp: number, totalEpisode: 
  * @param now 当前时间戳
  * @returns 更新状态枚举
  */
-export function getAnimeStatus(
-    totalEpisode: number,
-    firstEpisodeTimestamp: number,
-    now: number = Date.now()
-) {
+export function getAnimeStatus(totalEpisode: number, firstEpisodeTimestamp: number, now: number = Date.now()) {
     if (now < firstEpisodeTimestamp) {
         return EStatus.toBeUpdated
     }
@@ -82,11 +79,7 @@ export function getAnimeStatus(
  * @param now 当前时间戳
  * @returns 已更新集数
  */
-export function getAiredEpisodeCount(
-    totalEpisode: number,
-    firstEpisodeTimestamp: number,
-    now: number = Date.now()
-) {
+export function getAiredEpisodeCount(totalEpisode: number, firstEpisodeTimestamp: number, now: number = Date.now()) {
     if (now < firstEpisodeTimestamp) return 0
 
     const diffDays = dayjs(now).diff(firstEpisodeTimestamp, 'day')
@@ -113,11 +106,7 @@ export function getAiredEpisodeCount(
  * @param now 当前时间戳（毫秒），默认取当前时间
  * @returns 本周是否存在至少一集更新
  */
-export function isUpdatedInThisWeek(
-    totalEpisode: number,
-    firstEpisodeTimestamp: number,
-    now: number = Date.now()
-) {
+export function isUpdatedInThisWeek(totalEpisode: number, firstEpisodeTimestamp: number, now: number = Date.now()) {
     if (now < firstEpisodeTimestamp) return false
     const weekStart = dayjs(now).startOf('isoWeek')
     const weekEnd = dayjs(now).endOf('isoWeek')
@@ -125,11 +114,9 @@ export function isUpdatedInThisWeek(
     const first = dayjs(firstEpisodeTimestamp)
 
     // 本周可能涉及的 episode index 区间（核心）
-    const startIndex =
-        Math.floor(weekStart.diff(first, 'millisecond') / INTERVAL) + 1
+    const startIndex = Math.floor(weekStart.diff(first, 'millisecond') / INTERVAL) + 1
 
-    const endIndex =
-        Math.floor(weekEnd.diff(first, 'millisecond') / INTERVAL) + 1
+    const endIndex = Math.floor(weekEnd.diff(first, 'millisecond') / INTERVAL) + 1
 
     // 裁剪到合法集数范围
     const from = Math.max(1, startIndex)
@@ -160,7 +147,7 @@ export function getExpectedEpisodeThisWeek(
     totalEpisode: number,
     firstEpisodeTimestamp: number,
     status: number,
-    now: number = Date.now()
+    now: number = Date.now(),
 ) {
     if (now < firstEpisodeTimestamp) {
         return 1
@@ -182,10 +169,7 @@ export function getExpectedEpisodeThisWeek(
  * @param firstEpisodeTimestamp 首集播出时间戳
  * @returns 最后一集播出时间戳
  */
-export function getLastEpisodeTimestamp(
-    totalEpisode: number,
-    firstEpisodeTimestamp: number
-) {
+export function getLastEpisodeTimestamp(totalEpisode: number, firstEpisodeTimestamp: number) {
     return getLastEpisodeTime(firstEpisodeTimestamp, totalEpisode).valueOf()
 }
 

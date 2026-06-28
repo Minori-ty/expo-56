@@ -1,3 +1,12 @@
+import { useMutation } from '@tanstack/react-query'
+import dayjs from 'dayjs'
+import { eq } from 'drizzle-orm'
+import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
+import { notificationAsync, NotificationFeedbackType } from 'expo-haptics'
+import { router, useLocalSearchParams, useNavigation } from 'expo-router'
+import React, { useEffect, useMemo, useRef } from 'react'
+import { type SubmitHandler } from 'react-hook-form'
+
 import { handleUpdateAnimeById } from '@/api'
 import { getAnimeByNameExceptItself, parseAnimeData } from '@/api/anime'
 import BaseAnimeForm, { IBaseFormRef } from '@/components/BaseForm'
@@ -8,14 +17,6 @@ import { animeTable } from '@/db/schema'
 import { EStatus } from '@/enums'
 import { queryClient } from '@/utils/react-query'
 import { getAiredEpisodeCount, getAnimeStatus, getFirstEpisodeTimestamp, getLastEpisodeTimestamp } from '@/utils/time'
-import { useMutation } from '@tanstack/react-query'
-import dayjs from 'dayjs'
-import { eq } from 'drizzle-orm'
-import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
-import { notificationAsync, NotificationFeedbackType } from 'expo-haptics'
-import { router, useLocalSearchParams, useNavigation } from 'expo-router'
-import React, { useEffect, useMemo, useRef } from 'react'
-import { type SubmitHandler } from 'react-hook-form'
 
 export default function EditAnime() {
     const navigation = useNavigation()
@@ -34,7 +35,7 @@ export default function EditAnime() {
         db
             .select()
             .from(animeTable)
-            .where(eq(animeTable.id, Number(id)))
+            .where(eq(animeTable.id, Number(id))),
     )
 
     const formData = useMemo<TFormSchema>(() => {
@@ -44,9 +45,9 @@ export default function EditAnime() {
         const result = parseAnimeData(data[0])
         const { firstEpisodeTimestamp, totalEpisode, ...reset } = result
         const firstEpisodeYYYYMMDDHHmm = dayjs(firstEpisodeTimestamp).format('YYYY-MM-DD HH:mm')
-        const lastEpisodeYYYYMMDDHHmm = dayjs(
-            getLastEpisodeTimestamp(totalEpisode, firstEpisodeTimestamp)
-        ).format('YYYY-MM-DD HH:mm')
+        const lastEpisodeYYYYMMDDHHmm = dayjs(getLastEpisodeTimestamp(totalEpisode, firstEpisodeTimestamp)).format(
+            'YYYY-MM-DD HH:mm',
+        )
 
         const status = getAnimeStatus(totalEpisode, firstEpisodeTimestamp)
         const currentEpisode = getAiredEpisodeCount(totalEpisode, firstEpisodeTimestamp)
@@ -75,7 +76,7 @@ export default function EditAnime() {
         return !updatedAt
     }, [updatedAt])
 
-    const onSubmit: SubmitHandler<TFormSchema> = async data => {
+    const onSubmit: SubmitHandler<TFormSchema> = async (data) => {
         const { name, cover, totalEpisode } = data
         const result = await handleValidateAnimeNameIsExist(name, Number(id))
         if (result) {
@@ -129,7 +130,7 @@ export default function EditAnime() {
 
             router.back()
         },
-        onError: err => {
+        onError: (err) => {
             alert(err)
         },
     })

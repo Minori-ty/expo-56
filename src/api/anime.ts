@@ -1,11 +1,12 @@
+import dayjs from 'dayjs'
+import { and, eq, like, ne } from 'drizzle-orm'
+import type { DeepExpand } from 'types-tools'
+
 import { db } from '@/db'
 import { animeTable } from '@/db/schema'
 import { EWeekday } from '@/enums'
 import { TTx } from '@/types'
 import { getLastEpisodeTimestamp } from '@/utils/time'
-import dayjs from 'dayjs'
-import { and, eq, like, ne } from 'drizzle-orm'
-import type { DeepExpand } from 'types-tools'
 
 export interface IAddAnimeData {
     name: string
@@ -103,7 +104,7 @@ export async function getAnimeById(tx: TTx, id: number) {
  * 根据id查找动漫（对外使用）
  */
 export async function handleGetAnimeById(id: number) {
-    return db.transaction(async tx => {
+    return db.transaction(async (tx) => {
         const data = await getAnimeById(tx, id)
         if (!data) return
         return parseAnimeData(data)

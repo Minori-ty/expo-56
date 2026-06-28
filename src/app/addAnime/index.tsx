@@ -1,3 +1,10 @@
+import { useMutation } from '@tanstack/react-query'
+import dayjs from 'dayjs'
+import { notificationAsync, NotificationFeedbackType } from 'expo-haptics'
+import { router, useNavigation } from 'expo-router'
+import React, { useLayoutEffect, useRef } from 'react'
+import { type SubmitHandler } from 'react-hook-form'
+
 import { handleAddAnime } from '@/api'
 import { getAnimeByName } from '@/api/anime'
 import BaseAnimeForm, { IBaseFormRef } from '@/components/BaseForm'
@@ -5,12 +12,6 @@ import { formDefaultValues, type TFormSchema } from '@/components/schema'
 import { EStatus } from '@/enums'
 import { queryClient } from '@/utils/react-query'
 import { getFirstEpisodeTimestamp } from '@/utils/time'
-import { useMutation } from '@tanstack/react-query'
-import dayjs from 'dayjs'
-import { notificationAsync, NotificationFeedbackType } from 'expo-haptics'
-import { router, useNavigation } from 'expo-router'
-import React, { useLayoutEffect, useRef } from 'react'
-import { type SubmitHandler } from 'react-hook-form'
 
 export default function AddAnime() {
     const navigation = useNavigation()
@@ -22,7 +23,7 @@ export default function AddAnime() {
     }, [navigation])
 
     const baseFormRef = useRef<IBaseFormRef>(null)
-    const onSubmit: SubmitHandler<TFormSchema> = async data => {
+    const onSubmit: SubmitHandler<TFormSchema> = async (data) => {
         const { name, cover, totalEpisode } = data
         const result = await handleValidateAnimeNameIsExist(name)
         if (result) {
@@ -71,7 +72,7 @@ export default function AddAnime() {
 
             router.back()
         },
-        onError: err => {
+        onError: (err) => {
             alert(err)
         },
     })

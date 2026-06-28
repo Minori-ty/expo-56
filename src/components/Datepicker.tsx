@@ -48,7 +48,7 @@ const DatePicker = forwardRef<IDatePickerRef, IDatepickerProps>(
                         styles={defaultStyles}
                         mode="single"
                         date={date}
-                        onChange={params => onChange(params.date)}
+                        onChange={(params) => onChange(params.date)}
                         firstDayOfWeek={6}
                         multiRangeMode
                         showOutsideDays
@@ -60,7 +60,7 @@ const DatePicker = forwardRef<IDatePickerRef, IDatepickerProps>(
                 </BottomSheetView>
             </BottomSheetModal>
         )
-    }
+    },
 )
 
 DatePicker.displayName = 'DatePicker'
