@@ -288,8 +288,7 @@ const AnimeContainerItem = memo(function AnimeContainerItem({ data }: IAnimeCont
                     source={data.cover}
                     placeholder={{ blurhash }}
                     contentFit="cover"
-                    transition={500}
-                    cachePolicy={'memory-disk'}
+                    cachePolicy="disk"
                     style={styles.cover}
                 />
                 <UpdateLabel status={getAnimeStatus(data.totalEpisode, data.firstEpisodeTimestamp)} />
