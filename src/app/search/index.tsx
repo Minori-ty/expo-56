@@ -47,7 +47,7 @@ export default function Search() {
             value: EStatus.toBeUpdated,
             color: 'text-toBeUpdated',
         },
-    } as const)
+    })
 
     return (
         <ScrollView className="flex-1 bg-white px-6" contentContainerStyle={{ flexGrow: 1 }}>

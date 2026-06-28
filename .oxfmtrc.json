@@ -8,8 +8,8 @@
     "singleQuote": true,
     // 分号：省略（符合现代 ES 模块风格）
     "semi": false,
-    // Tailwind 类排序：开启（统一类名顺序，减少冲突）
-    "sortTailwindcss": true,
+    // // Tailwind 类排序：开启（统一类名顺序，减少冲突）
+    // "sortTailwindcss": true,
     // 导入排序：开启（按字母+类型排序，提升可读性）
     "sortImports": true,
     // package.json 排序：开启（统一依赖顺序）

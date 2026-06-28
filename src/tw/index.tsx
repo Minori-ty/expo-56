@@ -1,4 +1,5 @@
 import { Link as RouterLink } from 'expo-router'
+import type { ReactElement } from 'react'
 import React from 'react'
 import {
     View as RNView,
@@ -11,7 +12,6 @@ import {
     FlatList as RNFlatList,
     Button as RNButton,
     RefreshControl as RNRefreshControl,
-    StyleSheet,
 } from 'react-native'
 import { useCssElement, useNativeVariable as useFunctionalVariable } from 'react-native-css'
 import { KeyboardAwareScrollView as RNKeyboardAwareScrollView } from 'react-native-keyboard-controller'
@@ -24,8 +24,7 @@ export const useCSSVariable =
 
 // ─── Link ───────────────────────────────────────────────────────────────────
 
-export const Link = (props: React.ComponentProps<typeof RouterLink> & { className?: string }) => {
-    // @ts-expect-error: Complex union type from useCssElement
+export const Link = (props: React.ComponentProps<typeof RouterLink> & { className?: string }): ReactElement => {
     return useCssElement(RouterLink, props, { className: 'style' })
 }
 
@@ -40,14 +39,14 @@ export type ViewProps = React.ComponentProps<typeof RNView> & {
     className?: string
 }
 
-export const View = (props: ViewProps) => {
+export const View = (props: ViewProps): ReactElement => {
     return useCssElement(RNView, props, { className: 'style' })
 }
 View.displayName = 'CSS(View)'
 
 // ─── Text ───────────────────────────────────────────────────────────────────
 
-export const Text = (props: React.ComponentProps<typeof RNText> & { className?: string }) => {
+export const Text = (props: React.ComponentProps<typeof RNText> & { className?: string }): ReactElement => {
     return useCssElement(RNText, props, { className: 'style' })
 }
 Text.displayName = 'CSS(Text)'
@@ -59,8 +58,7 @@ export const ScrollView = (
         className?: string
         contentContainerClassName?: string
     },
-) => {
-    // @ts-expect-error: Complex union type from useCssElement
+): ReactElement => {
     return useCssElement(RNScrollView, props, {
         className: 'style',
         contentContainerClassName: 'contentContainerStyle',
@@ -70,14 +68,14 @@ ScrollView.displayName = 'CSS(ScrollView)'
 
 // ─── Pressable ──────────────────────────────────────────────────────────────
 
-export const Pressable = (props: React.ComponentProps<typeof RNPressable> & { className?: string }) => {
+export const Pressable = (props: React.ComponentProps<typeof RNPressable> & { className?: string }): ReactElement => {
     return useCssElement(RNPressable, props, { className: 'style' })
 }
 Pressable.displayName = 'CSS(Pressable)'
 
 // ─── TextInput ──────────────────────────────────────────────────────────────
 
-export const TextInput = (props: React.ComponentProps<typeof RNTextInput> & { className?: string }) => {
+export const TextInput = (props: React.ComponentProps<typeof RNTextInput> & { className?: string }): ReactElement => {
     return useCssElement(RNTextInput, props, { className: 'style' })
 }
 TextInput.displayName = 'CSS(TextInput)'
@@ -90,8 +88,7 @@ export const AnimatedScrollView = (
         contentClassName?: string
         contentContainerClassName?: string
     },
-) => {
-    // @ts-expect-error: Complex union type from useCssElement
+): ReactElement => {
     return useCssElement(Animated.ScrollView, props, {
         className: 'style',
         contentClassName: 'contentContainerStyle',
@@ -101,34 +98,32 @@ export const AnimatedScrollView = (
 
 // ─── TouchableHighlight ─────────────────────────────────────────────────────
 
-function XXTouchableHighlight(props: React.ComponentProps<typeof RNTouchableHighlight>) {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { underlayColor, ...style } = (StyleSheet.flatten(props.style) || {}) as { underlayColor?: string }
-    return <RNTouchableHighlight underlayColor={underlayColor} {...props} style={style} />
+function XXTouchableHighlight(props: React.ComponentProps<typeof RNTouchableHighlight>): ReactElement {
+    return <RNTouchableHighlight {...props} />
 }
 
-export const TouchableHighlight = (props: React.ComponentProps<typeof RNTouchableHighlight>) => {
+export const TouchableHighlight = (props: React.ComponentProps<typeof RNTouchableHighlight>): ReactElement => {
     return useCssElement(XXTouchableHighlight, props, { className: 'style' })
 }
 TouchableHighlight.displayName = 'CSS(TouchableHighlight)'
 
 // ─── TouchableOpacity ────────────────────────────────────────────────────────
 
-export const TouchableOpacity = (props: React.ComponentProps<typeof RNTouchableOpacity> & { className?: string }) => {
-    // @ts-expect-error: Complex union type from useCssElement
+export const TouchableOpacity = (
+    props: React.ComponentProps<typeof RNTouchableOpacity> & { className?: string },
+): ReactElement => {
     return useCssElement(RNTouchableOpacity, props, { className: 'style' })
 }
 TouchableOpacity.displayName = 'CSS(TouchableOpacity)'
 
 // ─── FlatList ────────────────────────────────────────────────────────────────
 
-export const FlatList = <T,>(
+export function FlatList<T>(
     props: React.ComponentProps<typeof RNFlatList<T>> & {
         className?: string
         contentContainerClassName?: string
     },
-) => {
-    // @ts-expect-error: Complex union type from useCssElement
+): ReactElement {
     return useCssElement(RNFlatList<T>, props, {
         className: 'style',
         contentContainerClassName: 'contentContainerStyle',
@@ -138,24 +133,25 @@ FlatList.displayName = 'CSS(FlatList)'
 
 // ─── Button ──────────────────────────────────────────────────────────────────
 
-export const Button = (props: React.ComponentProps<typeof RNButton> & { className?: string }) => {
-    // @ts-expect-error: Complex union type from useCssElement
+export const Button = (props: React.ComponentProps<typeof RNButton> & { className?: string }): ReactElement => {
     return useCssElement(RNButton, props, { className: 'style' })
 }
 Button.displayName = 'CSS(Button)'
 
 // ─── SafeAreaView ────────────────────────────────────────────────────────────
 
-export const SafeAreaView = (props: React.ComponentProps<typeof RNSafeAreaView> & { className?: string }) => {
-    // @ts-expect-error: Complex union type from useCssElement
+export const SafeAreaView = (
+    props: React.ComponentProps<typeof RNSafeAreaView> & { className?: string },
+): ReactElement => {
     return useCssElement(RNSafeAreaView, props, { className: 'style' })
 }
 SafeAreaView.displayName = 'CSS(SafeAreaView)'
 
 // ─── RefreshControl ──────────────────────────────────────────────────────────
 
-export const RefreshControl = (props: React.ComponentProps<typeof RNRefreshControl> & { className?: string }) => {
-    // @ts-expect-error: Complex union type from useCssElement
+export const RefreshControl = (
+    props: React.ComponentProps<typeof RNRefreshControl> & { className?: string },
+): ReactElement => {
     return useCssElement(RNRefreshControl, props, { className: 'style' })
 }
 RefreshControl.displayName = 'CSS(RefreshControl)'
@@ -167,8 +163,7 @@ export const KeyboardAwareScrollView = (
         className?: string
         contentContainerClassName?: string
     },
-) => {
-    // @ts-expect-error: Complex union type from useCssElement
+): ReactElement => {
     return useCssElement(RNKeyboardAwareScrollView, props, {
         className: 'style',
         contentContainerClassName: 'contentContainerStyle',
