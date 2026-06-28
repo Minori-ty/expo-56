@@ -5,7 +5,7 @@ import { useNavigation } from 'expo-router'
 import { debounce, differenceBy } from 'lodash-es'
 import { Calendar, Download, FileText, Trash2, Upload } from 'lucide-react-native'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react'
-import { ActivityIndicator, BackHandler } from 'react-native'
+import { BackHandler } from 'react-native'
 import Toast from 'react-native-toast-message'
 import { z } from 'zod'
 
@@ -14,17 +14,18 @@ import { getAnimeList } from '@/api/anime'
 import { deleteCalendarByAnimeId, deleteCalendarByAnimeIds } from '@/api/calendar'
 import Checkbox from '@/components/Checkbox'
 import { Modal } from '@/components/Modal/index'
+import TransparentLoading from '@/components/TransparentLoading'
 import { db } from '@/db'
 import { animeTable } from '@/db/schema'
 import { themeColorPurple } from '@/styles'
 import { RefreshControl, ScrollView, Text, TouchableOpacity, View } from '@/tw'
 import {
-    deleteJsonFile,
-    deleteJsonFileList,
-    DIR,
+    deleteExportDirJsonFile,
+    deleteExportDirJsonFileList,
     exportJsonFileToDownloads,
+    getSavedExportDir,
     importJsonFile,
-    scanJsonFile,
+    scanExportDirJsonFile,
 } from '@/utils/file'
 import { queryClient } from '@/utils/react-query'
 
@@ -53,7 +54,7 @@ export default function DataManagement() {
 
     const { data: fileList = [] } = useQuery({
         queryKey: ['settings-json-file'],
-        queryFn: scanJsonFile,
+        queryFn: scanExportDirJsonFile,
     })
 
     useEffect(() => {
@@ -182,13 +183,18 @@ export default function DataManagement() {
                 }
             },
         )
-        await exportJsonFileToDownloads({ animeList: res }, `anime_data_${dayjs().format('YYYY_MM_DD')}.json`)
+        const ok = await exportJsonFileToDownloads(
+            { animeList: res },
+            `anime_data_${dayjs().format('YYYY_MM_DD')}.json`,
+        )
+        if (!ok) return
         return dayjs().format('YYYY_MM_DD')
     }
 
     const { mutate: exportDataToJsonFileMutation, isPending: isExportDataToJsonFileMutationLoading } = useMutation({
         mutationFn: exportDataToJsonFile,
-        onSuccess: () => {
+        onSuccess: (date) => {
+            if (!date) return
             queryClient.invalidateQueries({
                 queryKey: ['settings-json-file'],
             })
@@ -267,7 +273,7 @@ export default function DataManagement() {
         })
 
     const { mutate: deleteJsonFileMution } = useMutation({
-        mutationFn: deleteJsonFile,
+        mutationFn: deleteExportDirJsonFile,
         onSuccess: (_, fileName) => {
             queryClient.invalidateQueries({
                 queryKey: ['schedule'],
@@ -293,7 +299,7 @@ export default function DataManagement() {
     })
 
     const { mutate: deleteJsonFileListMution } = useMutation({
-        mutationFn: deleteJsonFileList,
+        mutationFn: deleteExportDirJsonFileList,
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: ['settings-calendar'],
@@ -462,7 +468,7 @@ export default function DataManagement() {
                                             </View>
                                             <View>
                                                 <Text className="text-xs text-gray-500" numberOfLines={1}>
-                                                    路径：{DIR?.uri ?? ''}
+                                                    路径：{getSavedExportDir()?.uri ?? ''}
                                                 </Text>
                                             </View>
                                         </View>
@@ -569,8 +575,8 @@ export default function DataManagement() {
                 </View>
             </ScrollView>
             {isDeletingCalendarEvent ? (
-                <View className="absolute inset-0 z-50 items-center justify-center bg-white/70">
-                    <ActivityIndicator size="large" color={themeColorPurple} />
+                <View className="absolute inset-0 z-50 bg-white/70">
+                    <TransparentLoading />
                 </View>
             ) : null}
         </>

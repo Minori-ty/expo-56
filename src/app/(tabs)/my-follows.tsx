@@ -17,12 +17,13 @@ import React, {
     useRef,
     useState,
 } from 'react'
-import { ActivityIndicator, BackHandler, Dimensions, StyleSheet } from 'react-native'
+import { BackHandler, Dimensions, StyleSheet } from 'react-native'
 
 import { handleDeleteAnime } from '@/api'
 import { parseAnimeData } from '@/api/anime'
 import Loading from '@/components/lottie/Loading'
 import { Modal } from '@/components/Modal'
+import TransparentLoading from '@/components/TransparentLoading'
 import Icon from '@/components/ui/Icon'
 import { db } from '@/db'
 import { animeTable } from '@/db/schema'
@@ -97,10 +98,9 @@ export default function MyFollows() {
             })
             .sort((a, b) => {
                 if (sort === ESortList.positive) {
-                    return a.createdAt - b.createdAt
+                    return a.createdAt - b.createdAt || a.id - b.id
                 } else {
-                    if (a.createdAt === b.createdAt) return -1
-                    return b.createdAt - a.createdAt
+                    return b.createdAt - a.createdAt || b.id - a.id
                 }
             })
     }, [data, status, sort])
@@ -173,8 +173,8 @@ export default function MyFollows() {
             </myFollowsContext.Provider>
 
             {isDeleting ? (
-                <View className="absolute inset-0 z-50 items-center justify-center bg-white/70">
-                    <ActivityIndicator size="large" color={themeColorPurple} />
+                <View className="absolute inset-0 z-50 bg-white/70">
+                    <TransparentLoading />
                 </View>
             ) : null}
 

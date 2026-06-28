@@ -1,6 +1,12 @@
 import { sql } from 'drizzle-orm'
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
+/** 设置键值表 */
+export const settingsTable = sqliteTable('settings', {
+    key: text('key').primaryKey().notNull(),
+    value: text('value').notNull(),
+})
+
 /** 动漫列表数据表 */
 export const animeTable = sqliteTable('anime', {
     id: integer('id').primaryKey({ autoIncrement: true }).notNull(),

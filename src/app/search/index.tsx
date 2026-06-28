@@ -4,6 +4,7 @@ import { useLayoutEffect, useState } from 'react'
 import { StyleSheet } from 'react-native'
 
 import { getAnimeListByName } from '@/api/anime'
+import Empty from '@/components/lottie/Empty'
 import Icon from '@/components/ui/Icon'
 import { animeTable } from '@/db/schema'
 import { EStatus } from '@/enums'
@@ -22,11 +23,13 @@ export default function Search() {
     }, [navigation])
 
     const [keyword, setKeyword] = useState('')
+    const [searched, setSearched] = useState(false)
     type AnimeRow = (typeof animeTable)['$inferSelect']
     const [list, setList] = useState<AnimeRow[]>([])
 
     async function handleSearch() {
         if (!keyword) return
+        setSearched(true)
         const result = await getAnimeListByName(keyword)
         setList(result)
     }
@@ -47,7 +50,7 @@ export default function Search() {
     } as const)
 
     return (
-        <ScrollView className="flex-1 bg-white px-6">
+        <ScrollView className="flex-1 bg-white px-6" contentContainerStyle={{ flexGrow: 1 }}>
             <View className="my-5 flex-row items-center gap-2">
                 <TouchableOpacity onPress={() => router.back()}>
                     <Icon name="ArrowLeft" />
@@ -64,6 +67,8 @@ export default function Search() {
                     <Text>搜索</Text>
                 </TouchableOpacity>
             </View>
+
+            {searched && list.length === 0 && <Empty />}
 
             {list.map((item) => {
                 // DB stores seconds; convert to ms for time.ts

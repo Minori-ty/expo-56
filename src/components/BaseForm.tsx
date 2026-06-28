@@ -6,11 +6,10 @@ import { notificationAsync, NotificationFeedbackType } from 'expo-haptics'
 import { useNavigation } from 'expo-router'
 import { forwardRef, PropsWithChildren, useEffect, useImperativeHandle, useMemo, useRef } from 'react'
 import { Controller, FieldError, FieldErrors, SubmitHandler, useForm } from 'react-hook-form'
-import { ActivityIndicator } from 'react-native'
 
 import DatePicker, { type IDatePickerRef } from '@/components/Datepicker'
+import TransparentLoading from '@/components/TransparentLoading'
 import { EStatus, EWeekday } from '@/enums'
-import { themeColorPurple } from '@/styles'
 import { Button, KeyboardAwareScrollView, Text, TextInput, TouchableOpacity, View } from '@/tw'
 import { cn } from '@/utils/cn'
 
@@ -446,8 +445,8 @@ const BaseForm = forwardRef<IBaseFormRef, IBaseAnimeFormProps>(function BaseForm
                 />
             </KeyboardAwareScrollView>
             {isSubmitting ? (
-                <View className="absolute inset-0 z-50 items-center justify-center bg-white/70">
-                    <ActivityIndicator size="large" color={themeColorPurple} />
+                <View className="absolute inset-0 z-50 bg-white/70">
+                    <TransparentLoading />
                 </View>
             ) : null}
         </>

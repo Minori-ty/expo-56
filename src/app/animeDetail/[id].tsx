@@ -17,6 +17,7 @@ import DateTimePicker, {
 import { handleGetAnimeById } from '@/api/anime'
 import { addCalendarByAnimeId, deleteCalendarByAnimeId } from '@/api/calendar'
 import Loading from '@/components/lottie/Loading'
+import TransparentLoading from '@/components/TransparentLoading'
 import { CompactHeader } from '@/components/ui/CompactHeader'
 import Icon from '@/components/ui/Icon'
 import { db } from '@/db'
@@ -194,7 +195,7 @@ function AnimeDetail() {
             headerRight: () => {
                 return (
                     <TouchableOpacity onPress={handlePress}>
-                        <Icon name="Pencil" size={28} />
+                        <Icon name="Pencil" size={22} />
                     </TouchableOpacity>
                 )
             },
@@ -394,13 +395,13 @@ function AnimeDetail() {
                             <TouchableOpacity
                                 className={cn(
                                     'mt-3 flex-row items-center justify-center rounded-xl bg-green-500 py-4',
-                                    isCalendarLoading && 'bg-gray-400',
+                                    (isCalendarLoading || isHandleCreateAndBindCalendarMutionLoading) && 'bg-gray-400',
                                 )}
                                 activeOpacity={0.5}
                                 onPress={handleSubscribe}
                                 disabled={isHandleCreateAndBindCalendarMutionLoading}
                             >
-                                <Icon name="Bell" className="mr-2 text-white" size={20} />
+                                <Icon name="Bell" className="mr-2" color="white" size={20} />
                                 <Text className="font-medium text-white">设置更新提醒</Text>
                             </TouchableOpacity>
                         </View>
@@ -411,13 +412,13 @@ function AnimeDetail() {
                             <TouchableOpacity
                                 className={cn(
                                     'mt-3 flex-row items-center justify-center rounded-xl bg-red-500 py-4',
-                                    isCalendarLoading && 'bg-gray-400',
+                                    (isCalendarLoading || isHandleClearCalendarByAnimeIdMutionLoading) && 'bg-gray-400',
                                 )}
                                 activeOpacity={0.5}
                                 onPress={handleUnsubscribe}
                                 disabled={isHandleClearCalendarByAnimeIdMutionLoading}
                             >
-                                <Icon name="BellOff" className="mr-2 text-white" size={20} />
+                                <Icon name="BellOff" className="mr-2" color="white" size={20} />
                                 <Text className="font-medium text-white">取消更新提醒</Text>
                             </TouchableOpacity>
                         </View>
@@ -451,6 +452,11 @@ function AnimeDetail() {
                     </View>
                 </animeDetailContext.Provider>
             </ScrollView>
+            {(isHandleCreateAndBindCalendarMutionLoading || isHandleClearCalendarByAnimeIdMutionLoading) && (
+                <View className="absolute inset-0 z-50 bg-white/70">
+                    <TransparentLoading />
+                </View>
+            )}
         </View>
     )
 }
@@ -473,14 +479,16 @@ function Day(day: CalendarDay) {
     return (
         <View
             className={cn(
-                'relative w-full flex-1 items-center rounded border border-transparent bg-white',
+                // oxlint-disable-next-line tailwindcss/no-unknown-classes
+                'will-change-variable relative w-full flex-1 items-center rounded border border-transparent bg-white',
                 isSelected && 'border border-blue-500',
                 isCurrentMonth && isSelected && isToday && 'bg-blue-500',
             )}
         >
             <Text
                 className={cn(
-                    'top-2',
+                    // oxlint-disable-next-line tailwindcss/no-unknown-classes
+                    'will-change-variable top-2',
                     isSelected && isToday && 'text-white',
                     !isCurrentMonth && 'text-gray-200',
                     isCurrentMonth && !isSelected && isToday && 'text-blue-500',
@@ -492,7 +500,8 @@ function Day(day: CalendarDay) {
                 <View className="absolute bottom-2 w-full">
                     <Text
                         className={cn(
-                            'text-center',
+                            // oxlint-disable-next-line tailwindcss/no-unknown-classes
+                            'will-change-variable text-center',
                             !isCurrentMonth && 'text-gray-200',
                             isSelected && isToday && 'text-white',
                             isCurrentMonth && episode && 'text-orange-500',
