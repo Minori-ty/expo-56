@@ -10,7 +10,7 @@
         "web": "expo start --web",
         "lint": "expo lint",
         "test": "vitest run",
-        "build": "npx expo run:android --variant release --device generic --no-bundler",
+        "build": "eas build --platform android --local",
         "db": "npx drizzle-kit generate",
         "check": "npx tsc --noEmit"
     },
