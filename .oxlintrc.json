@@ -1,0 +1,93 @@
+{
+    "$schema": "./node_modules/oxlint/configuration_schema.json",
+    "jsPlugins": [
+        "oxlint-tailwindcss"
+    ],
+    "rules": {
+        // -------------------------- 核心正确性（必报错） --------------------------
+        "tailwindcss/no-conflicting-classes": "error", // 冲突类名（如 w-10 和 w-20 同时存在）
+        "tailwindcss/no-deprecated-classes": "error", // 废弃类名（如 text-yellow-lighter）
+        "tailwindcss/no-unknown-classes": "error", // 未知类名（拼写错误/未配置的自定义类）
+        "no-undef": "error", // 未定义变量（致命 bug）
+        "no-implicit-globals": "error", // 意外全局变量（避免污染全局作用域）
+        // -------------------------- 风格一致性（警告即可） --------------------------
+        "tailwindcss/no-duplicate-classes": "warn", // 重复类名（不影响功能，提醒优化）
+        "tailwindcss/enforce-canonical": "warn", // 强制规范类名（如 bg-#fff → bg-white）
+        "tailwindcss/no-unnecessary-arbitrary-value": "warn", // 不必要的任意值（如 w-[20px] → w-5）
+        "tailwindcss/enforce-sort-order": "warn", // 强制类名排序（与 oxfmt 配合）
+        "tailwindcss/consistent-variant-order": "warn", // 强制变体顺序（如 hover:bg-red before focus:bg-blue）
+        "tailwindcss/enforce-consistent-important-position": "warn", // 强制 !important 位置（统一 !bg-red-500 而非 bg-red-500!）
+        "tailwindcss/no-unnecessary-whitespace": "warn", // 类名间多余空格
+        "no-unused-vars": "warn", // 未使用变量（开发阶段允许，提测前修复）
+        // -------------------------- 补充实用规则（可选） --------------------------
+        "no-debugger": "error",
+        "no-console": "warn",
+        "no-constant-condition": "warn",
+        "no-self-assign": "error",
+        "no-var": "error",
+        "prefer-const": "warn",
+        "prefer-template": "warn",
+        "object-shorthand": "warn",
+        "no-unnecessary-type-assertion": "warn",
+        "prefer-as-const": "warn",
+        "react-hooks/exhaustive-deps": "warn",
+        "react/jsx-key": "error",
+        "react/no-unescaped-entities": "warn",
+        "react/jsx-no-duplicate-props": "error",
+        "react/jsx-no-undef": "error",
+        "react/no-direct-mutation-state": "error",
+        "react/no-unknown-property": "error",
+        // 补充：禁止 React 组件 props 透传时的多余展开（避免无效属性）
+        "react/jsx-props-no-spreading": [
+            "warn",
+            {
+                "custom": "ignore"
+            }
+        ],
+        // 补充：禁止使用危险的 DOM 操作（如 dangerouslySetInnerHTML，需显式允许）
+        "react/no-danger": "warn",
+        // 补充：禁止空函数（避免无意义代码）
+        "no-empty-function": "warn",
+        // 补充：禁止条件判断中的类型错误（如 if ('string') 这类永远为 true 的判断）
+        "no-promise-executor-return": "error",
+        // 补充：禁止数组/对象解构时的未定义值（避免运行时报错）
+        "no-unused-private-class-members": "error",
+        // TypeScript 强约束
+        "@typescript-eslint/no-explicit-any": "warn",
+        "@typescript-eslint/no-non-null-assertion": "warn",
+        "@typescript-eslint/prefer-optional-chain": "error",
+        "@typescript-eslint/no-unused-vars": [
+            "warn",
+            {
+                "argsIgnorePattern": "^_"
+            }
+        ]
+    },
+    "settings": {
+        "tailwindcss": {
+            // Tailwind 入口文件：明确指定，避免插件解析错误
+            "entryPoint": "./src/global.css"
+        }
+    },
+    "env": {
+        // 浏览器环境：开启（覆盖 window/document 等全局变量）
+        "browser": true,
+        // 补充：若用 ES6+ 语法，开启 es2022（避免 let/const 报错）
+        "es2022": true,
+        // 新增：Node 环境（按需开启，如 SSR/脚本）
+        "node": true,
+        // 新增：React 环境（覆盖 React 全局变量）
+        "react": true,
+        "react-jsx": true,
+        // 新增：如果使用 TypeScript
+        "typescript": true
+    },
+    // 忽略目录：与 oxfmt 完全一致
+    "ignorePatterns": [
+        "node_modules",
+        "dist",
+        ".claude",
+        ".agents",
+        ".codegraph"
+    ]
+}
