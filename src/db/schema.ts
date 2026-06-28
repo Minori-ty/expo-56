@@ -4,7 +4,7 @@ import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 /** 动漫列表数据表 */
 export const animeTable = sqliteTable('anime', {
     id: integer('id').primaryKey({ autoIncrement: true }).notNull(),
-    name: text('name').notNull().unique(),
+    name: text('name').notNull(),
     totalEpisode: integer('total_episode').notNull(),
     cover: text('cover').notNull(),
     /** unix时间戳 */

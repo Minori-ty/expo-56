@@ -1,99 +1,271 @@
+import { parseAnimeData } from '@/api/anime'
 import Empty from '@/components/lottie/Empty'
-import { Text, View } from '@/tw'
-import { cn } from '@/utils/cn'
+import Loading from '@/components/lottie/Loading'
+import { db } from '@/db'
+import { animeTable } from '@/db/schema'
+import { EStatus, EWeekday } from '@/enums'
+import { blurhash, themeColorPurple } from '@/styles'
+import type { TAnimeList } from '@/types'
+import {
+    getAiredEpisodeCount,
+    getAnimeStatus,
+    getSundayTimestampInThisWeek,
+    getMondayTimestampInThisWeek,
+    isCurrentWeekdayUpdateTimePassed,
+} from '@/utils/time'
 import dayjs from 'dayjs'
-import { useCallback, useMemo, useState } from 'react'
-import { useWindowDimensions } from 'react-native'
-import { SceneMap, TabView, type Route } from 'react-native-tab-view'
+import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
+import { Image } from 'expo-image'
+import { router } from 'expo-router'
+import { debounce } from 'lodash-es'
+import React, { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { SceneMap, TabBar, TabView } from 'react-native-tab-view'
 
-// ─── Constants ───────────────────────────────────────────────────────────────
-
-const DAYS = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'] as const
-
-type DayRoute = Route & {
-    key: (typeof DAYS)[number]
+interface IScheduleContext {
+    list: TAnimeList
+    isLoading: boolean
 }
 
-/** dayjs day() → DAYS index (dayjs: 0=Sun → DAYS: 周一=0 … 周日=6) */
-function getTodayIndex(): number {
-    const d = dayjs().day() // 0=Sun … 6=Sat
-    return d === 0 ? 6 : d - 1 // Sun→6, Mon→0, Tue→1, …
+const scheduleContext = createContext<IScheduleContext | null>(null)
+
+const useSchedule = () => {
+    const ctx = useContext(scheduleContext)
+    if (!ctx) throw new Error('缺少provider')
+    return ctx
 }
 
-// ─── Day Scene ───────────────────────────────────────────────────────────────
+// enum-plus v3: toMenu() removed, iterate items directly
+const routes = EWeekday.items.map(item => {
+    return {
+        key: item.key,
+        title: item.label,
+    }
+})
 
-function DayScene({ day }: { day: string }) {
+const renderScene = SceneMap({
+    [EWeekday.monday]: () => <TabViewComponent updateWeekday={EWeekday.monday} />,
+    [EWeekday.tuesday]: () => <TabViewComponent updateWeekday={EWeekday.tuesday} />,
+    [EWeekday.wednesday]: () => <TabViewComponent updateWeekday={EWeekday.wednesday} />,
+    [EWeekday.thursday]: () => <TabViewComponent updateWeekday={EWeekday.thursday} />,
+    [EWeekday.friday]: () => <TabViewComponent updateWeekday={EWeekday.friday} />,
+    [EWeekday.saturday]: () => <TabViewComponent updateWeekday={EWeekday.saturday} />,
+    [EWeekday.sunday]: () => <TabViewComponent updateWeekday={EWeekday.sunday} />,
+})
+export default function Index() {
+    const [index, setIndex] = useState<number>(dayjs().isoWeekday() - 1)
+
+    const { data, updatedAt } = useLiveQuery(db.select().from(animeTable))
+    const list = useMemo(() => {
+        return data
+            .map(item => parseAnimeData(item))
+            .filter(item => {
+                const status = getAnimeStatus(item.totalEpisode, item.firstEpisodeTimestamp)
+                if (status === EStatus.serializing) {
+                    return true
+                }
+                if (status === EStatus.completed) {
+                    return item.lastEpisodeTimestamp > getMondayTimestampInThisWeek()
+                }
+                if (status === EStatus.toBeUpdated) {
+                    return item.firstEpisodeTimestamp < getSundayTimestampInThisWeek()
+                }
+                return false
+            })
+    }, [data])
+
+    const isLoading = useMemo(() => {
+        return !updatedAt
+    }, [updatedAt])
+
     return (
-        <View className="flex-1 bg-white items-center justify-center">
-            <Empty />
+        <SafeAreaView edges={['top']} className="flex-1 bg-white">
+            <scheduleContext.Provider value={{ list, isLoading }}>
+                <TabView
+                    navigationState={{ index, routes }}
+                    renderScene={renderScene}
+                    onIndexChange={setIndex}
+                    overScrollMode={'auto'}
+                    renderTabBar={props => (
+                        <TabBar
+                            {...props}
+                            scrollEnabled
+                            activeColor={themeColorPurple}
+                            inactiveColor="#9E9E9E"
+                            tabStyle={styles.tabBarTab}
+                            style={styles.tabBar}
+                        />
+                    )}
+                />
+            </scheduleContext.Provider>
+        </SafeAreaView>
+    )
+}
+
+function TabViewComponent({ updateWeekday }: { updateWeekday: typeof EWeekday.valueType }) {
+    const { list, isLoading } = useSchedule()
+    const [timestamp, setTimestamp] = useState(dayjs().unix())
+    const animeList = list.filter(item => dayjs(item.firstEpisodeTimestamp).isoWeekday() === updateWeekday)
+
+    function refetch() {
+        setTimestamp(dayjs().unix())
+    }
+    if (animeList.length === 0) {
+        return (
+            <ScrollView
+                contentContainerStyle={styles.center}
+                key={timestamp}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={isLoading}
+                        onRefresh={refetch}
+                        className="text-theme"
+                        colors={[themeColorPurple]}
+                    />
+                }
+            >
+                {isLoading ? <Loading /> : <Empty />}
+            </ScrollView>
+        )
+    }
+
+    const mapSchedule: Record<string, TAnimeList> = {}
+    animeList.forEach(item => {
+        const HHmm = dayjs(item.firstEpisodeTimestamp).format('HH:mm')
+        if (mapSchedule[HHmm]) {
+            mapSchedule[HHmm].push(item)
+        } else {
+            mapSchedule[HHmm] = [item]
+        }
+    })
+
+    const updateTimeHHmmList = Object.keys(mapSchedule)
+    const sortedTimes = updateTimeHHmmList.sort((a, b) => {
+        const timeA = dayjs(`${dayjs().format('YYYY-MM-DD')} ${a}`).unix()
+        const timeB = dayjs(`${dayjs().format('YYYY-MM-DD')} ${b}`).unix()
+        return timeA - timeB
+    })
+
+    return (
+        <ScrollView
+            showsVerticalScrollIndicator={false}
+            showsHorizontalScrollIndicator={false}
+            refreshControl={
+                <RefreshControl
+                    refreshing={isLoading}
+                    onRefresh={refetch}
+                    className="text-theme"
+                    colors={[themeColorPurple]}
+                />
+            }
+        >
+            {sortedTimes.map((time, index) => {
+                return <AnimeCardItem time={time} animeList={mapSchedule[time]} key={index} />
+            })}
+        </ScrollView>
+    )
+}
+interface IAnimeCardItemProps {
+    time: string
+    animeList: TAnimeList
+}
+
+function AnimeCardItem({ time, animeList }: IAnimeCardItemProps) {
+    const handleToAnimeDetail = useCallback((id: number) => {
+        const debounceHandler = debounce(
+            () => {
+                router.push(`/animeDetail/${id}` as any)
+            },
+            300,
+            {
+                leading: true,
+                trailing: false,
+            }
+        )
+        debounceHandler()
+        return () => debounceHandler.cancel()
+    }, [])
+    return (
+        <View className="my-2 flex-row">
+            <View className="w-16 items-center justify-start">
+                <Text className="font-medium">{time}</Text>
+            </View>
+            <View className="size-full">
+                {animeList.map(item => {
+                    return (
+                        <TouchableOpacity
+                            key={item.id}
+                            activeOpacity={0.5}
+                            onPress={() => handleToAnimeDetail(item.id)}
+                            className="mb-3 h-28 flex-1 flex-row"
+                        >
+                            <Image
+                                source={item.cover}
+                                placeholder={{ blurhash }}
+                                contentFit="cover"
+                                transition={500}
+                                cachePolicy={'memory-disk'}
+                                style={styles.cover}
+                            />
+                            <View className="flex-1">
+                                <Text className="font-black">{item.name}</Text>
+                                <EpisodeTip
+                                    firstEpisodeTimestamp={item.firstEpisodeTimestamp}
+                                    totalEpisode={item.totalEpisode}
+                                />
+                                {getAnimeStatus(item.totalEpisode, item.firstEpisodeTimestamp) ===
+                                    EStatus.completed && <Text className="mt-2 text-sm text-[#fb7299]">已完结🎉</Text>}
+                            </View>
+                        </TouchableOpacity>
+                    )
+                })}
+            </View>
         </View>
     )
 }
 
-// ─── Route Config ────────────────────────────────────────────────────────────
-
-const routes: DayRoute[] = DAYS.map((day) => ({
-    key: day,
-    title: day,
-}))
-
-const renderScene = SceneMap({
-    周一: () => <DayScene day="周一" />,
-    周二: () => <DayScene day="周二" />,
-    周三: () => <DayScene day="周三" />,
-    周四: () => <DayScene day="周四" />,
-    周五: () => <DayScene day="周五" />,
-    周六: () => <DayScene day="周六" />,
-    周日: () => <DayScene day="周日" />,
-})
-
-// ─── Main Component ──────────────────────────────────────────────────────────
-
-export default function UpdateSchedule() {
-    const layout = useWindowDimensions()
-
-    const initialIndex = useMemo(() => getTodayIndex(), [])
-    const [index, setIndex] = useState(initialIndex)
-
-    const renderTabBar = useCallback(
-        (props: any) => (
-            <View className="bg-white dark:bg-black border-b border-gray-200 dark:border-gray-800">
-                <View className="flex-row px-2">
-                    {props.navigationState.routes.map((route: DayRoute, i: number) => {
-                        const isActive = i === index
-                        return (
-                            <View
-                                key={route.key}
-                                className="flex-1 items-center py-3 relative"
-                                style={{ minWidth: 48 }}
-                                onTouchEnd={() => setIndex(i)}
-                            >
-                                <Text
-                                    className={cn(
-                                        'text-sm',
-                                        isActive ? 'font-bold text-[#208AEF]' : 'text-gray-400 dark:text-gray-500',
-                                    )}
-                                >
-                                    {route.title}
-                                </Text>
-                                {isActive && <View className="absolute bottom-0 h-0.5 w-8 rounded-full bg-[#208AEF]" />}
-                            </View>
-                        )
-                    })}
-                </View>
-            </View>
-        ),
-        [index],
-    )
-
+interface IEpisodeTipProps {
+    firstEpisodeTimestamp: number
+    totalEpisode: number
+}
+function EpisodeTip({ firstEpisodeTimestamp, totalEpisode }: IEpisodeTipProps) {
+    if (isCurrentWeekdayUpdateTimePassed(dayjs(firstEpisodeTimestamp).format('YYYY-MM-DD HH:mm'))) {
+        return (
+            <Text className="mt-3 text-sm text-[#fb7299]">
+                更新到 第{getAiredEpisodeCount(totalEpisode, firstEpisodeTimestamp)}集
+            </Text>
+        )
+    }
     return (
-        <TabView
-            navigationState={{ index, routes }}
-            renderScene={renderScene}
-            onIndexChange={setIndex}
-            renderTabBar={renderTabBar}
-            initialLayout={{ width: layout.width, height: 0 }}
-            swipeEnabled
-        />
+        <Text className="mt-3 text-sm text-[#9E9E9E]">
+            即将更新 第{getAiredEpisodeCount(totalEpisode, firstEpisodeTimestamp) + 1}集
+        </Text>
     )
 }
+
+const styles = StyleSheet.create({
+    tabBar: {
+        elevation: 0,
+        shadowOpacity: 0,
+        shadowRadius: 0,
+        shadowOffset: { height: 0, width: 0 },
+        borderBottomWidth: 0,
+        backgroundColor: '#fff',
+    },
+    tabBarTab: {
+        width: 80,
+        backgroundColor: '#fff',
+    },
+    cover: {
+        width: 70,
+        borderRadius: 5,
+        marginRight: 10,
+        height: 70 * 1.5,
+    },
+    center: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        flex: 1,
+    },
+})

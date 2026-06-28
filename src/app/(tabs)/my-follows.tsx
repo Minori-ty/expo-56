@@ -1,26 +1,394 @@
-import { View, Text, ScrollView } from "@/tw";
+import { handleDeleteAnime } from '@/api'
+import { parseAnimeData } from '@/api/anime'
+import Loading from '@/components/lottie/Loading'
+import { Modal } from '@/components/Modal'
+import PageHeader from '@/components/PageHeader'
+import Icon from '@/components/ui/Icon'
+import { db } from '@/db'
+import { animeTable } from '@/db/schema'
+import { EStatus } from '@/enums'
+import { blurhash, themeColorPurple } from '@/styles'
+import { TAnimeList } from '@/types'
+import { cn } from '@/utils/cn'
+import { queryClient } from '@/utils/react-query'
+import { getAiredEpisodeCount, getAnimeStatus } from '@/utils/time'
+import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet'
+import { useMutation } from '@tanstack/react-query'
+import { type ClassValue } from 'clsx'
+import dayjs from 'dayjs'
+import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
+import { Enum } from 'enum-plus'
+import { Image } from 'expo-image'
+import { useRouter } from 'expo-router'
+import { debounce } from 'lodash-es'
+import React, { createContext, memo, useCallback, useContext, useMemo, useRef, useState } from 'react'
+import {
+    Dimensions,
+    FlatList,
+    Pressable,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+
+const GAP = 10
+
+interface IMyFollowsContext {
+    isLoading: boolean
+    handleDeleteAnimeMutation: (id: number) => void
+}
+const myFollowsContext = createContext<IMyFollowsContext | null>(null)
+
+const useMyFollowsContext = () => {
+    const ctx = useContext(myFollowsContext)
+    if (!ctx) throw new Error('缺少provider')
+    return ctx
+}
+
+const EStatusList = Enum({
+    all: {
+        value: 0,
+        label: '全部',
+    },
+    completed: {
+        value: 1,
+        label: '已完结',
+    },
+    serializing: {
+        value: 2,
+        label: '连载中',
+    },
+    toBeUpdated: {
+        value: 3,
+        label: '即将更新',
+    },
+})
+
+const ESortList = Enum({
+    positive: {
+        value: 1,
+        label: '正序',
+    },
+    reverse: {
+        value: 2,
+        label: '倒序',
+    },
+})
 
 export default function MyFollows() {
-  return (
-    <ScrollView className="flex-1 bg-white dark:bg-black">
-      <View className="flex-1 items-center justify-center p-8">
-        <Text className="text-base text-gray-500 dark:text-gray-400 text-center">
-          管理你正在追的番剧列表
-        </Text>
+    const router = useRouter()
+    const bottomSheetModalRef = useRef<BottomSheetModal>(null)
+    const [status, setStatus] = useState<typeof EStatusList.valueType>(EStatusList.all)
+    const [sort, setSort] = useState<typeof ESortList.valueType>(ESortList.positive)
 
-        {/* Placeholder — empty state */}
-        <View className="mt-8 items-center gap-4">
-          <View className="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 items-center justify-center">
-            <Text className="text-3xl">📺</Text>
-          </View>
-          <Text className="text-lg text-gray-400 dark:text-gray-500">
-            还没有追番记录
-          </Text>
-          <Text className="text-sm text-gray-300 dark:text-gray-600 text-center">
-            去更新表发现感兴趣的番剧，{'\n'}点击追番即可加入列表
-          </Text>
+    const { data, updatedAt } = useLiveQuery(db.select().from(animeTable))
+    const list = useMemo(() => {
+        return data
+            .map(item => parseAnimeData(item))
+            .filter(item => {
+                if (status === EStatusList.all) {
+                    return true
+                }
+                return getAnimeStatus(item.totalEpisode, item.firstEpisodeTimestamp) === status
+            })
+            .sort((a, b) => {
+                if (sort === ESortList.positive) {
+                    return a.createdAt - b.createdAt
+                } else {
+                    if (a.createdAt === b.createdAt) return -1
+                    return b.createdAt - a.createdAt
+                }
+            })
+    }, [data, status, sort])
+
+    const isLoading = useMemo(() => {
+        return !updatedAt
+    }, [updatedAt])
+
+    const { mutate: handleDeleteAnimeMutation } = useMutation({
+        mutationFn: handleDeleteAnime,
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: ['search'],
+            })
+        },
+    })
+
+    const handlePress = useCallback(() => {
+        const debouncePush = debounce(
+            () => {
+                router.push('/addAnime' as any)
+            },
+            300,
+            {
+                leading: true,
+                trailing: false,
+            }
+        )
+
+        debouncePush()
+
+        return () => debouncePush.cancel()
+    }, [router])
+
+    function handleClose() {
+        bottomSheetModalRef.current?.close()
+    }
+
+    return (
+        <SafeAreaView edges={['top']} className="flex-1 bg-white pt-4">
+            <myFollowsContext.Provider value={{ isLoading, handleDeleteAnimeMutation }}>
+                <PageHeader
+                    title="我的追番"
+                    actions={[
+                        <TouchableOpacity onPress={() => router.push('/search' as any)} key={'search'}>
+                            <Icon name="Search" size={24} />
+                        </TouchableOpacity>,
+                        <TouchableOpacity onPress={() => bottomSheetModalRef.current?.present()} key={'setting'}>
+                            <Icon name="Settings2" size={24} />
+                        </TouchableOpacity>,
+                        <TouchableOpacity onPress={handlePress} key={'plus'}>
+                            <Icon name="Plus" size={34} />
+                        </TouchableOpacity>,
+                    ]}
+                    className="px-6"
+                />
+                {list.length > 0 ? <AnimeContainer list={list} /> : <Empty />}
+            </myFollowsContext.Provider>
+
+            <BottomSheetModal
+                ref={bottomSheetModalRef}
+                enableContentPanningGesture={false}
+                backdropComponent={() => (
+                    <TouchableOpacity
+                        activeOpacity={1}
+                        className="absolute inset-0 bg-[#0000007f]"
+                        onPress={handleClose}
+                    />
+                )}
+            >
+                <BottomSheetView className="h-[400px] flex-1 bg-gray-100 px-5 pt-5">
+                    <Text className="my-2 pl-4 text-sm font-medium text-gray-500">筛选状态</Text>
+                    <View className="overflow-hidden rounded-2xl bg-white">
+                        {EStatusList.items.map(item => {
+                            return <SelectItem item={item} status={status} setStatus={setStatus} key={item.key} />
+                        })}
+                    </View>
+                    <Text className="my-2 pl-4 text-sm font-medium text-gray-500">排序</Text>
+                    <View className="overflow-hidden rounded-2xl bg-white">
+                        {ESortList.items.map(item => {
+                            return <SortItem item={item} sort={sort} setSort={setSort} key={item.key} />
+                        })}
+                    </View>
+                </BottomSheetView>
+            </BottomSheetModal>
+        </SafeAreaView>
+    )
+}
+
+interface IAnimeContainerProps {
+    list: TAnimeList
+}
+const AnimeContainer = memo(function AnimeContainer({ list }: IAnimeContainerProps) {
+    const { isLoading } = useMyFollowsContext()
+    const [timestamp, setTimestamp] = useState(dayjs().unix())
+
+    function onRefetch() {
+        console.log(dayjs().unix())
+        setTimestamp(dayjs().unix())
+    }
+    return (
+        <FlatList
+            data={list}
+            keyExtractor={item => item.id.toString()}
+            numColumns={3}
+            columnWrapperStyle={{ gap: GAP }}
+            showsHorizontalScrollIndicator={false}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ gap: GAP, paddingHorizontal: GAP }}
+            renderItem={({ item }) => <AnimeContainerItem data={item} timestamp={timestamp} />}
+            refreshControl={
+                <RefreshControl
+                    refreshing={isLoading}
+                    onRefresh={onRefetch}
+                    className="text-theme"
+                    colors={[themeColorPurple]}
+                />
+            }
+        />
+    )
+})
+
+interface IAnimeContainerItemProps {
+    data: TAnimeList[number]
+    timestamp: number
+}
+const AnimeContainerItem = memo(function AnimeContainerItem({ data }: IAnimeContainerItemProps) {
+    const router = useRouter()
+    const { handleDeleteAnimeMutation } = useMyFollowsContext()
+
+    const handleToAnimeDetail = useCallback(() => {
+        const debounceHandle = debounce(
+            () => {
+                router.push(`/animeDetail/${data.id}` as any)
+            },
+            300,
+            {
+                leading: true,
+                trailing: false,
+            }
+        )
+        debounceHandle()
+        return () => debounceHandle.cancel()
+    }, [data.id, router])
+
+    return (
+        <Pressable
+            onPress={handleToAnimeDetail}
+            onLongPress={() => {
+                Modal.show({
+                    body: <Text className="text-sm">你确定要删除 &quot;{data.name}&quot; 吗?</Text>,
+                    onConfirm: () => handleDeleteAnimeMutation(data.id),
+                })
+            }}
+            delayLongPress={300}
+            style={{ width: (Dimensions.get('window').width - GAP * 4) / 3 }}
+        >
+            <View
+                className={cn(
+                    'overflow-hidden rounded-lg',
+                    `h-${((Dimensions.get('window').width - GAP * 4) / 3) * 1.5}px`
+                )}
+            >
+                <Image
+                    source={data.cover}
+                    placeholder={{ blurhash }}
+                    contentFit="cover"
+                    transition={500}
+                    cachePolicy={'memory-disk'}
+                    style={styles.cover}
+                />
+                <UpdateLabel status={getAnimeStatus(data.totalEpisode, data.firstEpisodeTimestamp)} />
+            </View>
+            <Text numberOfLines={1} className="font-semibold">
+                {data.name}
+            </Text>
+            <Text className="mt-1 text-sm text-gray-500">
+                更新 第
+                {getAiredEpisodeCount(data.totalEpisode, data.firstEpisodeTimestamp)}
+                集
+            </Text>
+        </Pressable>
+    )
+})
+
+function Empty() {
+    const { isLoading } = useMyFollowsContext()
+    const [timestamp, setTimestamp] = useState(dayjs().unix())
+    function refetch() {
+        setTimestamp(dayjs().unix())
+    }
+    return (
+        <ScrollView
+            contentContainerStyle={styles.center}
+            key={timestamp}
+            refreshControl={
+                <RefreshControl
+                    refreshing={isLoading}
+                    onRefresh={refetch}
+                    className="text-theme"
+                    colors={[themeColorPurple]}
+                />
+            }
+        >
+            {isLoading ? <Loading /> : <Text>暂无动漫数据，请先到右上角添加动漫</Text>}
+        </ScrollView>
+    )
+}
+
+interface IUpdateLabelProps {
+    status: typeof EStatus.valueType
+}
+function UpdateLabel({ status }: IUpdateLabelProps) {
+    return (
+        <View
+            className={cn('absolute bottom-0 left-0 h-8 items-center justify-center rounded-tr-lg px-2')}
+            style={{ backgroundColor: EStatus.raw(status).color }}
+        >
+            <Text className="truncate text-white">{EStatus.raw(status).label}</Text>
         </View>
-      </View>
-    </ScrollView>
-  );
+    )
+}
+
+const styles = StyleSheet.create({
+    cover: {
+        width: (Dimensions.get('window').width - GAP * 4) / 3,
+        height: ((Dimensions.get('window').width - GAP * 4) / 3) * 1.5,
+    },
+    center: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        flex: 1,
+    },
+})
+
+interface ISelectItem {
+    item: (typeof EStatusList.items)[number]
+    status: typeof EStatusList.valueType
+    setStatus: React.Dispatch<React.SetStateAction<typeof EStatusList.valueType>>
+}
+
+function SelectItem({ item, status, setStatus }: ISelectItem) {
+    const [bgColor, setBgColor] = useState<ClassValue>('bg-white')
+    return (
+        <TouchableOpacity
+            className={cn('flex-row items-center justify-between px-4 py-3', bgColor)}
+            key={item.key}
+            onPress={() => setStatus(item.value)}
+            activeOpacity={1}
+            onPressIn={() => {
+                if (status === item.value) return
+                setBgColor('bg-gray-300')
+            }}
+            onPressOut={() => {
+                if (status === item.value) return
+                setBgColor('bg-white')
+            }}
+        >
+            <Text className={cn('text-lg', status === item.value && 'text-blue-500')}>{item.label}</Text>
+            {status === item.value && <Icon name="Check" size={22} className="text-blue-500" />}
+        </TouchableOpacity>
+    )
+}
+
+interface ISortItem {
+    item: (typeof ESortList.items)[number]
+    sort: typeof ESortList.valueType
+    setSort: React.Dispatch<React.SetStateAction<typeof ESortList.valueType>>
+}
+function SortItem({ item, sort, setSort }: ISortItem) {
+    const [bgColor, setBgColor] = useState<ClassValue>('bg-white')
+    return (
+        <TouchableOpacity
+            className={cn('flex-row items-center justify-between px-4 py-3', bgColor)}
+            key={item.key}
+            onPress={() => setSort(item.value)}
+            activeOpacity={1}
+            onPressIn={() => {
+                if (sort === item.value) return
+                setBgColor('bg-gray-300')
+            }}
+            onPressOut={() => {
+                if (sort === item.value) return
+                setBgColor('bg-white')
+            }}
+        >
+            <Text className={cn('text-lg', sort === item.value && 'text-blue-500')}>{item.label}</Text>
+            {sort === item.value && <Icon name="Check" size={22} className="text-blue-500" />}
+        </TouchableOpacity>
+    )
 }

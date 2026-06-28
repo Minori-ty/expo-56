@@ -188,3 +188,58 @@ export function getLastEpisodeTimestamp(
 ) {
     return getLastEpisodeTime(firstEpisodeTimestamp, totalEpisode).valueOf()
 }
+
+/**
+ * 获取本周一 00:00:00 的时间戳
+ */
+export function getMondayTimestampInThisWeek(now: number = Date.now()) {
+    return dayjs(now).startOf('isoWeek').valueOf()
+}
+
+/**
+ * 获取本周日 23:59:59 的时间戳
+ */
+export function getSundayTimestampInThisWeek(now: number = Date.now()) {
+    return dayjs(now).endOf('isoWeek').valueOf()
+}
+
+/**
+ * 判断当前周的更新日对应的更新时间是否已经过了
+ *
+ * @param dateStr 格式 'YYYY-MM-DD HH:mm'
+ * @returns true 表示已过，false 表示未过
+ */
+export function isCurrentWeekdayUpdateTimePassed(dateStr: string) {
+    const target = dayjs(dateStr)
+    const now = dayjs()
+    return now.isAfter(target)
+}
+
+/**
+ * 根据当前集数和更新信息反推首集播出时间戳
+ *
+ * 公式：首集 = 本周更新日 - (currentEpisode - 1) * 7 天
+ *
+ * @param currentEpisode 当前已播集数
+ * @param updateTimeHHmm 更新时间（HH:mm 格式）
+ * @param updateWeekday ISO 星期（1-7）
+ * @returns 首集播出时间戳
+ */
+export function getFirstEpisodeTimestamp({
+    currentEpisode,
+    updateTimeHHmm,
+    updateWeekday,
+}: {
+    currentEpisode: number
+    updateTimeHHmm: string
+    updateWeekday: number
+}) {
+    const now = dayjs()
+    const updateDay = now
+        .isoWeekday(updateWeekday)
+        .hour(dayjs(updateTimeHHmm).hour())
+        .minute(dayjs(updateTimeHHmm).minute())
+        .second(0)
+
+    return updateDay.subtract(currentEpisode - 1, 'week').valueOf()
+}

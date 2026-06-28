@@ -1,57 +1,60 @@
-import { Text, View } from '@/tw'
 import { Tabs } from 'expo-router'
+import React from 'react'
+import { ColorValue, Platform } from 'react-native'
 
-export default function TabsLayout() {
+import { HapticTab } from '@/components/HapticTab'
+import Icon from '@/components/ui/Icon'
+import TabBarBackground from '@/components/ui/TabBarBackground'
+import { themeColorPurple } from '@/styles'
+import { cn } from '@/utils/cn'
+
+export default function TabLayout() {
     return (
         <Tabs
             screenOptions={{
+                tabBarActiveTintColor: themeColorPurple,
                 headerShown: false,
-                tabBarActiveTintColor: '#208AEF',
-                tabBarInactiveTintColor: '#8E8E93',
-                tabBarStyle: {
-                    backgroundColor: '#FFFFFF',
-                    borderTopColor: '#E5E5EA',
-                    borderTopWidth: 0.5,
-                },
-                tabBarLabelStyle: {
-                    fontSize: 11,
-                    fontWeight: '500',
-                },
+                tabBarButton: HapticTab as any,
+                tabBarBackground: TabBarBackground,
+                tabBarStyle: Platform.select({
+                    ios: {
+                        position: 'absolute',
+                    },
+                    default: {},
+                }),
             }}
         >
             <Tabs.Screen
                 name="index"
                 options={{
                     title: '更新表',
-                    tabBarIcon: ({ color, size }) => <Text style={{ color, fontSize: size }}>📅</Text>,
+                    tabBarIcon: IndexIcon,
                 }}
             />
             <Tabs.Screen
                 name="my-follows"
                 options={{
                     title: '我的追番',
-                    headerShown: true,
-                    header: () => (
-                        <View className="h-11 bg-white dark:bg-black justify-end items-center pb-2">
-                            <Text className="font-semibold text-gray-900 dark:text-white text-2xl">我的追番</Text>
-                        </View>
-                    ),
-                    tabBarIcon: ({ color, size }) => <Text style={{ color, fontSize: size }}>❤️</Text>,
+                    tabBarIcon: MyFollowsIcon,
                 }}
             />
             <Tabs.Screen
                 name="data-management"
                 options={{
                     title: '数据管理',
-                    headerShown: true,
-                    header: () => (
-                        <View className="h-11 bg-white dark:bg-black justify-end items-center pb-2">
-                            <Text className="font-semibold text-gray-900 dark:text-white text-2xl">数据管理</Text>
-                        </View>
-                    ),
-                    tabBarIcon: ({ color, size }) => <Text style={{ color, fontSize: size }}>📊</Text>,
+                    tabBarIcon: SettingsIcon,
                 }}
             />
         </Tabs>
     )
+}
+
+function IndexIcon({ focused }: { color: ColorValue; focused: boolean }) {
+    return <Icon name="CalendarClock" className={cn('text-gray-500', focused && 'text-theme')} />
+}
+function MyFollowsIcon({ focused }: { color: ColorValue; focused: boolean }) {
+    return <Icon name="Heart" className={cn('text-gray-500', focused && 'text-theme')} />
+}
+function SettingsIcon({ focused }: { color: ColorValue; focused: boolean }) {
+    return <Icon name="Settings" className={cn('text-gray-500', focused && 'text-theme')} />
 }
