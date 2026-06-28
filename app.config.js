@@ -9,6 +9,7 @@ const config = {
         userInterfaceStyle: 'automatic',
         ios: {
             icon: './assets/expo.icon',
+            bundleIdentifier: 'com.minority.expo56',
         },
         android: {
             adaptiveIcon: {
