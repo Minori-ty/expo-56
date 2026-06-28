@@ -82,6 +82,10 @@ jobs:
                              "ndk;27.1.12297006" \
                              "cmake;3.22.1"
 
+            - name: 增加权限
+              run: |
+                  chmod +x android/gradlew
+
             - name: 打包expo应用
               run: |
                   npm run build
