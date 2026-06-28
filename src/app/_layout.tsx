@@ -5,8 +5,9 @@ import { useDrizzleStudio } from 'expo-drizzle-studio-plugin'
 import { useFonts } from 'expo-font'
 import { Stack, ThemeProvider } from 'expo-router'
 import { DefaultTheme } from 'expo-router/react-navigation'
+import { StatusBar } from 'expo-status-bar'
 import { startTransition } from 'react'
-import { StatusBar, Text } from 'react-native'
+import { Text } from 'react-native'
 import ErrorBoundary from 'react-native-error-boundary'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { KeyboardProvider } from 'react-native-keyboard-controller'
@@ -60,7 +61,7 @@ export default function RootLayout() {
                     <GestureHandlerRootView>
                         <BottomSheetModalProvider>
                             <ThemeProvider value={DefaultTheme}>
-                                <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+                                <StatusBar style="dark" />
                                 <Stack>
                                     <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                                     <Stack.Screen name="+not-found" />
