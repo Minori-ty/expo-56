@@ -81,9 +81,14 @@ jobs:
                              "ndk;27.1.12297006" \
                              "cmake;3.22.1"
 
-            # - name: 增加权限  #使用cd android && ./gradlew assembleRelease才加目录权限，否则没有这个目录报错
-            #   run: |
-            #       chmod +x android/gradlew
+            - name: 增加权限
+              run: |
+                  if [ -f "android/gradlew" ]; then
+                    chmod +x android/gradlew
+                    echo "✅ 已为 android/gradlew 添加执行权限"
+                  else
+                    echo "⚠️ 未找到 android/gradlew，跳过权限修改"
+                  fi
 
             - name: 打包expo应用
               run: |
@@ -93,25 +98,28 @@ jobs:
               id: version
               run: echo "VERSION=$(npm pkg get version | tr -d '\"')" >> $GITHUB_ENV
 
-            # - name: 重命名apk #使用cd android && ./gradlew assembleRelease命令才是这个位置
-            #   run: |
-            #       # 直接定位到打包输出目录的 apk 并重命名到根目录
-            #       mv "android/app/build/outputs/apk/release/app-release.apk" "v${{ env.VERSION }}.apk"
-
-            - name: 重命名apk # 文件在根目录
+            - name: 重命名apk
               run: |
-                  # 仅在当前根目录下查找第一个 .apk 文件（不递归子目录）
-                  APK_FILE=$(ls -1 *.apk 2>/dev/null | head -n 1)
+                  # 定义目标文件名
+                  TARGET_NAME="v${{ env.VERSION }}.apk"
 
-                  if [ -z "$APK_FILE" ]; then
-                    echo "❌ 根目录下未找到任何 APK 文件"
-                    ls -la # 打印当前目录文件列表以供排查
-                    exit 1
+                  # 情况1：检查 gradle 打包生成的固定路径是否存在
+                  if [ -f "android/app/build/outputs/apk/release/app-release.apk" ]; then
+                    echo "检测到 gradle 产物，正在重命名..."
+                    mv "android/app/build/outputs/apk/release/app-release.apk" "$TARGET_NAME"
+                  else
+                    # 情况2：在根目录下查找 eas 本地打包生成的 apk
+                    echo "未检测到 gradle 产物，尝试在根目录查找 eas 产物..."
+                    APK_FILE=$(ls -1 *.apk 2>/dev/null | head -n 1)
+                    if [ -z "$APK_FILE" ]; then
+                      echo "❌ 未找到任何 APK 文件"
+                      exit 1
+                    fi
+                    echo "检测到 eas 产物: $APK_FILE，正在重命名..."
+                    mv "$APK_FILE" "$TARGET_NAME"
                   fi
 
-                  echo "✅ 找到 APK 文件: $APK_FILE"
-                  # 重命名
-                  mv "$APK_FILE" "v${{ env.VERSION }}.apk"
+                  echo "✅ 重命名完成: $TARGET_NAME"
 
             - name: 获取当前时间
               run: |
