@@ -9,6 +9,7 @@ import { handleAddAnime } from '@/api'
 import { getAnimeByName } from '@/api/anime'
 import BaseAnimeForm, { IBaseFormRef } from '@/components/BaseForm'
 import { formDefaultValues, type TFormSchema } from '@/components/schema'
+import { CompactHeader } from '@/components/ui/CompactHeader'
 import { EStatus } from '@/enums'
 import { queryClient } from '@/utils/react-query'
 import { getFirstEpisodeTimestamp } from '@/utils/time'
@@ -17,8 +18,14 @@ export default function AddAnime() {
     const navigation = useNavigation()
     useLayoutEffect(() => {
         navigation.setOptions({
-            headerTitle: '添加动漫',
-            headerTitleAlign: 'center',
+            title: '添加动漫',
+            header: ({
+                options,
+                navigation,
+            }: {
+                options: Record<string, unknown>
+                navigation: { goBack: () => void }
+            }) => <CompactHeader options={options} back navigation={navigation} />,
         })
     }, [navigation])
 

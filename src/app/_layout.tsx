@@ -10,6 +10,7 @@ import { startTransition } from 'react'
 import ErrorBoundary from 'react-native-error-boundary'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { KeyboardProvider } from 'react-native-keyboard-controller'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 
 import Error from '@/components/lottie/Error'
@@ -55,24 +56,26 @@ export default function RootLayout() {
     }
 
     return (
-        <KeyboardProvider>
-            <ErrorBoundary FallbackComponent={Error} onError={errorHandler}>
-                <QueryClientProvider client={queryClient}>
-                    <GestureHandlerRootView>
-                        <BottomSheetModalProvider>
-                            <ThemeProvider value={DefaultTheme}>
-                                <StatusBar style="dark" />
-                                <Stack>
-                                    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                                    <Stack.Screen name="+not-found" />
-                                </Stack>
-                                <Toast />
-                                <Modal />
-                            </ThemeProvider>
-                        </BottomSheetModalProvider>
-                    </GestureHandlerRootView>
-                </QueryClientProvider>
-            </ErrorBoundary>
-        </KeyboardProvider>
+        <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+            <KeyboardProvider>
+                <ErrorBoundary FallbackComponent={Error} onError={errorHandler}>
+                    <QueryClientProvider client={queryClient}>
+                        <GestureHandlerRootView>
+                            <BottomSheetModalProvider>
+                                <ThemeProvider value={DefaultTheme}>
+                                    <StatusBar style="dark" animated={true} />
+                                    <Stack>
+                                        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                                        <Stack.Screen name="+not-found" />
+                                    </Stack>
+                                    <Toast />
+                                    <Modal />
+                                </ThemeProvider>
+                            </BottomSheetModalProvider>
+                        </GestureHandlerRootView>
+                    </QueryClientProvider>
+                </ErrorBoundary>
+            </KeyboardProvider>
+        </SafeAreaView>
     )
 }

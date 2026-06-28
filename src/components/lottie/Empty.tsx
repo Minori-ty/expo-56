@@ -1,20 +1,16 @@
 import LottieView from 'lottie-react-native'
-import React from 'react'
-import { StyleSheet } from 'react-native'
 
 import { View } from '@/tw'
 
 export default function Empty() {
     return (
-        <View className="flex-1 items-center justify-center bg-white">
-            <LottieView source={require('@/assets/lottie/empty.json')} autoPlay loop style={styles.lottie} />
+        <View className="w-full flex-1 items-center justify-center bg-white">
+            <LottieView
+                source={require('@/assets/lottie/empty.json')}
+                autoPlay
+                loop
+                style={{ width: 150, height: 150 }}
+            />
         </View>
     )
 }
-
-const styles = StyleSheet.create({
-    lottie: {
-        width: 150, // 设置Lottie动画的宽度
-        height: 150, // 设置Lottie动画的高度
-    },
-})

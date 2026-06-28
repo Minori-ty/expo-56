@@ -13,7 +13,7 @@ import { db } from '@/db'
 import { animeTable } from '@/db/schema'
 import { EStatus, EWeekday } from '@/enums'
 import { blurhash, themeColorPurple } from '@/styles'
-import { RefreshControl, SafeAreaView, ScrollView, Text, TouchableOpacity, View } from '@/tw'
+import { RefreshControl, ScrollView, Text, TouchableOpacity, View } from '@/tw'
 import { Image } from '@/tw/image'
 import type { TAnimeList } from '@/types'
 import {
@@ -78,26 +78,24 @@ export default function Index() {
     }, [updatedAt])
 
     return (
-        <SafeAreaView className="flex-1 bg-white">
-            <scheduleContext.Provider value={{ list, isLoading }}>
-                <TabView
-                    navigationState={{ index, routes }}
-                    renderScene={renderScene}
-                    onIndexChange={setIndex}
-                    overScrollMode={'auto'}
-                    renderTabBar={(props) => (
-                        <TabBar
-                            {...props}
-                            scrollEnabled
-                            activeColor={themeColorPurple}
-                            inactiveColor="#9E9E9E"
-                            tabStyle={styles.tabBarTab}
-                            style={styles.tabBar}
-                        />
-                    )}
-                />
-            </scheduleContext.Provider>
-        </SafeAreaView>
+        <scheduleContext.Provider value={{ list, isLoading }}>
+            <TabView
+                navigationState={{ index, routes }}
+                renderScene={renderScene}
+                onIndexChange={setIndex}
+                overScrollMode={'auto'}
+                renderTabBar={(props) => (
+                    <TabBar
+                        {...props}
+                        scrollEnabled
+                        activeColor={themeColorPurple}
+                        inactiveColor="#9E9E9E"
+                        tabStyle={styles.tabBarTab}
+                        style={styles.tabBar}
+                    />
+                )}
+            />
+        </scheduleContext.Provider>
     )
 }
 

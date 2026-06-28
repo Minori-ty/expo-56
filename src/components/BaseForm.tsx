@@ -159,7 +159,7 @@ const BaseForm = forwardRef<IBaseFormRef, IBaseAnimeFormProps>(function BaseForm
         <KeyboardAwareScrollView
             bottomOffset={100}
             showsVerticalScrollIndicator={false}
-            className="bg-white px-4 pt-5 pb-20"
+            className="bg-white px-4 pb-20"
         >
             <FormItem label="番剧名称" error={fullErrors.name}>
                 <Controller

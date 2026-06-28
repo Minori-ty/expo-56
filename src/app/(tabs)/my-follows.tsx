@@ -4,22 +4,21 @@ import { type ClassValue } from 'clsx'
 import dayjs from 'dayjs'
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
 import { Enum } from 'enum-plus'
-import { useRouter } from 'expo-router'
+import { useRouter, useNavigation } from 'expo-router'
 import { debounce } from 'lodash-es'
-import React, { createContext, memo, useCallback, useContext, useMemo, useRef, useState } from 'react'
+import React, { createContext, memo, useCallback, useContext, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Dimensions, StyleSheet } from 'react-native'
 
 import { handleDeleteAnime } from '@/api'
 import { parseAnimeData } from '@/api/anime'
 import Loading from '@/components/lottie/Loading'
 import { Modal } from '@/components/Modal'
-import PageHeader from '@/components/PageHeader'
 import Icon from '@/components/ui/Icon'
 import { db } from '@/db'
 import { animeTable } from '@/db/schema'
 import { EStatus } from '@/enums'
 import { blurhash, themeColorPurple } from '@/styles'
-import { FlatList, Pressable, RefreshControl, SafeAreaView, ScrollView, Text, TouchableOpacity, View } from '@/tw'
+import { FlatList, Pressable, RefreshControl, ScrollView, Text, TouchableOpacity, View } from '@/tw'
 import { Image } from '@/tw/image'
 import { TAnimeList } from '@/types'
 import { cn } from '@/utils/cn'
@@ -130,24 +129,29 @@ export default function MyFollows() {
         bottomSheetModalRef.current?.close()
     }
 
+    const navigation = useNavigation()
+    useLayoutEffect(() => {
+        navigation.setOptions({
+            headerTitle: '我的追番',
+            headerRight: () => (
+                <View className="flex-row items-center gap-4 pr-2">
+                    <TouchableOpacity onPress={() => router.push('/search')}>
+                        <Icon name="Search" size={24} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => bottomSheetModalRef.current?.present()}>
+                        <Icon name="Settings2" size={24} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={handlePress}>
+                        <Icon name="Plus" size={34} />
+                    </TouchableOpacity>
+                </View>
+            ),
+        })
+    }, [navigation, router, handlePress])
+
     return (
-        <SafeAreaView className="flex-1 bg-white pt-4">
+        <>
             <myFollowsContext.Provider value={{ isLoading, handleDeleteAnimeMutation }}>
-                <PageHeader
-                    title="我的追番"
-                    actions={[
-                        <TouchableOpacity onPress={() => router.push('/search')} key={'search'}>
-                            <Icon name="Search" size={24} />
-                        </TouchableOpacity>,
-                        <TouchableOpacity onPress={() => bottomSheetModalRef.current?.present()} key={'setting'}>
-                            <Icon name="Settings2" size={24} />
-                        </TouchableOpacity>,
-                        <TouchableOpacity onPress={handlePress} key={'plus'}>
-                            <Icon name="Plus" size={34} />
-                        </TouchableOpacity>,
-                    ]}
-                    className="px-6"
-                />
                 {list.length > 0 ? <AnimeContainer list={list} /> : <Empty />}
             </myFollowsContext.Provider>
 
@@ -177,7 +181,7 @@ export default function MyFollows() {
                     </View>
                 </BottomSheetView>
             </BottomSheetModal>
-        </SafeAreaView>
+        </>
     )
 }
 

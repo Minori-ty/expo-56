@@ -12,6 +12,7 @@ import { getAnimeByNameExceptItself, parseAnimeData } from '@/api/anime'
 import BaseAnimeForm, { IBaseFormRef } from '@/components/BaseForm'
 import Loading from '@/components/lottie/Loading'
 import { formDefaultValues, TFormSchema } from '@/components/schema'
+import { CompactHeader } from '@/components/ui/CompactHeader'
 import { db } from '@/db'
 import { animeTable } from '@/db/schema'
 import { EStatus } from '@/enums'
@@ -22,8 +23,14 @@ export default function EditAnime() {
     const navigation = useNavigation()
     useEffect(() => {
         navigation.setOptions({
-            headerTitle: '编辑动漫信息',
-            headerTitleAlign: 'center',
+            title: '编辑动漫信息',
+            header: ({
+                options,
+                navigation,
+            }: {
+                options: Record<string, unknown>
+                navigation: { goBack: () => void }
+            }) => <CompactHeader options={options} back navigation={navigation} />,
         })
     }, [navigation])
 

@@ -17,6 +17,7 @@ import DateTimePicker, {
 import { handleGetAnimeById } from '@/api/anime'
 import { addCalendarByAnimeId, deleteCalendarByAnimeId } from '@/api/calendar'
 import Loading from '@/components/lottie/Loading'
+import { CompactHeader } from '@/components/ui/CompactHeader'
 import Icon from '@/components/ui/Icon'
 import { db } from '@/db'
 import 'dayjs/locale/zh-cn'
@@ -182,8 +183,14 @@ function AnimeDetail() {
 
     useLayoutEffect(() => {
         navigation.setOptions({
-            headerTitle: '动漫详情',
-            headerTitleAlign: 'center',
+            title: '动漫详情',
+            header: ({
+                options,
+                navigation,
+            }: {
+                options: Record<string, unknown>
+                navigation: { goBack: () => void }
+            }) => <CompactHeader options={options} back navigation={navigation} />,
             headerRight: () => {
                 return (
                     <TouchableOpacity onPress={handlePress}>

@@ -86,6 +86,10 @@ const config = {
                 projectId: '382a0b40-4626-431f-b71b-f3b0c09b9f13',
             },
         },
+        androidStatusBar: {
+            backgroundColor: '#ffffff',
+            translucent: true,
+        },
     },
 }
 export default config
