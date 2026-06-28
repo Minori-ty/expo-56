@@ -1,24 +1,14 @@
 import { EStatus } from '@/enums'
 import { getCalendarPermission } from '@/permissions'
-import dayjs from 'dayjs'
 import * as Calendar from 'expo-calendar'
 import { getAnimeStatus, getAiredEpisodeCount, getEpisodeTime } from './time'
 
 /**
- * 删除单个日历事件
+ * 获取可修改的默认日历
  */
-export async function deleteCalendarEvent(eventId: string) {
-    const granted = await getCalendarPermission()
-    if (!granted) return false
-
-    try {
-        await Calendar.deleteEventAsync(eventId)
-        console.log('删除日历成功:', eventId)
-        return true
-    } catch {
-        console.log('删除日历失败:', eventId)
-        return false
-    }
+async function getWritableCalendar() {
+    const calendars = await Calendar.getCalendars()
+    return calendars.find(cal => cal.allowsModifications) ?? null
 }
 
 /**
@@ -30,18 +20,11 @@ export async function deleteCalendarEvents(eventIds: string[]) {
     const granted = await getCalendarPermission()
     if (!granted) return false
 
-    const calendars = await Calendar.getCalendarsAsync()
-    const defaultCalendar = calendars.find(cal => cal.allowsModifications)
-
-    if (!defaultCalendar) {
-        console.log('没有找到可修改的默认日历')
-        return false
-    }
-
     let allSuccess = true
     for (const id of eventIds) {
         try {
-            await Calendar.deleteEventAsync(id)
+            const event = await Calendar.ExpoCalendarEvent.get(id)
+            await event.delete()
             console.log('删除日历成功:', id)
         } catch {
             console.log('删除日历失败:', id)
@@ -74,10 +57,8 @@ export async function addCalendarEvents({
     const granted = await getCalendarPermission()
     if (!granted) return null
 
-    const calendars = await Calendar.getCalendarsAsync()
-    const defaultCalendar = calendars.find(cal => cal.allowsModifications)
-
-    if (!defaultCalendar) {
+    const calendar = await getWritableCalendar()
+    if (!calendar) {
         console.log('没有找到可修改的默认日历')
         return null
     }
@@ -106,7 +87,7 @@ export async function addCalendarEvents({
         const endDate = episodeTime.add(1, 'minute').toDate()
 
         try {
-            const eventId = await Calendar.createEventAsync(defaultCalendar.id, {
+            const event = await calendar.createEvent({
                 title: `${name} 第 ${ep} 集更新!`,
                 startDate,
                 endDate,
@@ -118,7 +99,7 @@ export async function addCalendarEvents({
                     },
                 ],
             })
-            eventIds.push(eventId)
+            eventIds.push(event.id)
             console.log(`创建日历成功: ${name} 第 ${ep} 集`)
         } catch (error) {
             console.log(`创建日历失败: ${name} 第 ${ep} 集`, error)
@@ -128,20 +109,4 @@ export async function addCalendarEvents({
     if (eventIds.length === 0) return null
 
     return eventIds
-}
-
-/**
- * 查找日历事件是否存在
- */
-export async function getCalendarEventByEventId(eventId: string) {
-    const granted = await getCalendarPermission()
-    if (!granted) return false
-
-    try {
-        await Calendar.getEventAsync(eventId)
-        return true
-    } catch {
-        console.log('没有找到日历事件')
-        return false
-    }
 }

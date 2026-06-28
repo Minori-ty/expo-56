@@ -38,28 +38,6 @@ export async function addAnime(tx: TTx, data: DeepExpand<IAddAnimeData>) {
     return parseAnimeData(result[0])
 }
 
-export async function addAnimeList(tx: TTx, dataList: IAddAnimeData[]) {
-    const result = await tx.insert(animeTable).values(dataList).returning()
-    if (result.length === 0) {
-        console.log('添加动漫失败')
-        return []
-    }
-    return result.map(item => parseAnimeData(item))
-}
-
-/**
- * 根据id删除动漫
- */
-export async function deleteAnimeById(tx: TTx, id: number) {
-    const result = await getAnimeById(tx, id)
-    if (!result) {
-        console.log('对应的动漫不存在，就不删除动漫了')
-        return
-    }
-    await tx.delete(animeTable).where(eq(animeTable.id, id)).returning()
-    console.log('删除动漫成功')
-}
-
 export interface IUpdateAnimeByAnimeId extends IAddAnimeData {
     animeId: number
 }

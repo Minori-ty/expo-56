@@ -11,33 +11,9 @@ import { forwardRef, PropsWithChildren, useEffect, useImperativeHandle, useMemo,
 import { Controller, FieldError, FieldErrors, SubmitHandler, useForm } from 'react-hook-form'
 import { Button, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller'
-import type { DeepExpand } from 'types-tools'
 import { RadioGroup } from './RadioGroup'
 import { formSchema, TFormInput, TFormOutput, TFormSchema } from './schema'
 import Icon from './ui/Icon'
-
-interface IBaseFormData {
-    name: string
-    updateTimeHHmm: string
-    totalEpisode: number
-    cover: string
-}
-
-interface ISerializingExtera {
-    status: typeof EStatus.serializing
-    updateWeekday: typeof EWeekday.valueType
-    currentEpisode: number
-}
-export type TSerializingForm = DeepExpand<IBaseFormData> & DeepExpand<ISerializingExtera>
-
-type ICompletedExtera = {
-    status: typeof EStatus.completed | typeof EStatus.toBeUpdated
-    firstEpisodeYYYYMMDDHHmm: string
-}
-
-export type TCompletedForm = DeepExpand<IBaseFormData> & DeepExpand<ICompletedExtera>
-
-export type TFormData = DeepExpand<TSerializingForm> | DeepExpand<TCompletedForm>
 
 export interface IBaseAnimeFormProps {
     onSubmit: SubmitHandler<TFormSchema>

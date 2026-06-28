@@ -2,18 +2,16 @@ import Error from '@/components/lottie/Error'
 import Loading from '@/components/lottie/Loading'
 import Modal from '@/components/Modal/Modal'
 import { db, expo } from '@/db'
-import migrations from '../../drizzle/migrations'
 import { useAppStateRefresh } from '@/hooks/useAppStateRefresh'
 import { getCalendarPermission } from '@/permissions'
-import '../global.css'
 import { queryClient } from '@/utils/react-query'
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet'
-import { DefaultTheme, ThemeProvider } from 'expo-router/react-navigation'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator'
 import { useDrizzleStudio } from 'expo-drizzle-studio-plugin'
 import { useFonts } from 'expo-font'
 import { Stack } from 'expo-router'
+import { DefaultTheme, ThemeProvider } from 'expo-router/react-navigation'
 import { startTransition } from 'react'
 import { Text } from 'react-native'
 import ErrorBoundary from 'react-native-error-boundary'
@@ -21,11 +19,13 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { KeyboardProvider } from 'react-native-keyboard-controller'
 import 'react-native-reanimated'
 import Toast from 'react-native-toast-message'
+import migrations from '../../drizzle/migrations'
+import '../global.css'
 
 export default function RootLayout() {
     const { success, error } = useMigrations(db, migrations)
     const [loaded] = useFonts({
-        SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+        SpaceMono: require('../../assets/fonts/SpaceMono-Regular.ttf'),
     })
     useDrizzleStudio(expo)
 

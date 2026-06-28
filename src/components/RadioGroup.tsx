@@ -18,7 +18,7 @@ export interface RadioItemProps<T extends string | number> {
     className?: ClassValue
 }
 
-export function RadioItem<T extends string | number>(props: RadioItemProps<T>) {
+function RadioItem<T extends string | number>(props: RadioItemProps<T>) {
     const { label, value, selected, onPress, size = 20, color = '#fb7299' } = props
     return (
         <TouchableOpacity
