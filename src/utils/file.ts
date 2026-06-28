@@ -1,5 +1,5 @@
 import { animeTable } from '@/db/schema'
-import { Directory, File, Paths } from 'expo-file-system'
+import { File, Paths } from 'expo-file-system'
 import type { DeepExpand } from 'types-tools'
 
 /** 应用文档目录 */
@@ -18,7 +18,7 @@ export async function exportJsonFile(data: TJsonFileData, filename: string) {
 
     const file = new File(DIR, filename)
     const content = JSON.stringify(data, null, 2)
-    ;(file as any).write(content)
+    file.write(content)
 
     return true
 }
@@ -36,7 +36,7 @@ export async function importJsonFile(): Promise<TJsonFileData> {
     }
 
     const file = result.result
-    const content = await (file as any).text()
+    const content = await file.text()
 
     const data = JSON.parse(content)
     return data
@@ -54,7 +54,7 @@ export async function scanJsonFile(): Promise<{ name: string; size: number }[]> 
         if (item instanceof File && item.name.endsWith('.json')) {
             jsonFiles.push({
                 name: item.name,
-                size: (item as any).size ?? 0,
+                size: item.size ?? 0,
             })
         }
     }
@@ -71,7 +71,7 @@ export async function deleteJsonFile(fileName: string): Promise<boolean> {
     }
 
     const file = new File(DIR, fileName)
-    ;(file as any).delete()
+    file.delete()
 
     return true
 }

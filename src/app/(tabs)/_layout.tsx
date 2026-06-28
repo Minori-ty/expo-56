@@ -1,5 +1,4 @@
 import { Tabs } from 'expo-router'
-import React from 'react'
 import { ColorValue, Platform } from 'react-native'
 
 import { HapticTab } from '@/components/HapticTab'
@@ -14,7 +13,7 @@ export default function TabLayout() {
             screenOptions={{
                 tabBarActiveTintColor: themeColorPurple,
                 headerShown: false,
-                tabBarButton: HapticTab as any,
+                tabBarButton: HapticTab,
                 tabBarBackground: TabBarBackground,
                 tabBarStyle: Platform.select({
                     ios: {

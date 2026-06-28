@@ -9,8 +9,8 @@ import type { TAnimeList } from '@/types'
 import {
     getAiredEpisodeCount,
     getAnimeStatus,
-    getSundayTimestampInThisWeek,
     getMondayTimestampInThisWeek,
+    getSundayTimestampInThisWeek,
     isCurrentWeekdayUpdateTimePassed,
 } from '@/utils/time'
 import dayjs from 'dayjs'
@@ -18,7 +18,7 @@ import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
 import { Image } from 'expo-image'
 import { router } from 'expo-router'
 import { debounce } from 'lodash-es'
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { SceneMap, TabBar, TabView } from 'react-native-tab-view'
@@ -37,7 +37,7 @@ const useSchedule = () => {
 }
 
 // enum-plus v3: toMenu() removed, iterate items directly
-const routes = EWeekday.items.map(item => {
+const routes = EWeekday.items.map((item) => {
     return {
         key: item.key,
         title: item.label,
@@ -59,8 +59,8 @@ export default function Index() {
     const { data, updatedAt } = useLiveQuery(db.select().from(animeTable))
     const list = useMemo(() => {
         return data
-            .map(item => parseAnimeData(item))
-            .filter(item => {
+            .map((item) => parseAnimeData(item))
+            .filter((item) => {
                 const status = getAnimeStatus(item.totalEpisode, item.firstEpisodeTimestamp)
                 if (status === EStatus.serializing) {
                     return true
@@ -87,7 +87,7 @@ export default function Index() {
                     renderScene={renderScene}
                     onIndexChange={setIndex}
                     overScrollMode={'auto'}
-                    renderTabBar={props => (
+                    renderTabBar={(props) => (
                         <TabBar
                             {...props}
                             scrollEnabled
@@ -106,7 +106,7 @@ export default function Index() {
 function TabViewComponent({ updateWeekday }: { updateWeekday: typeof EWeekday.valueType }) {
     const { list, isLoading } = useSchedule()
     const [timestamp, setTimestamp] = useState(dayjs().unix())
-    const animeList = list.filter(item => dayjs(item.firstEpisodeTimestamp).isoWeekday() === updateWeekday)
+    const animeList = list.filter((item) => dayjs(item.firstEpisodeTimestamp).isoWeekday() === updateWeekday)
 
     function refetch() {
         setTimestamp(dayjs().unix())
@@ -131,7 +131,7 @@ function TabViewComponent({ updateWeekday }: { updateWeekday: typeof EWeekday.va
     }
 
     const mapSchedule: Record<string, TAnimeList> = {}
-    animeList.forEach(item => {
+    animeList.forEach((item) => {
         const HHmm = dayjs(item.firstEpisodeTimestamp).format('HH:mm')
         if (mapSchedule[HHmm]) {
             mapSchedule[HHmm].push(item)
@@ -175,13 +175,13 @@ function AnimeCardItem({ time, animeList }: IAnimeCardItemProps) {
     const handleToAnimeDetail = useCallback((id: number) => {
         const debounceHandler = debounce(
             () => {
-                router.push(`/animeDetail/${id}` as any)
+                router.push(`/animeDetail/${id}`)
             },
             300,
             {
                 leading: true,
                 trailing: false,
-            }
+            },
         )
         debounceHandler()
         return () => debounceHandler.cancel()
@@ -192,7 +192,7 @@ function AnimeCardItem({ time, animeList }: IAnimeCardItemProps) {
                 <Text className="font-medium">{time}</Text>
             </View>
             <View className="size-full">
-                {animeList.map(item => {
+                {animeList.map((item) => {
                     return (
                         <TouchableOpacity
                             key={item.id}

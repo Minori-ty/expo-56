@@ -15,7 +15,7 @@ const statusSchema = z.discriminatedUnion('status', [
             z.literal(EWeekday.sunday),
             z.literal(''),
         ]),
-        currentEpisode: z.coerce.number(),
+        currentEpisode: z.number(),
         updateTimeHHmm: z.string().regex(/(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]/, '请输入正确的时间格式HH:mm'),
     }),
     z.object({
@@ -31,7 +31,7 @@ const statusSchema = z.discriminatedUnion('status', [
 const formSchema = z
     .object({
         name: z.string().min(1, '请输入番剧名称').max(20, '番剧名称长度不能超过20个字符'),
-        totalEpisode: z.coerce.number().min(1, '总集数至少为1'),
+        totalEpisode: z.number().min(1, '总集数至少为1'),
         cover: z.string().url('请输入有效的URL'),
     })
     .and(statusSchema)
@@ -132,7 +132,31 @@ const formSchema = z
         }
     })
 
-type TFormSchema = z.infer<typeof formSchema>
+/**
+ * 表单类型 — 手动定义而非使用 z.infer，因 z.preprocess 在 discriminatedUnion
+ * 中无法被 TypeScript 正确推断（会得到 unknown）。
+ * @see https://github.com/colinhacks/zod/issues/2280
+ */
+type TFormSchema = {
+    name: string
+    totalEpisode: number
+    cover: string
+} & (
+    | {
+          status: typeof EStatus.serializing
+          updateWeekday: typeof EWeekday.valueType | ''
+          currentEpisode: number
+          updateTimeHHmm: string
+      }
+    | {
+          status: typeof EStatus.completed
+          lastEpisodeYYYYMMDDHHmm: string
+      }
+    | {
+          status: typeof EStatus.toBeUpdated
+          firstEpisodeYYYYMMDDHHmm: string
+      }
+)
 
 const formDefaultValues: TFormSchema = {
     name: '',
@@ -144,4 +168,7 @@ const formDefaultValues: TFormSchema = {
     updateWeekday: '',
 }
 
-export { formDefaultValues, formSchema, TFormSchema }
+type TFormInput = z.input<typeof formSchema>
+type TFormOutput = z.output<typeof formSchema>
+
+export { formDefaultValues, formSchema, TFormInput, TFormOutput, TFormSchema }

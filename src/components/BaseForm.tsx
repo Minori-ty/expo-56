@@ -7,13 +7,13 @@ import { useUpdateEffect } from 'ahooks'
 import dayjs from 'dayjs'
 import { notificationAsync, NotificationFeedbackType } from 'expo-haptics'
 import { useNavigation } from 'expo-router'
-import React, { forwardRef, PropsWithChildren, useEffect, useImperativeHandle, useMemo, useRef } from 'react'
+import { forwardRef, PropsWithChildren, useEffect, useImperativeHandle, useMemo, useRef } from 'react'
 import { Controller, FieldError, FieldErrors, SubmitHandler, useForm } from 'react-hook-form'
 import { Button, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller'
 import type { DeepExpand } from 'types-tools'
 import { RadioGroup } from './RadioGroup'
-import { formSchema, TFormSchema } from './schema'
+import { formSchema, TFormInput, TFormOutput, TFormSchema } from './schema'
 import Icon from './ui/Icon'
 
 interface IBaseFormData {
@@ -71,9 +71,9 @@ const BaseForm = forwardRef<IBaseFormRef, IBaseAnimeFormProps>(function BaseForm
         trigger,
         setValue,
         setError,
-    } = useForm<TFormSchema>({
+    } = useForm<TFormInput, any, TFormOutput>({
         mode: 'all',
-        resolver: zodResolver(formSchema) as any,
+        resolver: zodResolver(formSchema),
         defaultValues: formData,
     })
 
@@ -130,7 +130,7 @@ const BaseForm = forwardRef<IBaseFormRef, IBaseAnimeFormProps>(function BaseForm
         }
     }, [totalEpisode, currentEpisode, firstEpisodeYYYYMMDDHHmm, lastEpisodeYYYYMMDDHHmm, status])
 
-    const onSubmit: SubmitHandler<TFormSchema> = async data => {
+    const onSubmit: SubmitHandler<TFormSchema> = async (data) => {
         submit(data)
     }
 
@@ -194,7 +194,7 @@ const BaseForm = forwardRef<IBaseFormRef, IBaseAnimeFormProps>(function BaseForm
                                 {...field}
                                 className={cn(
                                     'h-10 rounded-md border border-[#ccc] p-0 pl-2 pt-1 text-start text-base leading-7',
-                                    fullErrors && fullErrors.name && 'border-red-500'
+                                    fullErrors && fullErrors.name && 'border-red-500',
                                 )}
                                 placeholder="请输入番剧名称"
                                 onChangeText={field.onChange}
@@ -231,7 +231,7 @@ const BaseForm = forwardRef<IBaseFormRef, IBaseAnimeFormProps>(function BaseForm
                                 activeOpacity={0.5}
                                 className={cn(
                                     'h-10 flex-row items-center gap-3 rounded-md border border-[#ccc] pl-3',
-                                    fullErrors.firstEpisodeYYYYMMDDHHmm && 'border-red-500'
+                                    fullErrors.firstEpisodeYYYYMMDDHHmm && 'border-red-500',
                                 )}
                                 onPress={() => firstEpisodeRef.current?.open()}
                             >
@@ -285,7 +285,7 @@ const BaseForm = forwardRef<IBaseFormRef, IBaseAnimeFormProps>(function BaseForm
                                 activeOpacity={0.5}
                                 className={cn(
                                     'h-10 flex-row items-center gap-3 rounded-md border border-[#ccc] pl-3',
-                                    fullErrors.lastEpisodeYYYYMMDDHHmm && 'border-red-500'
+                                    fullErrors.lastEpisodeYYYYMMDDHHmm && 'border-red-500',
                                 )}
                                 onPress={() => lastEpisodeRef.current?.open()}
                             >
@@ -309,12 +309,12 @@ const BaseForm = forwardRef<IBaseFormRef, IBaseAnimeFormProps>(function BaseForm
                                 <View
                                     className={cn(
                                         'rounded-md border border-[#ccc]',
-                                        fullErrors.updateWeekday && 'border-red-500'
+                                        fullErrors.updateWeekday && 'border-red-500',
                                     )}
                                 >
                                     <Picker {...field} selectedValue={field.value} onValueChange={field.onChange}>
                                         <Picker.Item label="请选择" value="" />
-                                        {EWeekday.items.map(item => {
+                                        {EWeekday.items.map((item) => {
                                             return <Picker.Item key={item.key} label={item.label} value={item.key} />
                                         })}
                                     </Picker>
@@ -334,7 +334,7 @@ const BaseForm = forwardRef<IBaseFormRef, IBaseAnimeFormProps>(function BaseForm
                                 activeOpacity={0.5}
                                 className={cn(
                                     'h-10 flex-row items-center rounded-md border border-[#ccc] pl-3',
-                                    fullErrors.updateTimeHHmm && 'border-red-500'
+                                    fullErrors.updateTimeHHmm && 'border-red-500',
                                 )}
                                 onPress={() => timepickerRef.current?.open()}
                             >
@@ -355,10 +355,10 @@ const BaseForm = forwardRef<IBaseFormRef, IBaseAnimeFormProps>(function BaseForm
                                 {...field}
                                 className={cn(
                                     'h-10 rounded-md border border-[#ccc] p-0 pl-2 pt-1 text-start text-base leading-7',
-                                    fullErrors.currentEpisode && 'border-red-500'
+                                    fullErrors.currentEpisode && 'border-red-500',
                                 )}
                                 placeholder="请输入当前更新集数"
-                                onChangeText={text => {
+                                onChangeText={(text) => {
                                     field.onChange(removeLeadingZeros(text.replace(/[^0-9]/g, '')))
                                 }}
                                 keyboardType="numeric"
@@ -377,10 +377,10 @@ const BaseForm = forwardRef<IBaseFormRef, IBaseAnimeFormProps>(function BaseForm
                             {...field}
                             className={cn(
                                 'h-10 rounded-md border border-[#ccc] p-0 pl-2 pt-1 text-start text-base leading-7',
-                                fullErrors.totalEpisode && 'border-red-500'
+                                fullErrors.totalEpisode && 'border-red-500',
                             )}
                             placeholder="请输入总集数"
-                            onChangeText={text => {
+                            onChangeText={(text) => {
                                 field.onChange(removeLeadingZeros(text.replace(/[^0-9]/g, '')))
                             }}
                             keyboardType="numeric"
@@ -398,7 +398,7 @@ const BaseForm = forwardRef<IBaseFormRef, IBaseAnimeFormProps>(function BaseForm
                             {...field}
                             className={cn(
                                 'h-10 rounded-md border border-[#ccc] p-0 pl-2 pt-1 text-start text-base leading-7',
-                                fullErrors.cover && 'border-red-500'
+                                fullErrors.cover && 'border-red-500',
                             )}
                             placeholder="请输入封面图片URL"
                             onChangeText={field.onChange}
@@ -418,7 +418,7 @@ const BaseForm = forwardRef<IBaseFormRef, IBaseAnimeFormProps>(function BaseForm
                         <DatePicker
                             ref={firstEpisodeRef}
                             date={field.value}
-                            onChange={date => {
+                            onChange={(date) => {
                                 field.onChange(dayjs(date).format('YYYY-MM-DD HH:mm'))
                             }}
                         />
@@ -433,7 +433,7 @@ const BaseForm = forwardRef<IBaseFormRef, IBaseAnimeFormProps>(function BaseForm
                         <DatePicker
                             ref={lastEpisodeRef}
                             date={field.value}
-                            onChange={date => {
+                            onChange={(date) => {
                                 field.onChange(dayjs(date).format('YYYY-MM-DD HH:mm'))
                             }}
                         />
@@ -448,7 +448,7 @@ const BaseForm = forwardRef<IBaseFormRef, IBaseAnimeFormProps>(function BaseForm
                         ref={timepickerRef}
                         date={field.value}
                         hideHeader={true}
-                        onChange={date => {
+                        onChange={(date) => {
                             field.onChange(dayjs(date).format('YYYY-MM-DD HH:mm'))
                         }}
                     />

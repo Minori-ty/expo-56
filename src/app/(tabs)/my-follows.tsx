@@ -88,8 +88,8 @@ export default function MyFollows() {
     const { data, updatedAt } = useLiveQuery(db.select().from(animeTable))
     const list = useMemo(() => {
         return data
-            .map(item => parseAnimeData(item))
-            .filter(item => {
+            .map((item) => parseAnimeData(item))
+            .filter((item) => {
                 if (status === EStatusList.all) {
                     return true
                 }
@@ -121,13 +121,13 @@ export default function MyFollows() {
     const handlePress = useCallback(() => {
         const debouncePush = debounce(
             () => {
-                router.push('/addAnime' as any)
+                router.push('/addAnime')
             },
             300,
             {
                 leading: true,
                 trailing: false,
-            }
+            },
         )
 
         debouncePush()
@@ -145,7 +145,7 @@ export default function MyFollows() {
                 <PageHeader
                     title="我的追番"
                     actions={[
-                        <TouchableOpacity onPress={() => router.push('/search' as any)} key={'search'}>
+                        <TouchableOpacity onPress={() => router.push('/search')} key={'search'}>
                             <Icon name="Search" size={24} />
                         </TouchableOpacity>,
                         <TouchableOpacity onPress={() => bottomSheetModalRef.current?.present()} key={'setting'}>
@@ -174,13 +174,13 @@ export default function MyFollows() {
                 <BottomSheetView className="h-[400px] flex-1 bg-gray-100 px-5 pt-5">
                     <Text className="my-2 pl-4 text-sm font-medium text-gray-500">筛选状态</Text>
                     <View className="overflow-hidden rounded-2xl bg-white">
-                        {EStatusList.items.map(item => {
+                        {EStatusList.items.map((item) => {
                             return <SelectItem item={item} status={status} setStatus={setStatus} key={item.key} />
                         })}
                     </View>
                     <Text className="my-2 pl-4 text-sm font-medium text-gray-500">排序</Text>
                     <View className="overflow-hidden rounded-2xl bg-white">
-                        {ESortList.items.map(item => {
+                        {ESortList.items.map((item) => {
                             return <SortItem item={item} sort={sort} setSort={setSort} key={item.key} />
                         })}
                     </View>
@@ -204,7 +204,7 @@ const AnimeContainer = memo(function AnimeContainer({ list }: IAnimeContainerPro
     return (
         <FlatList
             data={list}
-            keyExtractor={item => item.id.toString()}
+            keyExtractor={(item) => item.id.toString()}
             numColumns={3}
             columnWrapperStyle={{ gap: GAP }}
             showsHorizontalScrollIndicator={false}
@@ -234,13 +234,13 @@ const AnimeContainerItem = memo(function AnimeContainerItem({ data }: IAnimeCont
     const handleToAnimeDetail = useCallback(() => {
         const debounceHandle = debounce(
             () => {
-                router.push(`/animeDetail/${data.id}` as any)
+                router.push(`/animeDetail/${data.id}`)
             },
             300,
             {
                 leading: true,
                 trailing: false,
-            }
+            },
         )
         debounceHandle()
         return () => debounceHandle.cancel()
@@ -261,7 +261,7 @@ const AnimeContainerItem = memo(function AnimeContainerItem({ data }: IAnimeCont
             <View
                 className={cn(
                     'overflow-hidden rounded-lg',
-                    `h-${((Dimensions.get('window').width - GAP * 4) / 3) * 1.5}px`
+                    `h-${((Dimensions.get('window').width - GAP * 4) / 3) * 1.5}px`,
                 )}
             >
                 <Image
@@ -278,9 +278,7 @@ const AnimeContainerItem = memo(function AnimeContainerItem({ data }: IAnimeCont
                 {data.name}
             </Text>
             <Text className="mt-1 text-sm text-gray-500">
-                更新 第
-                {getAiredEpisodeCount(data.totalEpisode, data.firstEpisodeTimestamp)}
-                集
+                更新 第{getAiredEpisodeCount(data.totalEpisode, data.firstEpisodeTimestamp)}集
             </Text>
         </Pressable>
     )

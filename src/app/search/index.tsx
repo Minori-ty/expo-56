@@ -3,11 +3,11 @@ import Icon from '@/components/ui/Icon'
 import { EStatus } from '@/enums'
 import { blurhash } from '@/styles'
 import { cn } from '@/utils/cn'
-import { getAiredEpisodeCount, getAnimeStatus, getLastEpisodeTimestamp } from '@/utils/time'
+import { getAiredEpisodeCount, getAnimeStatus } from '@/utils/time'
 import { Enum } from 'enum-plus'
 import { Image } from 'expo-image'
 import { router, useNavigation } from 'expo-router'
-import React, { useLayoutEffect, useState } from 'react'
+import { useLayoutEffect, useState } from 'react'
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -63,7 +63,7 @@ export default function Search() {
                     </TouchableOpacity>
                 </View>
 
-                {list.map(item => {
+                {list.map((item) => {
                     // DB stores seconds; convert to ms for time.ts
                     const firstMs = item.firstEpisodeTimestamp * 1000
                     const totalEpisode = item.totalEpisode
@@ -73,7 +73,7 @@ export default function Search() {
                         <TouchableOpacity
                             key={item.id}
                             className="mb-2 flex-row"
-                            onPress={() => router.push(`/animeDetail/${item.id}` as any)}
+                            onPress={() => router.push(`/animeDetail/${item.id}`)}
                             activeOpacity={0.5}
                         >
                             <Image
@@ -94,9 +94,7 @@ export default function Search() {
                                 </Text>
                                 <Text className="text-sm">
                                     更新进度:
-                                    <Text>
-                                        {` ${getAiredEpisodeCount(totalEpisode, firstMs)}/${totalEpisode}`}
-                                    </Text>
+                                    <Text>{` ${getAiredEpisodeCount(totalEpisode, firstMs)}/${totalEpisode}`}</Text>
                                 </Text>
                             </View>
                         </TouchableOpacity>

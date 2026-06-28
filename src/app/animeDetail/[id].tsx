@@ -18,7 +18,7 @@ import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
 import { Image } from 'expo-image'
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router'
 import { debounce } from 'lodash-es'
-import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import DateTimePicker, {
     type CalendarComponents,
@@ -69,7 +69,7 @@ function AnimeDetail() {
         db
             .select()
             .from(animeTable)
-            .where(eq(animeTable.id, Number(id)))
+            .where(eq(animeTable.id, Number(id))),
     )
 
     const isCalendarLoading = useMemo(() => {
@@ -84,7 +84,7 @@ function AnimeDetail() {
     }, [data])
 
     const [firstEpisodeYYYYMMDDHHmm, setFirstEpisodeYYYYMMDDHHmm] = useState<DateType>(
-        anime.firstEpisodeTimestamp && dayjs().format('YYYY-MM-DD HH:mm')
+        anime.firstEpisodeTimestamp && dayjs().format('YYYY-MM-DD HH:mm'),
     )
     useEffect(() => {
         setFirstEpisodeYYYYMMDDHHmm(dayjs(anime.firstEpisodeTimestamp))
@@ -93,13 +93,13 @@ function AnimeDetail() {
     const handlePress = useCallback(() => {
         const debounceHandler = debounce(
             () => {
-                router.push(`/editAnime/${anime.id}` as any)
+                router.push(`/editAnime/${anime.id}`)
             },
             300,
             {
                 leading: true,
                 trailing: false,
-            }
+            },
         )
 
         debounceHandler()
@@ -119,7 +119,7 @@ function AnimeDetail() {
                     queryKey: ['settings-calendar'],
                 })
             },
-            onError: err => {
+            onError: (err) => {
                 alert(`创建日历失败 ${err}`)
             },
         })
@@ -133,7 +133,7 @@ function AnimeDetail() {
             {
                 leading: true,
                 trailing: false,
-            }
+            },
         )
 
         debounceHandler()
@@ -165,7 +165,7 @@ function AnimeDetail() {
             {
                 leading: true,
                 trailing: false,
-            }
+            },
         )
 
         debounceHandler()
@@ -270,20 +270,19 @@ function AnimeDetail() {
                                     className={cn(
                                         `absolute -right-2 -top-2 rounded-full px-2 py-1`,
                                         mapColor[getAnimeStatus(anime.totalEpisode, anime.firstEpisodeTimestamp)]
-                                            .bgColor
+                                            .bgColor,
                                     )}
                                 >
                                     <Text
                                         className={cn(
                                             `text-xs font-medium`,
                                             mapColor[getAnimeStatus(anime.totalEpisode, anime.firstEpisodeTimestamp)]
-                                                .textColor
+                                                .textColor,
                                         )}
                                     >
                                         {
-                                            EStatus.raw(
-                                                getAnimeStatus(anime.totalEpisode, anime.firstEpisodeTimestamp)
-                                            ).label
+                                            EStatus.raw(getAnimeStatus(anime.totalEpisode, anime.firstEpisodeTimestamp))
+                                                .label
                                         }
                                     </Text>
                                 </View>
@@ -385,7 +384,7 @@ function AnimeDetail() {
                             <TouchableOpacity
                                 className={cn(
                                     'mt-3 flex-row items-center justify-center rounded-xl bg-green-500 py-4',
-                                    isCalendarLoading && 'bg-gray-400'
+                                    isCalendarLoading && 'bg-gray-400',
                                 )}
                                 activeOpacity={0.5}
                                 onPress={handleSubscribe}
@@ -402,7 +401,7 @@ function AnimeDetail() {
                             <TouchableOpacity
                                 className={cn(
                                     'mt-3 flex-row items-center justify-center rounded-xl bg-red-500 py-4',
-                                    isCalendarLoading && 'bg-gray-400'
+                                    isCalendarLoading && 'bg-gray-400',
                                 )}
                                 activeOpacity={0.5}
                                 onPress={handleUnsubscribe}
@@ -419,7 +418,7 @@ function AnimeDetail() {
                             styles={defaultStyles}
                             mode="single"
                             date={firstEpisodeYYYYMMDDHHmm}
-                            onChange={day => {
+                            onChange={(day) => {
                                 setFirstEpisodeYYYYMMDDHHmm(day.date)
                             }}
                             firstDayOfWeek={1}
@@ -466,7 +465,7 @@ function Day(day: CalendarDay) {
             className={cn(
                 'relative w-full flex-1 items-center rounded border border-transparent bg-white',
                 isSelected && 'border border-blue-500',
-                isCurrentMonth && isSelected && isToday && 'bg-blue-500'
+                isCurrentMonth && isSelected && isToday && 'bg-blue-500',
             )}
         >
             <Text
@@ -474,7 +473,7 @@ function Day(day: CalendarDay) {
                     'font-archivo text-foreground top-2',
                     isSelected && isToday && 'text-white',
                     !isCurrentMonth && 'text-gray-200',
-                    isCurrentMonth && !isSelected && isToday && 'text-blue-500'
+                    isCurrentMonth && !isSelected && isToday && 'text-blue-500',
                 )}
             >
                 {day.text}
@@ -486,7 +485,7 @@ function Day(day: CalendarDay) {
                             'font-archivo text-foreground text-center',
                             !isCurrentMonth && 'text-gray-200',
                             isSelected && isToday && 'text-white',
-                            isCurrentMonth && episode && 'text-orange-500'
+                            isCurrentMonth && episode && 'text-orange-500',
                         )}
                         style={styles.episodeText}
                     >
