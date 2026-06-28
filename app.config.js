@@ -7,8 +7,10 @@ const config = {
         icon: './assets/images/icon.png',
         scheme: 'expo56',
         userInterfaceStyle: 'automatic',
+        newArchEnabled: true,
         ios: {
             icon: './assets/expo.icon',
+            supportsTablet: true,
             bundleIdentifier: 'com.minority.expo56',
         },
         android: {
@@ -23,6 +25,7 @@ const config = {
             package: 'com.minority.expo56',
         },
         web: {
+            bundler: 'metro',
             output: 'static',
             favicon: './assets/images/favicon.png',
         },
