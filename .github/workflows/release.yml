@@ -55,9 +55,8 @@ jobs:
                       caches
                       wrapper
                       build-cache
-                  build-scan-publish:
-                      true
-                      # 自动同意服务条款 (注意这里是 of-use)
+                  build-scan-publish: true
+                  # 自动同意服务条款 (注意这里是 of-use)
                   build-scan-terms-of-use-url: 'https://gradle.com/help/legal-terms-of-use'
                   build-scan-terms-of-use-agree: 'yes'
 
@@ -96,10 +95,8 @@ jobs:
 
             - name: 重命名apk
               run: |
-                  # 获取第一个 apk 文件名
-                  APK_FILE=$(ls *.apk | head -n 1)
-                  # 重命名
-                  mv "$APK_FILE" "v${{ env.VERSION }}.apk"
+                  # 直接定位到打包输出目录的 apk 并重命名到根目录
+                  mv "android/app/build/outputs/apk/release/app-release.apk" "v${{ env.VERSION }}.apk"
 
             - name: 获取当前时间
               run: |

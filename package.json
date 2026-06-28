@@ -10,7 +10,7 @@
         "web": "expo start --web",
         "lint": "expo lint",
         "test": "vitest run",
-        "build": "eas build --platform android --local",
+        "build": "cd android && ./gradlew assembleRelease",
         "db": "npx drizzle-kit generate",
         "check": "npx tsc --noEmit"
     },
