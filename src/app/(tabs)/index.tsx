@@ -92,6 +92,7 @@ export default function Index() {
                         inactiveColor="#9E9E9E"
                         tabStyle={styles.tabBarTab}
                         style={styles.tabBar}
+                        options={Object.fromEntries(routes.map((r) => [r.key, { labelStyle: styles.tabBarLabel }]))}
                     />
                 )}
             />
@@ -253,6 +254,10 @@ const styles = StyleSheet.create({
     tabBarTab: {
         width: 80,
         backgroundColor: '#fff',
+    },
+    tabBarLabel: {
+        fontWeight: '900',
+        fontSize: 16,
     },
     cover: {
         width: 70,

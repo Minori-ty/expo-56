@@ -322,6 +322,7 @@ function Empty() {
                     colors={[themeColorPurple]}
                 />
             }
+            className="bg-white"
         >
             {isLoading ? <Loading /> : <Text>暂无动漫数据，请先到右上角添加动漫</Text>}
         </ScrollView>

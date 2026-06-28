@@ -76,11 +76,18 @@ const config = {
                     },
                 },
             ],
+            'expo-sharing',
             [
                 'expo-status-bar',
                 {
                     backgroundColor: '#ffffff',
                     translucent: true,
+                },
+            ],
+            [
+                'expo-file-system',
+                {
+                    enableFileSharing: true,
                 },
             ],
         ],

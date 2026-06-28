@@ -1,4 +1,6 @@
 import { File, Paths } from 'expo-file-system'
+import { StorageAccessFramework, writeAsStringAsync } from 'expo-file-system/legacy'
+import { Platform } from 'react-native'
 import type { DeepExpand } from 'types-tools'
 
 import { animeTable } from '@/db/schema'
@@ -10,7 +12,7 @@ type TAnime = DeepExpand<Omit<typeof animeTable.$inferSelect, 'createdAt' | 'upd
 type TJsonFileData = DeepExpand<{ animeList: TAnime[] }>
 
 /**
- * 导出数据为json文件
+ * 导出数据为json文件（保存到 app 私有目录）
  */
 export async function exportJsonFile(data: TJsonFileData, filename: string) {
     if (!filename.endsWith('.json')) {
@@ -22,6 +24,43 @@ export async function exportJsonFile(data: TJsonFileData, filename: string) {
     file.write(content)
 
     return true
+}
+
+/**
+ * 导出数据为json文件到公共 Downloads 目录（Android 通过 SAF）
+ *
+ * Android: StorageAccessFramework 写入系统 Downloads 文件夹
+ * iOS: 回退到 app 私有文档目录（iOS 无公共 Downloads 概念）
+ */
+export async function exportJsonFileToDownloads(data: TJsonFileData, filename: string) {
+    if (!filename.endsWith('.json')) {
+        filename += '.json'
+    }
+
+    const content = JSON.stringify(data, null, 2)
+
+    if (Platform.OS === 'android') {
+        const safUri = StorageAccessFramework.getUriForDirectoryInRoot('Download')
+        const permission = await StorageAccessFramework.requestDirectoryPermissionsAsync(safUri)
+
+        if (!permission.granted) {
+            throw new Error('用户未授权访问 Downloads 目录')
+        }
+
+        // SAF 要求文件名不含扩展名，扩展名通过 MIME 类型指定
+        const nameWithoutExt = filename.replace(/\.json$/, '')
+        const fileUri = await StorageAccessFramework.createFileAsync(
+            permission.directoryUri,
+            nameWithoutExt,
+            'application/json',
+        )
+        await writeAsStringAsync(fileUri, content, { encoding: 'utf8' })
+
+        return true
+    }
+
+    // iOS: 回退到 app 私有目录
+    return exportJsonFile(data, filename)
 }
 
 /**

@@ -17,7 +17,14 @@ import { db } from '@/db'
 import { animeTable } from '@/db/schema'
 import { themeColorPurple } from '@/styles'
 import { RefreshControl, ScrollView, Text, TouchableOpacity, View } from '@/tw'
-import { deleteJsonFile, deleteJsonFileList, DIR, exportJsonFile, importJsonFile, scanJsonFile } from '@/utils/file'
+import {
+    deleteJsonFile,
+    deleteJsonFileList,
+    DIR,
+    exportJsonFileToDownloads,
+    importJsonFile,
+    scanJsonFile,
+} from '@/utils/file'
 import { queryClient } from '@/utils/react-query'
 
 type CheckboxState = 'unchecked' | 'checked' | 'indeterminate'
@@ -166,7 +173,7 @@ export default function DataManagement() {
                 }
             },
         )
-        await exportJsonFile({ animeList: res }, `anime_data_${dayjs().format('YYYY_MM_DD')}.json`)
+        await exportJsonFileToDownloads({ animeList: res }, `anime_data_${dayjs().format('YYYY_MM_DD')}.json`)
         return dayjs().format('YYYY_MM_DD')
     }
 
