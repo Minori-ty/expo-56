@@ -41,32 +41,29 @@ function ModalComponent() {
             onRequestClose={handleClose}
             statusBarTranslucent={Platform.OS === 'android'}
         >
-            <Pressable
-                className="absolute inset-0 flex-1 items-center justify-center bg-black/40"
-                onPress={handleClose}
-            >
-                {/* 下面这个View包裹内容，阻止事件冒泡 */}
-                <Pressable onPress={() => {}}>
-                    <View pointerEvents="box-none" className="w-80 rounded-3xl bg-white px-5 pt-8 pb-9">
-                        <View>
+            <View className="flex-1">
+                <Pressable
+                    className="flex-1 items-center justify-center px-8"
+                    style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
+                    onPress={handleClose}
+                >
+                    {/* 阻止事件冒泡到外层 */}
+                    <Pressable onPress={() => {}}>
+                        <View className="w-80 rounded-3xl bg-white px-5 pt-8 pb-9">
                             <Text className="mb-4 text-xl font-bold">{options?.title ?? '确认删除'}</Text>
                             {options?.body}
-                        </View>
-                        <View className="mt-5 flex-row justify-end">
-                            <View>
+                            <View className="mt-5 flex-row justify-end gap-4">
                                 <Pressable onPress={handleClose} className="h-7 w-16 items-center justify-center">
                                     <Text className="text-base text-theme">取消</Text>
                                 </Pressable>
-                            </View>
-                            <View>
                                 <Pressable onPress={handleConfirm} className="h-7 w-16 items-center justify-center">
                                     <Text className="text-base text-theme">删除</Text>
                                 </Pressable>
                             </View>
                         </View>
-                    </View>
+                    </Pressable>
                 </Pressable>
-            </Pressable>
+            </View>
         </RNModal>
     )
 }

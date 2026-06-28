@@ -14,6 +14,7 @@ import {
     StyleSheet,
 } from 'react-native'
 import { useCssElement, useNativeVariable as useFunctionalVariable } from 'react-native-css'
+import { KeyboardAwareScrollView as RNKeyboardAwareScrollView } from 'react-native-keyboard-controller'
 import Animated from 'react-native-reanimated'
 import { SafeAreaView as RNSafeAreaView } from 'react-native-safe-area-context'
 
@@ -158,3 +159,19 @@ export const RefreshControl = (props: React.ComponentProps<typeof RNRefreshContr
     return useCssElement(RNRefreshControl, props, { className: 'style' })
 }
 RefreshControl.displayName = 'CSS(RefreshControl)'
+
+// ─── KeyboardAwareScrollView ─────────────────────────────────────────────────
+
+export const KeyboardAwareScrollView = (
+    props: React.ComponentProps<typeof RNKeyboardAwareScrollView> & {
+        className?: string
+        contentContainerClassName?: string
+    },
+) => {
+    // @ts-expect-error: Complex union type from useCssElement
+    return useCssElement(RNKeyboardAwareScrollView, props, {
+        className: 'style',
+        contentContainerClassName: 'contentContainerStyle',
+    })
+}
+KeyboardAwareScrollView.displayName = 'CSS(KeyboardAwareScrollView)'

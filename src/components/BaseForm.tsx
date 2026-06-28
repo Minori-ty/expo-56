@@ -6,11 +6,10 @@ import { notificationAsync, NotificationFeedbackType } from 'expo-haptics'
 import { useNavigation } from 'expo-router'
 import { forwardRef, PropsWithChildren, useEffect, useImperativeHandle, useMemo, useRef } from 'react'
 import { Controller, FieldError, FieldErrors, SubmitHandler, useForm } from 'react-hook-form'
-import { KeyboardAwareScrollView } from 'react-native-keyboard-controller'
 
 import DatePicker, { type IDatePickerRef } from '@/components/Datepicker'
 import { EStatus, EWeekday } from '@/enums'
-import { Button, Text, TextInput, TouchableOpacity, View } from '@/tw'
+import { Button, KeyboardAwareScrollView, Text, TextInput, TouchableOpacity, View } from '@/tw'
 import { cn } from '@/utils/cn'
 
 import { RadioGroup } from './RadioGroup'
