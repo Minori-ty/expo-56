@@ -5,6 +5,7 @@ import { useNavigation } from 'expo-router'
 import { debounce, differenceBy } from 'lodash-es'
 import { Calendar, Download, FileText, Trash2, Upload } from 'lucide-react-native'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import { ActivityIndicator, BackHandler } from 'react-native'
 import Toast from 'react-native-toast-message'
 import { z } from 'zod'
 
@@ -65,7 +66,7 @@ export default function DataManagement() {
         setSelectedJsonFileList((prev) => prev.filter((fileName) => allFile.includes(fileName)))
     }, [fileList])
 
-    const { mutate: handleClearCalendarByAnimeIdMution } = useMutation({
+    const { mutate: handleClearCalendarByAnimeIdMution, isPending: isSingleDeleting } = useMutation({
         mutationFn: deleteCalendarByAnimeId,
         onSuccess: (_, id) => {
             queryClient.invalidateQueries({
@@ -107,19 +108,18 @@ export default function DataManagement() {
         [handleClearCalendarByAnimeIdMution],
     )
 
-    const { mutate: handleCalendarByAnimeIdListMution, isPending: isHandleCalendarByAnimeIdListMutionLoading } =
-        useMutation({
-            mutationFn: deleteCalendarByAnimeIds,
-            onSuccess: () => {
-                queryClient.invalidateQueries({
-                    queryKey: ['anime-calendar'],
-                })
-                queryClient.invalidateQueries({
-                    queryKey: ['settings-calendar'],
-                })
-                setSelectedAnimeIdList([])
-            },
-        })
+    const { mutate: handleCalendarByAnimeIdListMution, isPending: isBatchDeleting } = useMutation({
+        mutationFn: deleteCalendarByAnimeIds,
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: ['anime-calendar'],
+            })
+            queryClient.invalidateQueries({
+                queryKey: ['settings-calendar'],
+            })
+            setSelectedAnimeIdList([])
+        },
+    })
 
     const handleUnsubscribeAll = useCallback(() => {
         const debounceHandler = debounce(
@@ -137,6 +137,15 @@ export default function DataManagement() {
 
         return () => debounceHandler.cancel()
     }, [handleCalendarByAnimeIdListMution, selectedAnimeIdList])
+
+    const isDeletingCalendarEvent = isSingleDeleting || isBatchDeleting
+
+    // 删除日历事件时禁止安卓返回键
+    useEffect(() => {
+        if (!isDeletingCalendarEvent) return
+        const subscription = BackHandler.addEventListener('hardwareBackPress', () => true)
+        return () => subscription.remove()
+    }, [isDeletingCalendarEvent])
 
     const handleEventSelectAll = (state: CheckboxState) => {
         if (state === 'checked') {
@@ -194,7 +203,7 @@ export default function DataManagement() {
 
             Toast.show({
                 type: 'error',
-                text1: `导入失败！${err}`,
+                text1: `导出失败！${err}`,
             })
         },
     })
@@ -345,210 +354,225 @@ export default function DataManagement() {
     }, [navigation])
 
     return (
-        <ScrollView
-            showsVerticalScrollIndicator={false}
-            refreshControl={
-                <RefreshControl
-                    refreshing={isLoading}
-                    onRefresh={refetch}
-                    className="text-theme"
-                    colors={[themeColorPurple]}
-                />
-            }
-        >
-            <View className="p-4">
-                {/* 数据管理区域 */}
-                <View className="mb-6 rounded-lg bg-white p-4 shadow-sm">
-                    <Text className="mb-4 text-lg font-semibold text-gray-900">数据管理</Text>
+        <>
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={isLoading}
+                        onRefresh={refetch}
+                        className="text-theme"
+                        colors={[themeColorPurple]}
+                    />
+                }
+            >
+                <View className="p-4">
+                    {/* 数据管理区域 */}
+                    <View className="mb-6 rounded-lg bg-white p-4 shadow-sm">
+                        <Text className="mb-4 text-lg font-semibold text-gray-900">数据管理</Text>
 
-                    <View className="mb-4 flex-row gap-3">
-                        <TouchableOpacity
-                            className={`flex-1 flex-row items-center justify-center rounded-lg px-4 py-3 ${
-                                isExportDataToJsonFileMutationLoading ? 'bg-gray-300' : 'bg-blue-600'
-                            }`}
-                            onPress={() => {
-                                exportDataToJsonFileMutation()
-                            }}
-                            disabled={isExportDataToJsonFileMutationLoading}
-                        >
-                            <Download size={16} color="white" />
-                            <Text className="ml-2 font-medium text-white">
-                                {isExportDataToJsonFileMutationLoading ? '导出中...' : '导出数据'}
-                            </Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                            className={`flex-1 flex-row items-center justify-center rounded-lg px-4 py-3 ${
-                                handleImportJsonFileToDataMutionLoading ? 'bg-gray-300' : 'bg-green-600'
-                            }`}
-                            onPress={() => handleImportJsonFileToDataMution()}
-                            disabled={handleImportJsonFileToDataMutionLoading}
-                        >
-                            <Upload size={16} color="white" />
-                            <Text className="ml-2 font-medium text-white">
-                                {handleImportJsonFileToDataMutionLoading ? '导入中...' : '导入数据'}
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-
-                {/* 本地文件管理 */}
-                <View className="mb-6 rounded-lg bg-white p-4 shadow-sm">
-                    <View className="mb-4 h-10 flex-row items-center justify-between">
-                        <View className="flex-row items-center">
-                            <FileText size={20} color="#374151" />
-                            <Text className="ml-2 text-lg font-semibold text-gray-900">本地文件</Text>
-                        </View>
-                        {selectedJsonFileList.length > 0 && (
+                        <View className="mb-4 flex-row gap-3">
                             <TouchableOpacity
-                                className="flex-row items-center rounded-lg bg-red-100 px-3 py-2"
+                                className={`flex-1 flex-row items-center justify-center rounded-lg px-4 py-3 ${
+                                    isExportDataToJsonFileMutationLoading ? 'bg-gray-300' : 'bg-blue-600'
+                                }`}
                                 onPress={() => {
-                                    Modal.show({
-                                        body: (
-                                            <Text className="text-sm">
-                                                你确定要删除{selectedJsonFileList.length}个文件吗
-                                            </Text>
-                                        ),
-                                        onConfirm: () => deleteJsonFileListMution(selectedJsonFileList),
-                                    })
+                                    exportDataToJsonFileMutation()
                                 }}
+                                disabled={isExportDataToJsonFileMutationLoading}
                             >
-                                <Trash2 size={14} color="#dc2626" />
-                                <Text className="ml-1 text-sm font-medium text-red-600">
-                                    删除 ({selectedJsonFileList.length})
+                                <Download size={16} color="white" />
+                                <Text className="ml-2 font-medium text-white">
+                                    {isExportDataToJsonFileMutationLoading ? '导出中...' : '导出数据'}
                                 </Text>
                             </TouchableOpacity>
-                        )}
-                    </View>
 
-                    {fileList.length > 0 && (
-                        <View className="mb-3">
-                            <Checkbox
-                                label="全选"
-                                allowIndeterminate
-                                state={fileSelectAllState}
-                                onStateChange={handleFileSelectAll}
-                            />
-                        </View>
-                    )}
-
-                    {fileList.length === 0 ? (
-                        <Text className="py-8 text-center text-gray-500">暂无本地文件</Text>
-                    ) : (
-                        <View className="space-y-3">
-                            {fileList.map((file) => (
-                                <View key={file.name} className="flex-row rounded-lg bg-gray-50 p-3">
-                                    <Checkbox
-                                        state={selectedJsonFileList.includes(file.name) ? 'checked' : 'unchecked'}
-                                        onStateChange={(state) => handleFileSelect(file.name, state === 'checked')}
-                                    />
-                                    <View className="ml-3 flex-1">
-                                        <Text className="font-medium text-gray-900">{file.name}</Text>
-                                        <View className="mt-1 flex-row items-center">
-                                            <Text className="text-sm text-gray-500">{formatFileSize(file.size)}</Text>
-                                            <Text className="mx-2 text-sm text-gray-400">•</Text>
-                                        </View>
-                                        <View>
-                                            <Text className="text-xs text-gray-500" numberOfLines={1}>
-                                                路径：{DIR?.uri ?? ''}
-                                            </Text>
-                                        </View>
-                                    </View>
-
-                                    <TouchableOpacity
-                                        className="mt-1"
-                                        onPress={() => {
-                                            Modal.show({
-                                                body: (
-                                                    <Text className="text-sm">你确定要删除文件 {file.name} 吗？</Text>
-                                                ),
-                                                onConfirm: () => deleteJsonFileMution(file.name),
-                                            })
-                                        }}
-                                    >
-                                        <Trash2 size={16} color="#ef4444" />
-                                    </TouchableOpacity>
-                                </View>
-                            ))}
-                        </View>
-                    )}
-                </View>
-
-                {/* 日历事件管理 */}
-                <View className="rounded-lg bg-white p-4 shadow-sm">
-                    <View className="mb-4 h-10 flex-row items-center justify-between">
-                        <View className="flex-row items-center">
-                            <Calendar size={20} color="#374151" />
-                            <Text className="ml-2 text-lg font-semibold text-gray-900">动漫日历事件</Text>
-                        </View>
-                        {selectedAnimeIdList.length > 0 && (
                             <TouchableOpacity
-                                className="flex-row items-center rounded-lg bg-red-100 px-3 py-2"
-                                onPress={() => {
-                                    Modal.show({
-                                        body: (
-                                            <Text className="text-sm">
-                                                你确定要删除{selectedAnimeIdList.length}个动漫日历事件吗？
-                                            </Text>
-                                        ),
-                                        onConfirm: handleUnsubscribeAll,
-                                    })
-                                }}
-                                disabled={isHandleCalendarByAnimeIdListMutionLoading}
+                                className={`flex-1 flex-row items-center justify-center rounded-lg px-4 py-3 ${
+                                    handleImportJsonFileToDataMutionLoading ? 'bg-gray-300' : 'bg-green-600'
+                                }`}
+                                onPress={() => handleImportJsonFileToDataMution()}
+                                disabled={handleImportJsonFileToDataMutionLoading}
                             >
-                                <Trash2 size={14} color="#dc2626" />
-                                <Text className="ml-1 text-sm font-medium text-red-600">
-                                    删除 ({selectedAnimeIdList.length})
+                                <Upload size={16} color="white" />
+                                <Text className="ml-2 font-medium text-white">
+                                    {handleImportJsonFileToDataMutionLoading ? '导入中...' : '导入数据'}
                                 </Text>
                             </TouchableOpacity>
-                        )}
+                        </View>
                     </View>
 
-                    {calendarList.length > 0 && (
-                        <View className="mb-3">
-                            <Checkbox
-                                label="全选"
-                                allowIndeterminate
-                                state={eventSelectAllState}
-                                onStateChange={handleEventSelectAll}
-                            />
+                    {/* 本地文件管理 */}
+                    <View className="mb-6 rounded-lg bg-white p-4 shadow-sm">
+                        <View className="mb-4 h-10 flex-row items-center justify-between">
+                            <View className="flex-row items-center">
+                                <FileText size={20} color="#374151" />
+                                <Text className="ml-2 text-lg font-semibold text-gray-900">本地文件</Text>
+                            </View>
+                            {selectedJsonFileList.length > 0 && (
+                                <TouchableOpacity
+                                    className="flex-row items-center rounded-lg bg-red-100 px-3 py-2"
+                                    onPress={() => {
+                                        Modal.show({
+                                            body: (
+                                                <Text className="text-sm">
+                                                    你确定要删除{selectedJsonFileList.length}个文件吗
+                                                </Text>
+                                            ),
+                                            onConfirm: () => deleteJsonFileListMution(selectedJsonFileList),
+                                        })
+                                    }}
+                                >
+                                    <Trash2 size={14} color="#dc2626" />
+                                    <Text className="ml-1 text-sm font-medium text-red-600">
+                                        删除 ({selectedJsonFileList.length})
+                                    </Text>
+                                </TouchableOpacity>
+                            )}
                         </View>
-                    )}
 
-                    {calendarList.length === 0 ? (
-                        <Text className="py-8 text-center text-gray-500">暂无日历事件</Text>
-                    ) : (
-                        <View className="space-y-3">
-                            {calendarList.map((item) => {
-                                return (
-                                    <View
-                                        key={item.id}
-                                        className="mb-2 flex-row items-center justify-between rounded-lg bg-gray-50 p-3"
-                                    >
+                        {fileList.length > 0 && (
+                            <View className="mb-3">
+                                <Checkbox
+                                    label="全选"
+                                    allowIndeterminate
+                                    state={fileSelectAllState}
+                                    onStateChange={handleFileSelectAll}
+                                />
+                            </View>
+                        )}
+
+                        {fileList.length === 0 ? (
+                            <Text className="py-8 text-center text-gray-500">暂无本地文件</Text>
+                        ) : (
+                            <View className="space-y-3">
+                                {fileList.map((file) => (
+                                    <View key={file.name} className="flex-row rounded-lg bg-gray-50 p-3">
                                         <Checkbox
-                                            state={selectedAnimeIdList.includes(item.id) ? 'checked' : 'unchecked'}
-                                            onStateChange={(state) => handleEventSelect(item.id, state === 'checked')}
-                                            label={item.name}
+                                            state={selectedJsonFileList.includes(file.name) ? 'checked' : 'unchecked'}
+                                            onStateChange={(state) => handleFileSelect(file.name, state === 'checked')}
                                         />
+                                        <View className="ml-3 flex-1">
+                                            <Text className="font-medium text-gray-900">{file.name}</Text>
+                                            <View className="mt-1 flex-row items-center">
+                                                <Text className="text-sm text-gray-500">
+                                                    {formatFileSize(file.size)}
+                                                </Text>
+                                                <Text className="mx-2 text-sm text-gray-400">•</Text>
+                                            </View>
+                                            <View>
+                                                <Text className="text-xs text-gray-500" numberOfLines={1}>
+                                                    路径：{DIR?.uri ?? ''}
+                                                </Text>
+                                            </View>
+                                        </View>
+
                                         <TouchableOpacity
+                                            className="mt-1"
                                             onPress={() => {
                                                 Modal.show({
                                                     body: (
-                                                        <Text className="text-sm">确定要删除事件 {item.name} 吗？</Text>
+                                                        <Text className="text-sm">
+                                                            你确定要删除文件 {file.name} 吗？
+                                                        </Text>
                                                     ),
-                                                    onConfirm: () => handleUnsubscribe(item.id),
+                                                    onConfirm: () => deleteJsonFileMution(file.name),
                                                 })
                                             }}
                                         >
                                             <Trash2 size={16} color="#ef4444" />
                                         </TouchableOpacity>
                                     </View>
-                                )
-                            })}
+                                ))}
+                            </View>
+                        )}
+                    </View>
+
+                    {/* 日历事件管理 */}
+                    <View className="rounded-lg bg-white p-4 shadow-sm">
+                        <View className="mb-4 h-10 flex-row items-center justify-between">
+                            <View className="flex-row items-center">
+                                <Calendar size={20} color="#374151" />
+                                <Text className="ml-2 text-lg font-semibold text-gray-900">动漫日历事件</Text>
+                            </View>
+                            {selectedAnimeIdList.length > 0 && (
+                                <TouchableOpacity
+                                    className="flex-row items-center rounded-lg bg-red-100 px-3 py-2"
+                                    onPress={() => {
+                                        Modal.show({
+                                            body: (
+                                                <Text className="text-sm">
+                                                    你确定要删除{selectedAnimeIdList.length}个动漫日历事件吗？
+                                                </Text>
+                                            ),
+                                            onConfirm: handleUnsubscribeAll,
+                                        })
+                                    }}
+                                    disabled={isBatchDeleting}
+                                >
+                                    <Trash2 size={14} color="#dc2626" />
+                                    <Text className="ml-1 text-sm font-medium text-red-600">
+                                        删除 ({selectedAnimeIdList.length})
+                                    </Text>
+                                </TouchableOpacity>
+                            )}
                         </View>
-                    )}
+
+                        {calendarList.length > 0 && (
+                            <View className="mb-3">
+                                <Checkbox
+                                    label="全选"
+                                    allowIndeterminate
+                                    state={eventSelectAllState}
+                                    onStateChange={handleEventSelectAll}
+                                />
+                            </View>
+                        )}
+
+                        {calendarList.length === 0 ? (
+                            <Text className="py-8 text-center text-gray-500">暂无日历事件</Text>
+                        ) : (
+                            <View className="space-y-3">
+                                {calendarList.map((item) => {
+                                    return (
+                                        <View
+                                            key={item.id}
+                                            className="mb-2 flex-row items-center justify-between rounded-lg bg-gray-50 p-3"
+                                        >
+                                            <Checkbox
+                                                state={selectedAnimeIdList.includes(item.id) ? 'checked' : 'unchecked'}
+                                                onStateChange={(state) =>
+                                                    handleEventSelect(item.id, state === 'checked')
+                                                }
+                                                label={item.name}
+                                            />
+                                            <TouchableOpacity
+                                                onPress={() => {
+                                                    Modal.show({
+                                                        body: (
+                                                            <Text className="text-sm">
+                                                                确定要删除事件 {item.name} 吗？
+                                                            </Text>
+                                                        ),
+                                                        onConfirm: () => handleUnsubscribe(item.id),
+                                                    })
+                                                }}
+                                            >
+                                                <Trash2 size={16} color="#ef4444" />
+                                            </TouchableOpacity>
+                                        </View>
+                                    )
+                                })}
+                            </View>
+                        )}
+                    </View>
                 </View>
-            </View>
-        </ScrollView>
+            </ScrollView>
+            {isDeletingCalendarEvent ? (
+                <View className="absolute inset-0 z-50 items-center justify-center bg-white/70">
+                    <ActivityIndicator size="large" color={themeColorPurple} />
+                </View>
+            ) : null}
+        </>
     )
 }

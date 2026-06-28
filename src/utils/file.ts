@@ -1,5 +1,4 @@
-import { File, Paths } from 'expo-file-system'
-import { StorageAccessFramework, writeAsStringAsync } from 'expo-file-system/legacy'
+import { Directory, File, Paths } from 'expo-file-system'
 import { Platform } from 'react-native'
 import type { DeepExpand } from 'types-tools'
 
@@ -10,6 +9,9 @@ export const DIR = Paths.document
 
 type TAnime = DeepExpand<Omit<typeof animeTable.$inferSelect, 'createdAt' | 'updatedAt' | 'eventIds'>>
 type TJsonFileData = DeepExpand<{ animeList: TAnime[] }>
+
+/** 缓存用户选择的导出目录，避免每次都要选 */
+let savedExportDir: Directory | null = null
 
 /**
  * 导出数据为json文件（保存到 app 私有目录）
@@ -27,10 +29,10 @@ export async function exportJsonFile(data: TJsonFileData, filename: string) {
 }
 
 /**
- * 导出数据为json文件到公共 Downloads 目录（Android 通过 SAF）
+ * 导出数据为json文件到公共 Downloads 目录
  *
- * Android: StorageAccessFramework 写入系统 Downloads 文件夹
- * iOS: 回退到 app 私有文档目录（iOS 无公共 Downloads 概念）
+ * Android: 通过 Directory.pickDirectoryAsync 让用户选择目录（选中一次后缓存，后续直接写入）
+ * iOS: 回退到 app 私有文档目录
  */
 export async function exportJsonFileToDownloads(data: TJsonFileData, filename: string) {
     if (!filename.endsWith('.json')) {
@@ -40,21 +42,15 @@ export async function exportJsonFileToDownloads(data: TJsonFileData, filename: s
     const content = JSON.stringify(data, null, 2)
 
     if (Platform.OS === 'android') {
-        const safUri = StorageAccessFramework.getUriForDirectoryInRoot('Download')
-        const permission = await StorageAccessFramework.requestDirectoryPermissionsAsync(safUri)
-
-        if (!permission.granted) {
-            throw new Error('用户未授权访问 Downloads 目录')
+        // 首次导出让用户选择目录，后续复用缓存的目录
+        if (!savedExportDir) {
+            savedExportDir = await Directory.pickDirectoryAsync()
         }
 
-        // SAF 要求文件名不含扩展名，扩展名通过 MIME 类型指定
+        // SAF content:// URI 不能用 new File().write()，必须用 Directory.createFile()
         const nameWithoutExt = filename.replace(/\.json$/, '')
-        const fileUri = await StorageAccessFramework.createFileAsync(
-            permission.directoryUri,
-            nameWithoutExt,
-            'application/json',
-        )
-        await writeAsStringAsync(fileUri, content, { encoding: 'utf8' })
+        const file = savedExportDir.createFile(nameWithoutExt, 'application/json')
+        file.write(content)
 
         return true
     }

@@ -228,7 +228,16 @@ interface IEpisodeTipProps {
     totalEpisode: number
 }
 function EpisodeTip({ firstEpisodeTimestamp, totalEpisode }: IEpisodeTipProps) {
-    if (isCurrentWeekdayUpdateTimePassed(dayjs(firstEpisodeTimestamp).format('YYYY-MM-DD HH:mm'))) {
+    const firstDate = dayjs(firstEpisodeTimestamp)
+    // 构造本周的更新日时间，而不是首集时间（首集可能是几年前）
+    const thisWeekUpdate = dayjs()
+        .isoWeekday(firstDate.isoWeekday())
+        .hour(firstDate.hour())
+        .minute(firstDate.minute())
+        .second(0)
+    const hasPassed = isCurrentWeekdayUpdateTimePassed(thisWeekUpdate.format('YYYY-MM-DD HH:mm'))
+
+    if (hasPassed) {
         return (
             <Text className="mt-3 text-sm text-[#fb7299]">
                 更新到 第{getAiredEpisodeCount(totalEpisode, firstEpisodeTimestamp)}集
