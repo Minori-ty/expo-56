@@ -63,6 +63,14 @@ const config = {
                     writeOnlyAccess: false,
                 },
             ],
+            [
+                'expo-build-properties',
+                {
+                    android: {
+                        buildArchs: ['arm64-v8a'],
+                    },
+                },
+            ],
         ],
         experiments: {
             typedRoutes: true,
