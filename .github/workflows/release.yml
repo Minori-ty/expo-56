@@ -55,7 +55,11 @@ jobs:
                       caches
                       wrapper
                       build-cache
-                  build-scan-publish: true
+                  build-scan-publish:
+                      true
+                      # 自动同意服务条款
+                  build-scan-terms-of-service-url: 'https://gradle.com/help/legal-terms-of-use'
+                  build-scan-terms-of-service-agree: 'yes'
 
             - name: Cache Android Gradle project # ⭐ 新增
               uses: actions/cache@v6
