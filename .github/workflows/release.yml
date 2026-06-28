@@ -81,15 +81,6 @@ jobs:
                              "ndk;27.1.12297006" \
                              "cmake;3.22.1"
 
-            - name: 增加权限
-              run: |
-                  if [ -f "android/gradlew" ]; then
-                    chmod +x android/gradlew
-                    echo "✅ 已为 android/gradlew 添加执行权限"
-                  else
-                    echo "⚠️ 未找到 android/gradlew，跳过权限修改"
-                  fi
-
             - name: 打包expo应用
               run: |
                   npm run build
