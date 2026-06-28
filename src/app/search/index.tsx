@@ -90,7 +90,7 @@ export default function Search() {
                             <Text className="text-lg font-medium">{item.name}</Text>
                             <Text className={cn('text-sm')}>
                                 状态：
-                                <Text className={cn(EStatusColor.raw(status).color)}>{EStatus.raw(status).label}</Text>
+                                <Text className={EStatusColor.raw(status).color}>{EStatus.raw(status).label}</Text>
                             </Text>
                             <Text className="text-sm">
                                 更新进度:

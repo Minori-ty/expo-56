@@ -292,7 +292,7 @@ const BaseForm = forwardRef<IBaseFormRef, IBaseAnimeFormProps>(function BaseForm
                                     <Picker {...field} selectedValue={field.value} onValueChange={field.onChange}>
                                         <Picker.Item label="请选择" value="" />
                                         {EWeekday.items.map((item) => {
-                                            return <Picker.Item key={item.key} label={item.label} value={item.key} />
+                                            return <Picker.Item key={item.key} label={item.label} value={item.value} />
                                         })}
                                     </Picker>
                                 </View>
@@ -336,7 +336,7 @@ const BaseForm = forwardRef<IBaseFormRef, IBaseAnimeFormProps>(function BaseForm
                                 )}
                                 placeholder="请输入当前更新集数"
                                 onChangeText={(text) => {
-                                    field.onChange(removeLeadingZeros(text.replace(/[^0-9]/g, '')))
+                                    field.onChange(Number(removeLeadingZeros(text.replace(/[^0-9]/g, ''))))
                                 }}
                                 keyboardType="numeric"
                                 value={field.value?.toString() || ''}
@@ -358,7 +358,7 @@ const BaseForm = forwardRef<IBaseFormRef, IBaseAnimeFormProps>(function BaseForm
                             )}
                             placeholder="请输入总集数"
                             onChangeText={(text) => {
-                                field.onChange(removeLeadingZeros(text.replace(/[^0-9]/g, '')))
+                                field.onChange(Number(removeLeadingZeros(text.replace(/[^0-9]/g, ''))))
                             }}
                             keyboardType="numeric"
                             value={field.value?.toString() || ''}

@@ -76,6 +76,13 @@ const config = {
                     },
                 },
             ],
+            [
+                'expo-status-bar',
+                {
+                    backgroundColor: '#ffffff',
+                    translucent: true,
+                },
+            ],
         ],
         experiments: {
             typedRoutes: true,
@@ -85,10 +92,6 @@ const config = {
             eas: {
                 projectId: '382a0b40-4626-431f-b71b-f3b0c09b9f13',
             },
-        },
-        androidStatusBar: {
-            backgroundColor: '#ffffff',
-            translucent: true,
         },
     },
 }

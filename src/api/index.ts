@@ -13,6 +13,11 @@ type THandleAddAnime = DeepExpand<Omit<TAddAnimeData, 'eventIds'>>
 
 /**
  * 添加动漫归一化处理
+ *
+ * ⚠️ 时间戳约定：
+ * - 入参 firstEpisodeTimestamp 为毫秒（来自表单 dayjs().valueOf() 或导入时 ×1000 转换）
+ * - DB 存储为秒（firstSec = Math.floor(ms / 1000)）
+ * - 导出 JSON 中为秒，重新导入时必须 ×1000 还原
  */
 export async function handleAddAnime(animeData: THandleAddAnime) {
     return await db.transaction(async (tx) => {

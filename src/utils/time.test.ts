@@ -1,18 +1,83 @@
 import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { EStatus } from '@/enums'
 
 import {
     getAiredEpisodeCount,
     getAnimeStatus,
+    getEpisodeTime,
     getExpectedEpisodeThisWeek,
+    getFirstEpisodeTimestamp,
+    getLastEpisodeTime,
     getLastEpisodeTimestamp,
+    getMondayTimestampInThisWeek,
+    getSundayTimestampInThisWeek,
+    isCurrentWeekdayUpdateTimePassed,
     isUpdatedInThisWeek,
 } from './time'
 
 dayjs.extend(isoWeek)
+
+describe('getFirstEpisodeTimestamp（从表单反推首集）', () => {
+    beforeEach(() => {
+        vi.useFakeTimers()
+    })
+    afterEach(() => {
+        vi.useRealTimers()
+    })
+
+    it('更新日在今天之后（本周还未到）→ 用上周推', () => {
+        // 周一，更新日是周六，本周六（7/4）还没到
+        // currentEpisode=180 是上周六（6/27）播的
+        vi.setSystemTime(new Date('2026-06-29T10:00:00'))
+
+        const result = dayjs(
+            getFirstEpisodeTimestamp({
+                currentEpisode: 180,
+                updateWeekday: 6, // 周六
+                updateTimeHHmm: '2026-06-29 10:00',
+            }),
+        )
+        // result + 179 周 = 上周六 6/27
+        const episode180 = result.add(179, 'week')
+        expect(episode180.format('YYYY-MM-DD')).toBe('2026-06-27')
+        expect(episode180.isoWeekday()).toBe(6)
+    })
+
+    it('更新日在本周已过 → 用本周推', () => {
+        // 周日，更新日是周六，本周六（7/4）已过
+        vi.setSystemTime(new Date('2026-07-05T10:00:00'))
+
+        const result = dayjs(
+            getFirstEpisodeTimestamp({
+                currentEpisode: 180,
+                updateWeekday: 6, // 周六
+                updateTimeHHmm: '2026-07-05 10:00',
+            }),
+        )
+        // result + 179 周 = 本周六 7/4
+        const episode180 = result.add(179, 'week')
+        expect(episode180.format('YYYY-MM-DD')).toBe('2026-07-04')
+        expect(episode180.isoWeekday()).toBe(6)
+    })
+
+    it('首集 + (n-1)*7天 = 第n集播出时间', () => {
+        vi.setSystemTime(new Date('2026-06-29T10:00:00'))
+
+        const first = getFirstEpisodeTimestamp({
+            currentEpisode: 10,
+            updateWeekday: 3, // 周三
+            updateTimeHHmm: '2026-06-29 10:00',
+        })
+        // 第1集 = 首集时间
+        const ep1 = dayjs(first)
+        // 第10集 = 首集 + 9*7 天
+        const ep10 = dayjs(first).add(9 * 7, 'day')
+        expect(ep10.diff(ep1, 'day')).toBe(63)
+    })
+})
 
 describe('getAnimeStatus（时间跨度增强）', () => {
     it('远未来（提前100天）=> 即将更新', () => {
@@ -203,5 +268,112 @@ describe('getLastEpisodeTimestamp（长期稳定性）', () => {
         const expected = dayjs(first).add(9 * 7, 'day')
 
         expect(result).toBe(expected.valueOf())
+    })
+})
+
+describe('getEpisodeTime（第n集播出时间）', () => {
+    it('第1集 = 首集时间本身', () => {
+        const first = dayjs('2026-01-01T12:00:00').valueOf()
+        const result = getEpisodeTime(first, 1)
+        expect(result.valueOf()).toBe(first)
+    })
+
+    it('第10集 = 首集 + 9*7天', () => {
+        const first = dayjs('2026-01-01T12:00:00').valueOf()
+        const result = getEpisodeTime(first, 10)
+        const expected = dayjs(first).add(9 * 7, 'day')
+        expect(result.valueOf()).toBe(expected.valueOf())
+    })
+
+    it('第0集会前移7天（调用方负责边界，函数仅做数学计算）', () => {
+        const first = dayjs('2026-01-01T12:00:00').valueOf()
+        const result = getEpisodeTime(first, 0)
+        const expected = dayjs(first).add(-7, 'day')
+        expect(result.valueOf()).toBe(expected.valueOf())
+    })
+
+    it('大集数不会溢出', () => {
+        const first = dayjs('2020-01-01').valueOf()
+        const result = getEpisodeTime(first, 1000)
+        const expected = dayjs(first).add(999 * 7, 'day')
+        expect(result.valueOf()).toBe(expected.valueOf())
+    })
+})
+
+describe('getLastEpisodeTime', () => {
+    it('总集数12 → 最后一个 = 第12集时间', () => {
+        const first = dayjs('2026-01-01').valueOf()
+        const last = getLastEpisodeTime(first, 12)
+        const expected = getEpisodeTime(first, 12)
+        expect(last.valueOf()).toBe(expected.valueOf())
+    })
+})
+
+describe('getMondayTimestampInThisWeek', () => {
+    beforeEach(() => {
+        vi.useFakeTimers()
+    })
+    afterEach(() => {
+        vi.useRealTimers()
+    })
+
+    it('返回本周一 00:00:00 的时间戳', () => {
+        vi.setSystemTime(new Date('2026-07-02T15:30:00')) // 周四
+
+        const monday = dayjs(getMondayTimestampInThisWeek())
+        expect(monday.format('YYYY-MM-DD')).toBe('2026-06-29')
+        expect(monday.hour()).toBe(0)
+        expect(monday.minute()).toBe(0)
+        expect(monday.second()).toBe(0)
+    })
+
+    it('周一当天返回当天 00:00:00', () => {
+        vi.setSystemTime(new Date('2026-06-29T10:00:00'))
+
+        const monday = dayjs(getMondayTimestampInThisWeek())
+        expect(monday.format('YYYY-MM-DD')).toBe('2026-06-29')
+    })
+})
+
+describe('getSundayTimestampInThisWeek', () => {
+    beforeEach(() => {
+        vi.useFakeTimers()
+    })
+    afterEach(() => {
+        vi.useRealTimers()
+    })
+
+    it('返回本周日 23:59:59 的时间戳', () => {
+        vi.setSystemTime(new Date('2026-06-29T10:00:00')) // 周一
+
+        const sunday = dayjs(getSundayTimestampInThisWeek())
+        expect(sunday.format('YYYY-MM-DD')).toBe('2026-07-05')
+        expect(sunday.hour()).toBe(23)
+        expect(sunday.minute()).toBe(59)
+        expect(sunday.second()).toBe(59)
+    })
+})
+
+describe('isCurrentWeekdayUpdateTimePassed', () => {
+    beforeEach(() => {
+        vi.useFakeTimers()
+    })
+    afterEach(() => {
+        vi.useRealTimers()
+    })
+
+    it('传入过去时间 → true', () => {
+        vi.setSystemTime(new Date('2026-06-29T12:00:00'))
+        expect(isCurrentWeekdayUpdateTimePassed('2026-06-29 10:00')).toBe(true)
+    })
+
+    it('传入未来时间 → false', () => {
+        vi.setSystemTime(new Date('2026-06-29T10:00:00'))
+        expect(isCurrentWeekdayUpdateTimePassed('2026-06-29 12:00')).toBe(false)
+    })
+
+    it('传入相同时间 → false（isAfter 严格大于）', () => {
+        vi.setSystemTime(new Date('2026-06-29T10:00:00'))
+        expect(isCurrentWeekdayUpdateTimePassed('2026-06-29 10:00')).toBe(false)
     })
 })

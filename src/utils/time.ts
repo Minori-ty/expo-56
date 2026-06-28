@@ -219,11 +219,17 @@ export function getFirstEpisodeTimestamp({
     updateWeekday: number
 }) {
     const now = dayjs()
-    const updateDay = now
+    let updateDay = now
         .isoWeekday(updateWeekday)
         .hour(dayjs(updateTimeHHmm).hour())
         .minute(dayjs(updateTimeHHmm).minute())
         .second(0)
+
+    // 如果本周更新日还没到，说明 currentEpisode 是上周播的，
+    // 需要用上周的更新日来反推首集时间，否则首集会晚一周
+    if (updateDay.isAfter(now)) {
+        updateDay = updateDay.subtract(1, 'week')
+    }
 
     return updateDay.subtract(currentEpisode - 1, 'week').valueOf()
 }

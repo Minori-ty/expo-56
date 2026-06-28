@@ -157,6 +157,8 @@ export default function DataManagement() {
     async function exportDataToJsonFile() {
         const data = await getAnimeList()
         type AnimeRow = (typeof animeTable)['$inferSelect']
+        // ⚠️ 导出时 firstEpisodeTimestamp 为秒（DB 存储格式），不是毫秒
+        // 重新导入时需要在 handleImportJsonFileToData 中 ×1000 转换
         const res = data.map(
             ({ eventIds: _eventIds, updatedAt: _updatedAt, createdAt: _createdAt, ...reset }: AnimeRow) => {
                 return {
@@ -214,7 +216,13 @@ export default function DataManagement() {
         }
         const data = await getAnimeList()
         const res = differenceBy(jsonData.animeList, data, 'name')
-        const animeList = res.map(({ id: _id, ...reset }) => reset)
+        // ⚠️ JSON 导出时 firstEpisodeTimestamp 是秒（DB 存储格式）
+        // handleAddAnime 期望毫秒输入（内部会 /1000 转回秒存 DB）
+        // 因此这里必须 ×1000 秒→毫秒，否则存入库的将是错误值
+        const animeList = res.map(({ id: _id, firstEpisodeTimestamp, ...reset }) => ({
+            ...reset,
+            firstEpisodeTimestamp: firstEpisodeTimestamp * 1000,
+        }))
 
         return await Promise.all(
             animeList.map((item) => {
