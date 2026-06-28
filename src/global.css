@@ -1,23 +1,30 @@
-@import "tailwindcss/theme.css" layer(theme);
-@import "tailwindcss/preflight.css" layer(base);
-@import "tailwindcss/utilities.css";
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/preflight.css' layer(base);
+@import 'tailwindcss/utilities.css';
 @import 'nativewind/theme';
 
 /* Platform-specific font families */
 @media android {
-  :root {
-    --font-mono: monospace;
-    --font-rounded: normal;
-    --font-serif: serif;
-    --font-sans: normal;
-  }
+    :root {
+        --font-mono: monospace;
+        --font-rounded: normal;
+        --font-serif: serif;
+        --font-sans: normal;
+    }
 }
 
 @media ios {
-  :root {
-    --font-mono: ui-monospace;
-    --font-serif: ui-serif;
-    --font-sans: system-ui;
-    --font-rounded: ui-rounded;
-  }
+    :root {
+        --font-mono: ui-monospace;
+        --font-serif: ui-serif;
+        --font-sans: system-ui;
+        --font-rounded: ui-rounded;
+    }
+}
+
+@theme {
+    --color-theme: #6c5ce7;
+    --color-completed: #f56c6c;
+    --color-serializing: #409eff;
+    --color-toBeUpdated: #ffd547;
 }

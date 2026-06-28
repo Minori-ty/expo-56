@@ -1,17 +1,3 @@
-import { handleDeleteAnime } from '@/api'
-import { parseAnimeData } from '@/api/anime'
-import Loading from '@/components/lottie/Loading'
-import { Modal } from '@/components/Modal'
-import PageHeader from '@/components/PageHeader'
-import Icon from '@/components/ui/Icon'
-import { db } from '@/db'
-import { animeTable } from '@/db/schema'
-import { EStatus } from '@/enums'
-import { blurhash, themeColorPurple } from '@/styles'
-import { TAnimeList } from '@/types'
-import { cn } from '@/utils/cn'
-import { queryClient } from '@/utils/react-query'
-import { getAiredEpisodeCount, getAnimeStatus } from '@/utils/time'
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet'
 import { useMutation } from '@tanstack/react-query'
 import { type ClassValue } from 'clsx'
@@ -34,6 +20,21 @@ import {
     View,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+
+import { handleDeleteAnime } from '@/api'
+import { parseAnimeData } from '@/api/anime'
+import Loading from '@/components/lottie/Loading'
+import { Modal } from '@/components/Modal'
+import PageHeader from '@/components/PageHeader'
+import Icon from '@/components/ui/Icon'
+import { db } from '@/db'
+import { animeTable } from '@/db/schema'
+import { EStatus } from '@/enums'
+import { blurhash, themeColorPurple } from '@/styles'
+import { TAnimeList } from '@/types'
+import { cn } from '@/utils/cn'
+import { queryClient } from '@/utils/react-query'
+import { getAiredEpisodeCount, getAnimeStatus } from '@/utils/time'
 
 const GAP = 10
 
@@ -171,7 +172,7 @@ export default function MyFollows() {
                     />
                 )}
             >
-                <BottomSheetView className="h-[400px] flex-1 bg-gray-100 px-5 pt-5">
+                <BottomSheetView className="h-100 flex-1 bg-gray-100 px-5 pt-5">
                     <Text className="my-2 pl-4 text-sm font-medium text-gray-500">筛选状态</Text>
                     <View className="overflow-hidden rounded-2xl bg-white">
                         {EStatusList.items.map((item) => {
@@ -261,7 +262,8 @@ const AnimeContainerItem = memo(function AnimeContainerItem({ data }: IAnimeCont
             <View
                 className={cn(
                     'overflow-hidden rounded-lg',
-                    `h-${((Dimensions.get('window').width - GAP * 4) / 3) * 1.5}px`,
+                    // oxlint-disable-next-line tailwindcss/no-unknown-classes
+                    `h-[${((Dimensions.get('window').width - GAP * 4) / 3) * 1.5}px]`,
                 )}
             >
                 <Image

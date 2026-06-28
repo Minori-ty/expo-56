@@ -1,8 +1,6 @@
 {
     "$schema": "./node_modules/oxlint/configuration_schema.json",
-    "jsPlugins": [
-        "oxlint-tailwindcss"
-    ],
+    "jsPlugins": ["oxlint-tailwindcss"],
     "rules": {
         // -------------------------- 核心正确性（必报错） --------------------------
         "tailwindcss/no-conflicting-classes": "error", // 冲突类名（如 w-10 和 w-20 同时存在）
@@ -66,7 +64,23 @@
     "settings": {
         "tailwindcss": {
             // Tailwind 入口文件：明确指定，避免插件解析错误
-            "entryPoint": "./src/global.css"
+            "entryPoint": "./src/global.css",
+            "customClassAllowlistPatterns": [
+                "^h-\\[",
+                "^w-\\[",
+                "^min-h-\\[",
+                "^max-h-\\[",
+                "^min-w-\\[",
+                "^max-w-\\[",
+                "^top-\\[",
+                "^bottom-\\[",
+                "^left-\\[",
+                "^right-\\[",
+                "px\\]$",
+                "rem\\]$",
+                "vh\\]$",
+                "vw\\]$"
+            ]
         }
     },
     "env": {
@@ -83,11 +97,5 @@
         "typescript": true
     },
     // 忽略目录：与 oxfmt 完全一致
-    "ignorePatterns": [
-        "node_modules",
-        "dist",
-        ".claude",
-        ".agents",
-        ".codegraph"
-    ]
+    "ignorePatterns": ["node_modules", "dist", ".claude", ".agents", ".codegraph"]
 }

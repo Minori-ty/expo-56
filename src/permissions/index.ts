@@ -13,7 +13,7 @@ export async function getCalendarPermission() {
         const status = await Calendar.requestCalendarPermissions()
         return status.granted
     } catch (error) {
-        alert('获取日历权限失败' + error)
+        alert(`获取日历权限失败${error}`)
         return false
     }
 }

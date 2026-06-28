@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react'
-import { Modal as RNModal, Platform, Pressable, StatusBar, Text, View } from 'react-native'
+import { useEffect, useState } from 'react'
+import { Platform, Pressable, Modal as RNModal, Text, View } from 'react-native'
+
 import { Modal, ModalOptions } from './index'
 
 function ModalComponent() {
@@ -44,7 +45,7 @@ function ModalComponent() {
             >
                 {/* 下面这个View包裹内容，阻止事件冒泡 */}
                 <Pressable onPress={() => {}}>
-                    <View pointerEvents="box-none" className="w-80 rounded-3xl bg-white px-5 pb-9 pt-8">
+                    <View pointerEvents="box-none" className="w-80 rounded-3xl bg-white px-5 pt-8 pb-9">
                         <View>
                             <Text className="mb-4 text-xl font-bold">{options?.title ?? '确认删除'}</Text>
                             {options?.body}

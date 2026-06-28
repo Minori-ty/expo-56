@@ -1,8 +1,9 @@
-import { themeColor } from '@/styles'
-import { cn } from '@/utils/cn'
 import { type ClassValue } from 'clsx'
 import React from 'react'
 import { Text, TextStyle, TouchableOpacity, View, ViewStyle } from 'react-native'
+
+import { themeColor } from '@/styles'
+import { cn } from '@/utils/cn'
 
 /**
  * 单个 RadioItem 的属性
@@ -28,7 +29,7 @@ function RadioItem<T extends string | number>(props: RadioItemProps<T>) {
             accessibilityRole="radio"
             accessibilityState={{ selected }}
         >
-            <View className={cn('mr-2 h-6 w-6 items-center justify-center rounded-xl border-2 border-[#409eff]')}>
+            <View className={cn('mr-2 h-6 w-6 items-center justify-center rounded-xl border-2 border-serializing')}>
                 {selected ? (
                     <View
                         style={[

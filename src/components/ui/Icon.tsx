@@ -14,7 +14,7 @@ import {
     Settings,
     Settings2,
 } from 'lucide-react-native'
-import { memo, useMemo } from 'react'
+import { memo } from 'react'
 
 type IconName = keyof typeof iconMap
 type IconProps = { name: IconName; className?: string; size?: number }

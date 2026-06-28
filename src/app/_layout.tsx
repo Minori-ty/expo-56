@@ -1,25 +1,29 @@
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator'
+import { useDrizzleStudio } from 'expo-drizzle-studio-plugin'
+import { useFonts } from 'expo-font'
+import { Stack, ThemeProvider } from 'expo-router'
+import { DefaultTheme } from 'expo-router/react-navigation'
+import { startTransition } from 'react'
+import { Text } from 'react-native'
+import ErrorBoundary from 'react-native-error-boundary'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import { KeyboardProvider } from 'react-native-keyboard-controller'
+import Toast from 'react-native-toast-message'
+
 import Error from '@/components/lottie/Error'
 import Loading from '@/components/lottie/Loading'
 import Modal from '@/components/Modal/Modal'
 import { db, expo } from '@/db'
 import { useAppStateRefresh } from '@/hooks/useAppStateRefresh'
 import { getCalendarPermission } from '@/permissions'
-import { queryClient } from '@/utils/react-query'
-import { BottomSheetModalProvider } from '@gorhom/bottom-sheet'
-import { QueryClientProvider } from '@tanstack/react-query'
-import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator'
-import { useDrizzleStudio } from 'expo-drizzle-studio-plugin'
-import { useFonts } from 'expo-font'
-import { Stack } from 'expo-router'
-import { DefaultTheme, ThemeProvider } from 'expo-router/react-navigation'
-import { startTransition } from 'react'
-import { Text } from 'react-native'
-import ErrorBoundary from 'react-native-error-boundary'
-import { GestureHandlerRootView } from 'react-native-gesture-handler'
-import { KeyboardProvider } from 'react-native-keyboard-controller'
 import 'react-native-reanimated'
-import Toast from 'react-native-toast-message'
+
+import { queryClient } from '@/utils/react-query'
+
 import migrations from '../../drizzle/migrations'
+
 import '../global.css'
 
 export default function RootLayout() {
@@ -34,7 +38,7 @@ export default function RootLayout() {
     })
     useAppStateRefresh()
 
-    function errorHandler(error: Error, stackTrace: string) {
+    function errorHandler(error: Error) {
         console.log(error)
     }
 

@@ -1,6 +1,3 @@
-import DatePicker, { type IDatePickerRef } from '@/components/Datepicker'
-import { EStatus, EWeekday } from '@/enums'
-import { cn } from '@/utils/cn'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Picker } from '@react-native-picker/picker'
 import { useUpdateEffect } from 'ahooks'
@@ -11,6 +8,11 @@ import { forwardRef, PropsWithChildren, useEffect, useImperativeHandle, useMemo,
 import { Controller, FieldError, FieldErrors, SubmitHandler, useForm } from 'react-hook-form'
 import { Button, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller'
+
+import DatePicker, { type IDatePickerRef } from '@/components/Datepicker'
+import { EStatus, EWeekday } from '@/enums'
+import { cn } from '@/utils/cn'
+
 import { RadioGroup } from './RadioGroup'
 import { formSchema, TFormInput, TFormOutput, TFormSchema } from './schema'
 import Icon from './ui/Icon'
@@ -158,7 +160,7 @@ const BaseForm = forwardRef<IBaseFormRef, IBaseAnimeFormProps>(function BaseForm
         <KeyboardAwareScrollView
             bottomOffset={100}
             showsVerticalScrollIndicator={false}
-            className="bg-white px-4 pb-20 pt-5"
+            className="bg-white px-4 pt-5 pb-20"
         >
             <FormItem label="番剧名称" error={fullErrors.name}>
                 <Controller
@@ -169,7 +171,7 @@ const BaseForm = forwardRef<IBaseFormRef, IBaseAnimeFormProps>(function BaseForm
                             <TextInput
                                 {...field}
                                 className={cn(
-                                    'h-10 rounded-md border border-[#ccc] p-0 pl-2 pt-1 text-start text-base leading-7',
+                                    'h-10 rounded-md border border-[#ccc] p-0 pt-1 pl-2 text-start text-base leading-7',
                                     fullErrors && fullErrors.name && 'border-red-500',
                                 )}
                                 placeholder="请输入番剧名称"
@@ -330,7 +332,7 @@ const BaseForm = forwardRef<IBaseFormRef, IBaseAnimeFormProps>(function BaseForm
                             <TextInput
                                 {...field}
                                 className={cn(
-                                    'h-10 rounded-md border border-[#ccc] p-0 pl-2 pt-1 text-start text-base leading-7',
+                                    'h-10 rounded-md border border-[#ccc] p-0 pt-1 pl-2 text-start text-base leading-7',
                                     fullErrors.currentEpisode && 'border-red-500',
                                 )}
                                 placeholder="请输入当前更新集数"
@@ -352,7 +354,7 @@ const BaseForm = forwardRef<IBaseFormRef, IBaseAnimeFormProps>(function BaseForm
                         <TextInput
                             {...field}
                             className={cn(
-                                'h-10 rounded-md border border-[#ccc] p-0 pl-2 pt-1 text-start text-base leading-7',
+                                'h-10 rounded-md border border-[#ccc] p-0 pt-1 pl-2 text-start text-base leading-7',
                                 fullErrors.totalEpisode && 'border-red-500',
                             )}
                             placeholder="请输入总集数"
@@ -373,7 +375,7 @@ const BaseForm = forwardRef<IBaseFormRef, IBaseAnimeFormProps>(function BaseForm
                         <TextInput
                             {...field}
                             className={cn(
-                                'h-10 rounded-md border border-[#ccc] p-0 pl-2 pt-1 text-start text-base leading-7',
+                                'h-10 rounded-md border border-[#ccc] p-0 pt-1 pl-2 text-start text-base leading-7',
                                 fullErrors.cover && 'border-red-500',
                             )}
                             placeholder="请输入封面图片URL"

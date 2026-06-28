@@ -1,18 +1,6 @@
-import { handleGetAnimeById } from '@/api/anime'
-import { addCalendarByAnimeId, deleteCalendarByAnimeId } from '@/api/calendar'
-import Loading from '@/components/lottie/Loading'
-import Icon from '@/components/ui/Icon'
-import { db } from '@/db'
-import { animeTable } from '@/db/schema'
-import { EStatus, EWeekday } from '@/enums'
-import { blurhash, themeColorPurple } from '@/styles'
-import { cn } from '@/utils/cn'
-import { queryClient } from '@/utils/react-query'
-import { getAiredEpisodeCount, getAnimeStatus } from '@/utils/time'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { type ClassValue } from 'clsx'
 import dayjs from 'dayjs'
-import 'dayjs/locale/zh-cn'
 import { eq } from 'drizzle-orm'
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
 import { Image } from 'expo-image'
@@ -26,6 +14,20 @@ import DateTimePicker, {
     type DateType,
     useDefaultStyles,
 } from 'react-native-ui-datepicker'
+
+import { handleGetAnimeById } from '@/api/anime'
+import { addCalendarByAnimeId, deleteCalendarByAnimeId } from '@/api/calendar'
+import Loading from '@/components/lottie/Loading'
+import 'dayjs/locale/zh-cn'
+
+import Icon from '@/components/ui/Icon'
+import { db } from '@/db'
+import { animeTable } from '@/db/schema'
+import { EStatus, EWeekday } from '@/enums'
+import { blurhash, themeColorPurple } from '@/styles'
+import { cn } from '@/utils/cn'
+import { queryClient } from '@/utils/react-query'
+import { getAiredEpisodeCount, getAnimeStatus } from '@/utils/time'
 
 interface IAnimeDetailContext {
     firstEpisodeTimestamp: number
@@ -216,7 +218,7 @@ function AnimeDetail() {
         },
     }
     const components: CalendarComponents = {
-        Day: Day,
+        Day,
     }
 
     function onRefetch() {
@@ -268,7 +270,7 @@ function AnimeDetail() {
                                 {/* Status Badge */}
                                 <View
                                     className={cn(
-                                        `absolute -right-2 -top-2 rounded-full px-2 py-1`,
+                                        `absolute -top-2 -right-2 rounded-full px-2 py-1`,
                                         mapColor[getAnimeStatus(anime.totalEpisode, anime.firstEpisodeTimestamp)]
                                             .bgColor,
                                     )}
@@ -290,7 +292,7 @@ function AnimeDetail() {
 
                             {/* Basic Info */}
                             <View className="flex-1">
-                                <Text className="mb-3 text-xl font-bold leading-6 text-gray-900">{anime.name}</Text>
+                                <Text className="mb-3 text-xl leading-6 font-bold text-gray-900">{anime.name}</Text>
 
                                 {/* Progress Info */}
                                 <View className="mb-4">
@@ -413,7 +415,7 @@ function AnimeDetail() {
                         </View>
                     )}
 
-                    <View className="mb-16 mt-2 rounded-md bg-white px-10 py-5">
+                    <View className="mt-2 mb-16 rounded-md bg-white px-10 py-5">
                         <DateTimePicker
                             styles={defaultStyles}
                             mode="single"
@@ -430,7 +432,7 @@ function AnimeDetail() {
                         <View className="h-16 items-end">
                             {dayjs(firstEpisodeYYYYMMDDHHmm).format('YYYY-MM-DD') !== dayjs().format('YYYY-MM-DD') && (
                                 <TouchableOpacity
-                                    className="elevation-lg size-16 items-center justify-center rounded-full bg-blue-500"
+                                    className="size-16 items-center justify-center rounded-full bg-blue-500 elevation-lg"
                                     onPress={() => setFirstEpisodeYYYYMMDDHHmm(dayjs())}
                                     activeOpacity={0.5}
                                 >
@@ -470,7 +472,7 @@ function Day(day: CalendarDay) {
         >
             <Text
                 className={cn(
-                    'font-archivo text-foreground top-2',
+                    'top-2',
                     isSelected && isToday && 'text-white',
                     !isCurrentMonth && 'text-gray-200',
                     isCurrentMonth && !isSelected && isToday && 'text-blue-500',
@@ -482,7 +484,7 @@ function Day(day: CalendarDay) {
                 <View className="absolute bottom-2 w-full">
                     <Text
                         className={cn(
-                            'font-archivo text-foreground text-center',
+                            'text-center',
                             !isCurrentMonth && 'text-gray-200',
                             isSelected && isToday && 'text-white',
                             isCurrentMonth && episode && 'text-orange-500',

@@ -1,3 +1,14 @@
+import { useMutation, useQuery } from '@tanstack/react-query'
+import dayjs from 'dayjs'
+import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
+import { debounce, differenceBy } from 'lodash-es'
+import { Calendar, Download, FileText, Trash2, Upload } from 'lucide-react-native'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import Toast from 'react-native-toast-message'
+import { z } from 'zod'
+
 import { handleAddAnime } from '@/api'
 import { getAnimeList } from '@/api/anime'
 import { deleteCalendarByAnimeId, deleteCalendarByAnimeIds } from '@/api/calendar'
@@ -7,26 +18,8 @@ import PageHeader from '@/components/PageHeader'
 import { db } from '@/db'
 import { animeTable } from '@/db/schema'
 import { themeColorPurple } from '@/styles'
-import {
-    deleteJsonFile,
-    deleteJsonFileList,
-    DIR,
-    exportJsonFile,
-    importJsonFile,
-    scanJsonFile,
-} from '@/utils/file'
+import { deleteJsonFile, deleteJsonFileList, DIR, exportJsonFile, importJsonFile, scanJsonFile } from '@/utils/file'
 import { queryClient } from '@/utils/react-query'
-import { useMutation, useQuery } from '@tanstack/react-query'
-import dayjs from 'dayjs'
-import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
-import { debounce, differenceBy } from 'lodash-es'
-import { Calendar, Download, FileText, Trash2, Upload } from 'lucide-react-native'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import Toast from 'react-native-toast-message'
-import { DeepExpand } from 'types-tools'
-import { z } from 'zod'
 
 type CheckboxState = 'unchecked' | 'checked' | 'indeterminate'
 
@@ -57,13 +50,13 @@ export default function DataManagement() {
     })
 
     useEffect(() => {
-        const allId = calendarList.map(item => item.id)
-        setSelectedAnimeIdList(prev => prev.filter(id => allId.includes(id)))
+        const allId = calendarList.map((item) => item.id)
+        setSelectedAnimeIdList((prev) => prev.filter((id) => allId.includes(id)))
     }, [calendarList])
 
     useEffect(() => {
-        const allFile = fileList.map(item => item.name)
-        setSelectedJsonFileList(prev => prev.filter(fileName => allFile.includes(fileName)))
+        const allFile = fileList.map((item) => item.name)
+        setSelectedJsonFileList((prev) => prev.filter((fileName) => allFile.includes(fileName)))
     }, [fileList])
 
     const { mutate: handleClearCalendarByAnimeIdMution } = useMutation({
@@ -80,7 +73,7 @@ export default function DataManagement() {
                 selectedAnimeIdList.splice(index, 1)
             }
         },
-        onError: err => {
+        onError: (err) => {
             Toast.show({
                 type: 'error',
                 text1: `获取日历事件失败 ${err}`,
@@ -98,14 +91,14 @@ export default function DataManagement() {
                 {
                     leading: true,
                     trailing: false,
-                }
+                },
             )
 
             debounceHandler()
 
             return () => debounceHandler.cancel()
         },
-        [handleClearCalendarByAnimeIdMution]
+        [handleClearCalendarByAnimeIdMution],
     )
 
     const { mutate: handleCalendarByAnimeIdListMution, isPending: isHandleCalendarByAnimeIdListMutionLoading } =
@@ -131,7 +124,7 @@ export default function DataManagement() {
             {
                 leading: true,
                 trailing: false,
-            }
+            },
         )
 
         debounceHandler()
@@ -141,7 +134,7 @@ export default function DataManagement() {
 
     const handleEventSelectAll = (state: CheckboxState) => {
         if (state === 'checked') {
-            setSelectedAnimeIdList(calendarList.map(item => item.id))
+            setSelectedAnimeIdList(calendarList.map((item) => item.id))
         } else {
             setSelectedAnimeIdList([])
         }
@@ -156,19 +149,22 @@ export default function DataManagement() {
 
     const handleEventSelect = (animeId: number, checked: boolean) => {
         if (checked) {
-            setSelectedAnimeIdList(prev => [...prev, animeId])
+            setSelectedAnimeIdList((prev) => [...prev, animeId])
         } else {
-            setSelectedAnimeIdList(prev => prev.filter(id => id !== animeId))
+            setSelectedAnimeIdList((prev) => prev.filter((id) => id !== animeId))
         }
     }
 
     async function exportDataToJsonFile() {
         const data = await getAnimeList()
-        const res = data.map(({ eventIds, updatedAt, createdAt, ...reset } : any) => {
-            return {
-                ...reset,
-            }
-        })
+        type AnimeRow = (typeof animeTable)['$inferSelect']
+        const res = data.map(
+            ({ eventIds: _eventIds, updatedAt: _updatedAt, createdAt: _createdAt, ...reset }: AnimeRow) => {
+                return {
+                    ...reset,
+                }
+            },
+        )
         await exportJsonFile({ animeList: res }, `anime_data_${dayjs().format('YYYY_MM_DD')}.json`)
         return dayjs().format('YYYY_MM_DD')
     }
@@ -185,12 +181,12 @@ export default function DataManagement() {
                 text1: '导出成功！',
             })
         },
-        onError: err => {
+        onError: (err) => {
             console.log(err)
 
             Toast.show({
                 type: 'error',
-                text1: '导入失败！' + err,
+                text1: `导入失败！${err}`,
             })
         },
     })
@@ -203,7 +199,7 @@ export default function DataManagement() {
                 totalEpisode: z.number(),
                 cover: z.string(),
                 firstEpisodeTimestamp: z.number().gte(0),
-            })
+            }),
         ),
     })
 
@@ -219,14 +215,14 @@ export default function DataManagement() {
         }
         const data = await getAnimeList()
         const res = differenceBy(jsonData.animeList, data, 'name')
-        const animeList = res.map(({ id, ...reset }) => reset)
+        const animeList = res.map(({ id: _id, ...reset }) => reset)
 
         return await Promise.all(
-            animeList.map(item => {
+            animeList.map((item) => {
                 handleAddAnime(item)
 
                 return Promise.resolve()
-            })
+            }),
         )
     }
 
@@ -265,7 +261,7 @@ export default function DataManagement() {
                 selectedJsonFileList.splice(index, 1)
             }
         },
-        onError: err => {
+        onError: (err) => {
             Toast.show({
                 type: 'error',
                 text1: err.message,
@@ -285,7 +281,7 @@ export default function DataManagement() {
             setSelectedJsonFileList([])
             Modal.hide()
         },
-        onError: err => {
+        onError: (err) => {
             Toast.show({
                 type: 'error',
                 text1: err.message,
@@ -301,7 +297,7 @@ export default function DataManagement() {
 
     const handleFileSelectAll = (state: CheckboxState) => {
         if (state === 'checked') {
-            setSelectedJsonFileList(fileList.map(file => file.name))
+            setSelectedJsonFileList(fileList.map((file) => file.name))
         } else {
             setSelectedJsonFileList([])
         }
@@ -315,9 +311,9 @@ export default function DataManagement() {
 
     const handleFileSelect = (fileName: string, checked: boolean) => {
         if (checked) {
-            setSelectedJsonFileList(prev => [...prev, fileName])
+            setSelectedJsonFileList((prev) => [...prev, fileName])
         } else {
-            setSelectedJsonFileList(prev => prev.filter(name => name !== fileName))
+            setSelectedJsonFileList((prev) => prev.filter((name) => name !== fileName))
         }
     }
 
@@ -423,13 +419,13 @@ export default function DataManagement() {
                                 <Text className="py-8 text-center text-gray-500">暂无本地文件</Text>
                             ) : (
                                 <View className="space-y-3">
-                                    {fileList.map(file => (
+                                    {fileList.map((file) => (
                                         <View key={file.name} className="flex-row rounded-lg bg-gray-50 p-3">
                                             <Checkbox
                                                 state={
                                                     selectedJsonFileList.includes(file.name) ? 'checked' : 'unchecked'
                                                 }
-                                                onStateChange={state =>
+                                                onStateChange={(state) =>
                                                     handleFileSelect(file.name, state === 'checked')
                                                 }
                                             />
@@ -514,7 +510,7 @@ export default function DataManagement() {
                                 <Text className="py-8 text-center text-gray-500">暂无日历事件</Text>
                             ) : (
                                 <View className="space-y-3">
-                                    {calendarList.map(item => {
+                                    {calendarList.map((item) => {
                                         return (
                                             <View
                                                 key={item.id}
@@ -524,7 +520,7 @@ export default function DataManagement() {
                                                     state={
                                                         selectedAnimeIdList.includes(item.id) ? 'checked' : 'unchecked'
                                                     }
-                                                    onStateChange={state =>
+                                                    onStateChange={(state) =>
                                                         handleEventSelect(item.id, state === 'checked')
                                                     }
                                                     label={item.name}

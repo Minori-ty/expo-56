@@ -1,15 +1,17 @@
-import { getAnimeListByName } from '@/api/anime'
-import Icon from '@/components/ui/Icon'
-import { EStatus } from '@/enums'
-import { blurhash } from '@/styles'
-import { cn } from '@/utils/cn'
-import { getAiredEpisodeCount, getAnimeStatus } from '@/utils/time'
 import { Enum } from 'enum-plus'
 import { Image } from 'expo-image'
 import { router, useNavigation } from 'expo-router'
 import { useLayoutEffect, useState } from 'react'
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+
+import { getAnimeListByName } from '@/api/anime'
+import Icon from '@/components/ui/Icon'
+import { animeTable } from '@/db/schema'
+import { EStatus } from '@/enums'
+import { blurhash } from '@/styles'
+import { cn } from '@/utils/cn'
+import { getAiredEpisodeCount, getAnimeStatus } from '@/utils/time'
 
 export default function Search() {
     const navigation = useNavigation()
@@ -20,7 +22,8 @@ export default function Search() {
     }, [navigation])
 
     const [keyword, setKeyword] = useState('')
-    const [list, setList] = useState<any[]>([])
+    type AnimeRow = (typeof animeTable)['$inferSelect']
+    const [list, setList] = useState<AnimeRow[]>([])
 
     async function handleSearch() {
         if (!keyword) return
@@ -53,7 +56,7 @@ export default function Search() {
                     <View className="flex-1 flex-row items-center rounded-3xl border border-[#ccc] pl-2">
                         <Icon name="Search" size={20} />
                         <TextInput
-                            className="h-10 flex-1 p-0 pl-2 pt-1 text-end text-base leading-7"
+                            className="h-10 flex-1 p-0 pt-1 pl-2 text-end text-base leading-7"
                             onChangeText={setKeyword}
                             onEndEditing={handleSearch}
                         />
