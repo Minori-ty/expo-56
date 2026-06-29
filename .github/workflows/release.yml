@@ -46,6 +46,7 @@ jobs:
                   distribution: 'temurin'
                   java-version: 21
                   gradle-cache: true
+                  cache: gradle
 
             - name: Setup Gradle
               uses: gradle/actions/setup-gradle@v6
@@ -60,17 +61,6 @@ jobs:
                   # 自动同意服务条款 (注意这里是 of-use)
                   build-scan-terms-of-use-url: 'https://gradle.com/help/legal-terms-of-use'
                   build-scan-terms-of-use-agree: 'yes'
-
-            - name: Cache Android Gradle project # ⭐ 新增
-              uses: actions/cache@v6
-              with:
-                  path: |
-                      ~/.gradle/caches
-                      ~/.gradle/wrapper
-                      android/.gradle
-                  key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/settings.gradle*') }}
-                  restore-keys: |
-                      gradle-${{ runner.os }}-
 
             - name: 安装 Android SDK
               uses: android-actions/setup-android@v4
