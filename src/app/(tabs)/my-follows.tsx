@@ -6,18 +6,7 @@ import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
 import { Enum } from 'enum-plus'
 import { impactAsync, ImpactFeedbackStyle } from 'expo-haptics'
 import { useNavigation, useRouter } from 'expo-router'
-import { debounce } from 'lodash-es'
-import React, {
-    createContext,
-    memo,
-    useCallback,
-    useContext,
-    useEffect,
-    useLayoutEffect,
-    useMemo,
-    useRef,
-    useState,
-} from 'react'
+import React, { createContext, memo, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { BackHandler, Dimensions, StyleSheet } from 'react-native'
 
 import { handleDeleteAnime } from '@/api'
@@ -29,6 +18,7 @@ import Icon from '@/components/ui/Icon'
 import { db } from '@/db'
 import { animeTable } from '@/db/schema'
 import { EStatus } from '@/enums'
+import { useNavigationLock } from '@/hooks/useNavigationLock'
 import { blurhash, themeColorPurple } from '@/styles'
 import { FlatList, Pressable, RefreshControl, ScrollView, Text, TouchableOpacity, View } from '@/tw'
 import { Image } from '@/tw/image'
@@ -126,22 +116,7 @@ export default function MyFollows() {
         return () => subscription.remove()
     }, [isDeleting])
 
-    const handlePress = useCallback(() => {
-        const debouncePush = debounce(
-            () => {
-                router.push('/addAnime')
-            },
-            300,
-            {
-                leading: true,
-                trailing: false,
-            },
-        )
-
-        debouncePush()
-
-        return () => debouncePush.cancel()
-    }, [router])
+    const navigate = useNavigationLock()
 
     function handleClose() {
         bottomSheetModalRef.current?.close()
@@ -153,19 +128,19 @@ export default function MyFollows() {
             headerTitle: '我的追番',
             headerRight: () => (
                 <View className="flex-row items-center gap-4 pr-2">
-                    <TouchableOpacity onPress={() => router.push('/search')}>
+                    <TouchableOpacity onPress={() => navigate(() => router.push('/search'))}>
                         <Icon name="Search" size={24} />
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => bottomSheetModalRef.current?.present()}>
                         <Icon name="Settings2" size={24} />
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={handlePress}>
+                    <TouchableOpacity onPress={() => navigate(() => router.push('/addAnime'))}>
                         <Icon name="Plus" size={34} />
                     </TouchableOpacity>
                 </View>
             ),
         })
-    }, [navigation, router, handlePress])
+    }, [navigation, router, navigate])
 
     return (
         <>
@@ -250,25 +225,11 @@ interface IAnimeContainerItemProps {
 const AnimeContainerItem = memo(function AnimeContainerItem({ data }: IAnimeContainerItemProps) {
     const router = useRouter()
     const { handleDeleteAnimeMutation } = useMyFollowsContext()
-
-    const handleToAnimeDetail = useCallback(() => {
-        const debounceHandle = debounce(
-            () => {
-                router.push(`/animeDetail/${data.id}`)
-            },
-            300,
-            {
-                leading: true,
-                trailing: false,
-            },
-        )
-        debounceHandle()
-        return () => debounceHandle.cancel()
-    }, [data.id, router])
+    const navigate = useNavigationLock()
 
     return (
         <Pressable
-            onPress={handleToAnimeDetail}
+            onPress={() => navigate(() => router.push(`/animeDetail/${data.id}`))}
             onLongPress={() => {
                 impactAsync(ImpactFeedbackStyle.Medium)
                 Modal.show({

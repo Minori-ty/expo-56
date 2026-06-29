@@ -2,7 +2,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
 import { useNavigation } from 'expo-router'
-import { debounce, differenceBy } from 'lodash-es'
+import { differenceBy } from 'lodash-es'
 import { Calendar, Download, FileText, Trash2, Upload } from 'lucide-react-native'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { BackHandler } from 'react-native'
@@ -91,22 +91,10 @@ export default function DataManagement() {
 
     const handleUnsubscribe = useCallback(
         (id: number) => {
-            const debounceHandler = debounce(
-                () => {
-                    handleClearCalendarByAnimeIdMution(id)
-                },
-                300,
-                {
-                    leading: true,
-                    trailing: false,
-                },
-            )
-
-            debounceHandler()
-
-            return () => debounceHandler.cancel()
+            if (isSingleDeleting) return
+            handleClearCalendarByAnimeIdMution(id)
         },
-        [handleClearCalendarByAnimeIdMution],
+        [handleClearCalendarByAnimeIdMution, isSingleDeleting],
     )
 
     const { mutate: handleCalendarByAnimeIdListMution, isPending: isBatchDeleting } = useMutation({
@@ -123,21 +111,9 @@ export default function DataManagement() {
     })
 
     const handleUnsubscribeAll = useCallback(() => {
-        const debounceHandler = debounce(
-            () => {
-                handleCalendarByAnimeIdListMution(selectedAnimeIdList)
-            },
-            300,
-            {
-                leading: true,
-                trailing: false,
-            },
-        )
-
-        debounceHandler()
-
-        return () => debounceHandler.cancel()
-    }, [handleCalendarByAnimeIdListMution, selectedAnimeIdList])
+        if (isBatchDeleting) return
+        handleCalendarByAnimeIdListMution(selectedAnimeIdList)
+    }, [handleCalendarByAnimeIdListMution, selectedAnimeIdList, isBatchDeleting])
 
     const isDeletingCalendarEvent = isSingleDeleting || isBatchDeleting
 
@@ -386,6 +362,7 @@ export default function DataManagement() {
                                     exportDataToJsonFileMutation()
                                 }}
                                 disabled={isExportDataToJsonFileMutationLoading}
+                                activeOpacity={0.7}
                             >
                                 <Download size={16} color="white" />
                                 <Text className="ml-2 font-medium text-white">
@@ -399,6 +376,7 @@ export default function DataManagement() {
                                 }`}
                                 onPress={() => handleImportJsonFileToDataMution()}
                                 disabled={handleImportJsonFileToDataMutionLoading}
+                                activeOpacity={0.7}
                             >
                                 <Upload size={16} color="white" />
                                 <Text className="ml-2 font-medium text-white">

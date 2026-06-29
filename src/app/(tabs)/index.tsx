@@ -1,8 +1,7 @@
 import dayjs from 'dayjs'
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
 import { router } from 'expo-router'
-import { debounce } from 'lodash-es'
-import { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import { createContext, useContext, useMemo, useState } from 'react'
 import { StyleSheet } from 'react-native'
 import { SceneMap, TabBar, TabView } from 'react-native-tab-view'
 
@@ -12,6 +11,7 @@ import Loading from '@/components/lottie/Loading'
 import { db } from '@/db'
 import { animeTable } from '@/db/schema'
 import { EStatus, EWeekday } from '@/enums'
+import { useNavigationLock } from '@/hooks/useNavigationLock'
 import { blurhash, themeColorPurple } from '@/styles'
 import { RefreshControl, ScrollView, Text, TouchableOpacity, View } from '@/tw'
 import { Image } from '@/tw/image'
@@ -170,20 +170,7 @@ interface IAnimeCardItemProps {
 }
 
 function AnimeCardItem({ time, animeList }: IAnimeCardItemProps) {
-    const handleToAnimeDetail = useCallback((id: number) => {
-        const debounceHandler = debounce(
-            () => {
-                router.push(`/animeDetail/${id}`)
-            },
-            300,
-            {
-                leading: true,
-                trailing: false,
-            },
-        )
-        debounceHandler()
-        return () => debounceHandler.cancel()
-    }, [])
+    const navigate = useNavigationLock()
     return (
         <View className="my-2 flex-row">
             <View className="w-16 items-center justify-start">
@@ -195,7 +182,7 @@ function AnimeCardItem({ time, animeList }: IAnimeCardItemProps) {
                         <TouchableOpacity
                             key={item.id}
                             activeOpacity={0.5}
-                            onPress={() => handleToAnimeDetail(item.id)}
+                            onPress={() => navigate(() => router.push(`/animeDetail/${item.id}`))}
                             className="mb-3 h-28 flex-1 flex-row"
                         >
                             <Image

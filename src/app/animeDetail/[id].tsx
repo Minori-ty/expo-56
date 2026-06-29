@@ -4,9 +4,8 @@ import dayjs from 'dayjs'
 import { eq } from 'drizzle-orm'
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router'
-import { debounce } from 'lodash-es'
 import { Bell, BellOff, CalendarCheck, CalendarClock, Clock } from 'lucide-react-native'
-import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { StyleSheet } from 'react-native'
 import DateTimePicker, {
     type CalendarComponents,
@@ -22,10 +21,11 @@ import TransparentLoading from '@/components/TransparentLoading'
 import { CompactHeader } from '@/components/ui/CompactHeader'
 import Icon from '@/components/ui/Icon'
 import { db } from '@/db'
+import { animeTable } from '@/db/schema'
 import 'dayjs/locale/zh-cn'
 
-import { animeTable } from '@/db/schema'
 import { EStatus, EWeekday } from '@/enums'
+import { useNavigationLock } from '@/hooks/useNavigationLock'
 import { blurhash, themeColorPurple } from '@/styles'
 import { RefreshControl, ScrollView, Text, TouchableOpacity, View } from '@/tw'
 import { Image } from '@/tw/image'
@@ -96,22 +96,7 @@ function AnimeDetail() {
         setFirstEpisodeYYYYMMDDHHmm(dayjs(anime.firstEpisodeTimestamp))
     }, [isLoading, anime])
 
-    const handlePress = useCallback(() => {
-        const debounceHandler = debounce(
-            () => {
-                router.push(`/editAnime/${anime.id}`)
-            },
-            300,
-            {
-                leading: true,
-                trailing: false,
-            },
-        )
-
-        debounceHandler()
-
-        return () => debounceHandler.cancel()
-    }, [router, anime.id])
+    const navigate = useNavigationLock()
 
     /** 添加订阅 */
     const { mutate: handleCreateAndBindCalendarMution, isPending: isHandleCreateAndBindCalendarMutionLoading } =
@@ -130,22 +115,10 @@ function AnimeDetail() {
             },
         })
 
-    const handleSubscribe = useCallback(() => {
-        const debounceHandler = debounce(
-            () => {
-                handleCreateAndBindCalendarMution(Number(id))
-            },
-            300,
-            {
-                leading: true,
-                trailing: false,
-            },
-        )
-
-        debounceHandler()
-
-        return () => debounceHandler.cancel()
-    }, [id, handleCreateAndBindCalendarMution])
+    function handleSubscribe() {
+        if (isHandleCreateAndBindCalendarMutionLoading) return
+        handleCreateAndBindCalendarMution(Number(id))
+    }
 
     /** 删除订阅 */
     const { mutate: handleClearCalendarByAnimeIdMution, isPending: isHandleClearCalendarByAnimeIdMutionLoading } =
@@ -162,22 +135,10 @@ function AnimeDetail() {
             onError: () => {},
         })
 
-    const handleUnsubscribe = useCallback(() => {
-        const debounceHandler = debounce(
-            () => {
-                handleClearCalendarByAnimeIdMution(Number(id))
-            },
-            300,
-            {
-                leading: true,
-                trailing: false,
-            },
-        )
-
-        debounceHandler()
-
-        return () => debounceHandler.cancel()
-    }, [id, handleClearCalendarByAnimeIdMution])
+    function handleUnsubscribe() {
+        if (isHandleClearCalendarByAnimeIdMutionLoading) return
+        handleClearCalendarByAnimeIdMution(Number(id))
+    }
 
     const status = useMemo<typeof EStatus.valueType>(() => {
         return getAnimeStatus(anime.totalEpisode, anime.firstEpisodeTimestamp)
@@ -195,13 +156,13 @@ function AnimeDetail() {
             }) => <CompactHeader options={options} back navigation={navigation} />,
             headerRight: () => {
                 return (
-                    <TouchableOpacity onPress={handlePress}>
+                    <TouchableOpacity onPress={() => navigate(() => router.push(`/editAnime/${anime.id}`))}>
                         <Icon name="Pencil" size={22} />
                     </TouchableOpacity>
                 )
             },
         })
-    }, [navigation, handlePress])
+    }, [navigation, router, navigate, anime.id])
 
     const defaultStyles = useDefaultStyles()
 
