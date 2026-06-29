@@ -37,7 +37,6 @@
         "expo-constants": "~56.0.16",
         "expo-dev-client": "~56.0.20",
         "expo-drizzle-studio-plugin": "^0.2.1",
-        "expo-file-system": "~56.0.8",
         "expo-font": "~56.0.5",
         "expo-glass-effect": "~56.0.4",
         "expo-haptics": "~56.0.3",
@@ -81,6 +80,7 @@
         "@types/react": "~19.2.2",
         "drizzle-kit": "^0.31.10",
         "expo-dev-client": "^56.0.20",
+        "expo-file-system": "~56.0.8",
         "husky": "^9.1.7",
         "lint-staged": "^16.4.0",
         "oxfmt": "^0.56.0",
@@ -98,12 +98,5 @@
             "oxfmt",
             "oxlint --fix"
         ]
-    },
-    "expo": {
-        "doctor": {
-            "appConfigFieldsNotSyncedCheck": {
-                "enabled": false
-            }
-        }
     }
 }

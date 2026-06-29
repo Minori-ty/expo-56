@@ -1,5 +1,8 @@
+import { eq } from 'drizzle-orm'
 import * as Calendar from 'expo-calendar'
 
+import { db } from '@/db'
+import { settingsTable } from '@/db/schema'
 import { EStatus } from '@/enums'
 import { getCalendarPermission } from '@/permissions'
 
@@ -35,6 +38,64 @@ export async function deleteCalendarEvents(eventIds: string[]) {
     }
 
     return allSuccess
+}
+
+/** 日历事件标题匹配： "XXX 第 N 集更新!" */
+const CALENDAR_EVENT_TITLE_PATTERN = /^.+ 第 \d+ 集更新!$/
+
+const CLEANUP_FLAG_KEY = 'calendar_cleanup_done'
+
+/**
+ * 清理孤立的日历事件（用户卸载 app 前未清理的事件）。
+ *
+ * 仅在首次启动时执行一次（通过 settings 表记录）。
+ * 检索所有可修改日历中的事件，删除标题匹配 `"XXX 第 N 集更新!"` 的孤立事件。
+ * 静默调用，失败不提示用户。
+ */
+export async function cleanupOrphanedCalendarEvents() {
+    // 已执行过清理，跳过
+    const rows = await db.select().from(settingsTable).where(eq(settingsTable.key, CLEANUP_FLAG_KEY))
+    if (rows.length > 0) return
+
+    const granted = await getCalendarPermission()
+    if (!granted) return
+
+    const calendars = await Calendar.getCalendars()
+    const writableCalendars = calendars.filter((cal) => cal.allowsModifications)
+    if (writableCalendars.length === 0) return
+
+    // 搜索范围：前后 5 年
+    const now = new Date()
+    const startDate = new Date(now.getFullYear() - 5, 0, 1)
+    const endDate = new Date(now.getFullYear() + 5, 11, 31)
+
+    let events: Calendar.ExpoCalendarEvent[]
+    try {
+        events = await Calendar.listEvents(writableCalendars, startDate, endDate)
+    } catch (error) {
+        console.log('获取日历事件失败:', error)
+        return
+    }
+
+    const orphanedEvents = events.filter((e) => CALENDAR_EVENT_TITLE_PATTERN.test(e.title))
+
+    if (orphanedEvents.length > 0) {
+        let deletedCount = 0
+        for (const event of orphanedEvents) {
+            try {
+                const calendarEvent = await Calendar.ExpoCalendarEvent.get(event.id)
+                await calendarEvent.delete()
+                deletedCount++
+                console.log(`清理孤立日历事件: ${event.title}`)
+            } catch {
+                console.log(`清理失败: ${event.title}`)
+            }
+        }
+        console.log(`清理完成，共删除 ${deletedCount} 个孤立日历事件`)
+    }
+
+    // 写入标记，避免再次扫描
+    await db.insert(settingsTable).values({ key: CLEANUP_FLAG_KEY, value: '1' })
 }
 
 interface ICreateCalendarEventsProps {

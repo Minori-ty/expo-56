@@ -3,6 +3,11 @@ import { z, ZodIssueCode } from 'zod'
 
 import { EStatus, EWeekday } from '@/enums'
 
+const dateString = z.preprocess(
+    (val) => (val === undefined || val === null ? '' : val),
+    z.string().nonempty('请选择日期'),
+)
+
 const statusSchema = z.discriminatedUnion('status', [
     z.object({
         status: z.literal(EStatus.serializing),
@@ -17,15 +22,18 @@ const statusSchema = z.discriminatedUnion('status', [
             z.literal(''),
         ]),
         currentEpisode: z.number(),
-        updateTimeHHmm: z.string().regex(/(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]/, '请输入正确的时间格式HH:mm'),
+        updateTimeHHmm: z.preprocess(
+            (val) => (val === undefined || val === null ? '' : val),
+            z.string().regex(/(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]/, '请输入正确的时间格式HH:mm'),
+        ),
     }),
     z.object({
         status: z.literal(EStatus.completed),
-        lastEpisodeYYYYMMDDHHmm: z.string().nonempty('请选择日期'),
+        lastEpisodeYYYYMMDDHHmm: dateString,
     }),
     z.object({
         status: z.literal(EStatus.toBeUpdated),
-        firstEpisodeYYYYMMDDHHmm: z.string().nonempty('请选择日期'),
+        firstEpisodeYYYYMMDDHHmm: dateString,
     }),
 ])
 

@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm'
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router'
 import { debounce } from 'lodash-es'
+import { Bell, BellOff, CalendarCheck, CalendarClock, Clock } from 'lucide-react-native'
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { StyleSheet } from 'react-native'
 import DateTimePicker, {
@@ -352,7 +353,7 @@ function AnimeDetail() {
                         <View className="space-y-4">
                             <View className="flex-row items-center rounded-xl bg-blue-50 px-4 py-3">
                                 <View className="mr-3 size-8 items-center justify-center rounded-full bg-blue-500">
-                                    <Icon name="CalendarClock" size={14} className="text-white" />
+                                    <CalendarClock size={14} color="white" />
                                 </View>
                                 <View className="flex-1">
                                     <Text className="font-medium text-gray-900">每周更新</Text>
@@ -365,7 +366,7 @@ function AnimeDetail() {
 
                             <View className="my-3 flex-row items-center rounded-xl bg-green-50 px-4 py-3">
                                 <View className="mr-3 size-8 items-center justify-center rounded-full bg-green-500">
-                                    <Icon name="Clock" size={14} className="text-white" />
+                                    <Clock size={14} color="white" />
                                 </View>
                                 <View className="flex-1">
                                     <Text className="font-medium text-gray-900">首播时间</Text>
@@ -377,7 +378,7 @@ function AnimeDetail() {
 
                             <View className="flex-row items-center rounded-xl bg-orange-50 px-4 py-3">
                                 <View className="mr-3 size-8 items-center justify-center rounded-full bg-orange-500">
-                                    <Icon name="CalendarCheck" size={14} className="text-white" />
+                                    <CalendarCheck size={14} color="white" />
                                 </View>
                                 <View className="flex-1">
                                     <Text className="font-medium text-gray-900">完结时间</Text>
@@ -401,7 +402,7 @@ function AnimeDetail() {
                                 onPress={handleSubscribe}
                                 disabled={isHandleCreateAndBindCalendarMutionLoading}
                             >
-                                <Icon name="Bell" className="mr-2" color="white" size={20} />
+                                <Bell className="mr-2" color="white" size={20} />
                                 <Text className="font-medium text-white">设置更新提醒</Text>
                             </TouchableOpacity>
                         </View>
@@ -418,7 +419,7 @@ function AnimeDetail() {
                                 onPress={handleUnsubscribe}
                                 disabled={isHandleClearCalendarByAnimeIdMutionLoading}
                             >
-                                <Icon name="BellOff" className="mr-2" color="white" size={20} />
+                                <BellOff className="mr-2" color="white" size={20} />
                                 <Text className="font-medium text-white">取消更新提醒</Text>
                             </TouchableOpacity>
                         </View>

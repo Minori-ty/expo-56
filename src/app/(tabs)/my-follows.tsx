@@ -4,6 +4,7 @@ import { type ClassValue } from 'clsx'
 import dayjs from 'dayjs'
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
 import { Enum } from 'enum-plus'
+import { impactAsync, ImpactFeedbackStyle } from 'expo-haptics'
 import { useNavigation, useRouter } from 'expo-router'
 import { debounce } from 'lodash-es'
 import React, {
@@ -228,7 +229,7 @@ const AnimeContainer = memo(function AnimeContainer({ list }: IAnimeContainerPro
             columnWrapperStyle={{ gap: GAP }}
             showsHorizontalScrollIndicator={false}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ gap: GAP, paddingHorizontal: GAP }}
+            contentContainerStyle={{ gap: GAP, paddingHorizontal: GAP, paddingBottom: 20 }}
             renderItem={({ item }) => <AnimeContainerItem data={item} timestamp={timestamp} />}
             refreshControl={
                 <RefreshControl
@@ -269,6 +270,7 @@ const AnimeContainerItem = memo(function AnimeContainerItem({ data }: IAnimeCont
         <Pressable
             onPress={handleToAnimeDetail}
             onLongPress={() => {
+                impactAsync(ImpactFeedbackStyle.Medium)
                 Modal.show({
                     body: <Text className="text-sm">你确定要删除 &quot;{data.name}&quot; 吗?</Text>,
                     onConfirm: () => handleDeleteAnimeMutation(data.id),

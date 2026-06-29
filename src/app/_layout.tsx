@@ -6,7 +6,7 @@ import { useFonts } from 'expo-font'
 import { Stack, ThemeProvider } from 'expo-router'
 import { DefaultTheme } from 'expo-router/react-navigation'
 import { StatusBar } from 'expo-status-bar'
-import { startTransition } from 'react'
+import { startTransition, useEffect } from 'react'
 import ErrorBoundary from 'react-native-error-boundary'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { KeyboardProvider } from 'react-native-keyboard-controller'
@@ -20,6 +20,7 @@ import { db, expo } from '@/db'
 import { useAppStateRefresh } from '@/hooks/useAppStateRefresh'
 import { getCalendarPermission } from '@/permissions'
 import { Text } from '@/tw'
+import { cleanupOrphanedCalendarEvents } from '@/utils/calendar'
 import 'react-native-reanimated'
 
 import { queryClient } from '@/utils/react-query'
@@ -39,6 +40,12 @@ export default function RootLayout() {
         getCalendarPermission()
     })
     useAppStateRefresh()
+
+    useEffect(() => {
+        if (success) {
+            cleanupOrphanedCalendarEvents()
+        }
+    }, [success])
 
     function errorHandler(error: Error) {
         console.log(error)

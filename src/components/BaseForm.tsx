@@ -218,7 +218,11 @@ const BaseForm = forwardRef<IBaseFormRef, IBaseAnimeFormProps>(function BaseForm
                                     )}
                                     onPress={() => firstEpisodeRef.current?.open()}
                                 >
-                                    <Icon name="CalendarClock" size={22} />
+                                    <Icon
+                                        name="CalendarClock"
+                                        size={22}
+                                        color={fullErrors.firstEpisodeYYYYMMDDHHmm ? '#ef4444' : undefined}
+                                    />
                                     <Text className={cn('text-lg', field.value ?? 'text-gray-400')}>
                                         {field.value ?? '请选择日期'}
                                     </Text>
@@ -235,7 +239,7 @@ const BaseForm = forwardRef<IBaseFormRef, IBaseAnimeFormProps>(function BaseForm
                             name="firstEpisodeYYYYMMDDHHmm"
                             render={() => (
                                 <View className="h-10 flex-row items-center gap-3 rounded-md border border-[#ccc] bg-gray-100 pl-3">
-                                    <Icon name="CalendarCheck" size={22} className="text-gray-400" />
+                                    <Icon name="CalendarCheck" size={22} color="#9ca3af" />
                                     <Text className="text-lg text-gray-400">{getLastEpisodeDateTime}</Text>
                                 </View>
                             )}
@@ -250,7 +254,7 @@ const BaseForm = forwardRef<IBaseFormRef, IBaseAnimeFormProps>(function BaseForm
                             name="lastEpisodeYYYYMMDDHHmm"
                             render={() => (
                                 <View className="h-10 flex-row items-center gap-3 rounded-md border border-[#ccc] bg-gray-100 pl-3">
-                                    <Icon name="CalendarCheck" size={22} className="text-gray-400" />
+                                    <Icon name="CalendarCheck" size={22} color="#9ca3af" />
                                     <Text className="text-lg text-gray-400">{getFirstEpisodeDateTime}</Text>
                                 </View>
                             )}
@@ -272,7 +276,11 @@ const BaseForm = forwardRef<IBaseFormRef, IBaseAnimeFormProps>(function BaseForm
                                     )}
                                     onPress={() => lastEpisodeRef.current?.open()}
                                 >
-                                    <Icon name="CalendarClock" size={22} />
+                                    <Icon
+                                        name="CalendarClock"
+                                        size={22}
+                                        color={fullErrors.lastEpisodeYYYYMMDDHHmm ? '#ef4444' : undefined}
+                                    />
                                     <Text className={cn('text-lg', field.value ?? 'text-gray-400')}>
                                         {field.value ?? '请选择日期'}
                                     </Text>
@@ -323,7 +331,11 @@ const BaseForm = forwardRef<IBaseFormRef, IBaseAnimeFormProps>(function BaseForm
                                     )}
                                     onPress={() => timepickerRef.current?.open()}
                                 >
-                                    <Icon name="Clock" size={22} />
+                                    <Icon
+                                        name="Clock"
+                                        size={22}
+                                        color={fullErrors.updateTimeHHmm ? '#ef4444' : undefined}
+                                    />
                                     <Text className="ml-3 text-lg">{dayjs(field.value).format('HH:mm')}</Text>
                                 </TouchableOpacity>
                             )}
