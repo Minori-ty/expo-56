@@ -45,7 +45,6 @@ jobs:
               with:
                   distribution: 'temurin'
                   java-version: 21
-                  gradle-cache: true
                   cache: gradle
 
             - name: Setup Gradle
