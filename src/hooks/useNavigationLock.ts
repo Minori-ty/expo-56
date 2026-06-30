@@ -7,7 +7,7 @@ import { useCallback, useEffect, useRef } from 'react'
  */
 export function useNavigationLock(unlockDelay = 500) {
     const locked = useRef(false)
-    const timer = useRef<ReturnType<typeof setTimeout>>()
+    const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
     useEffect(() => {
         return () => clearTimeout(timer.current)

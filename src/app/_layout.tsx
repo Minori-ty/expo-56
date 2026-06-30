@@ -5,6 +5,7 @@ import { useDrizzleStudio } from 'expo-drizzle-studio-plugin'
 import { useFonts } from 'expo-font'
 import { Stack, ThemeProvider } from 'expo-router'
 import { DefaultTheme } from 'expo-router/react-navigation'
+import { StatusBar } from 'expo-status-bar'
 import { startTransition, useEffect } from 'react'
 import ErrorBoundary from 'react-native-error-boundary'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
@@ -18,10 +19,10 @@ import Modal from '@/components/Modal/Modal'
 import { db, expo } from '@/db'
 import { useAppStateRefresh } from '@/hooks/useAppStateRefresh'
 import { getCalendarPermission } from '@/permissions'
-import { Text } from '@/tw'
-import { cleanupOrphanedCalendarEvents } from '@/utils/calendar'
 import 'react-native-reanimated'
 
+import { Text } from '@/tw'
+import { cleanupOrphanedCalendarEvents } from '@/utils/calendar'
 import { queryClient } from '@/utils/react-query'
 
 import migrations from '../../drizzle/migrations'
@@ -69,6 +70,7 @@ export default function RootLayout() {
                         <GestureHandlerRootView>
                             <BottomSheetModalProvider>
                                 <ThemeProvider value={DefaultTheme}>
+                                    <StatusBar style="dark" />
                                     <Stack>
                                         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                                         <Stack.Screen name="+not-found" />
