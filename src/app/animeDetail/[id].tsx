@@ -234,7 +234,6 @@ function AnimeDetail() {
                                     source={anime.cover}
                                     placeholder={{ blurhash }}
                                     contentFit="cover"
-                                    transition={500}
                                     cachePolicy={'memory-disk'}
                                     style={styles.cover}
                                 />

@@ -189,7 +189,6 @@ function AnimeCardItem({ time, animeList }: IAnimeCardItemProps) {
                                 source={item.cover}
                                 placeholder={{ blurhash }}
                                 contentFit="cover"
-                                transition={500}
                                 cachePolicy={'memory-disk'}
                                 style={styles.cover}
                             />
