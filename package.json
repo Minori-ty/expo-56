@@ -1,6 +1,6 @@
 {
   "name": "expo-56",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
@@ -16,7 +16,7 @@
     "test": "vitest run",
     "db": "npx drizzle-kit generate",
     "check": "npx tsc --noEmit",
-    "prepare": "node -e \"if (!process.env.CI) require('husky')\""
+    "prepare": "husky install"
   },
   "dependencies": {
     "@expo/ui": "~56.0.19",

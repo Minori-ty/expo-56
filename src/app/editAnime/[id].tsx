@@ -1,47 +1,32 @@
-import { useMutation } from '@tanstack/react-query'
-import dayjs from 'dayjs'
-import { eq } from 'drizzle-orm'
-import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
 import { notificationAsync, NotificationFeedbackType } from 'expo-haptics'
-import { router, useLocalSearchParams, useNavigation } from 'expo-router'
-import React, { useEffect, useMemo, useRef } from 'react'
-import { BackHandler } from 'react-native'
+import { useLocalSearchParams } from 'expo-router'
+import { useMemo, useRef } from 'react'
 
 import { handleUpdateAnimeById } from '@/api'
 import { getAnimeByNameExceptItself, parseAnimeData } from '@/api/anime'
 import AnimeForm, { type IAnimeFormRef } from '@/components/Form/AnimeForm'
 import { formDefaultValues, type AnimeFormValues } from '@/components/Form/schema'
 import Loading from '@/components/lottie/Loading'
-import { CompactHeader } from '@/components/ui/CompactHeader'
 import { db } from '@/db'
 import { animeTable } from '@/db/schema'
 import { EStatus } from '@/enums'
-import { queryClient } from '@/utils/react-query'
+import { useAnimeMutation } from '@/hooks/useAnimeMutation'
+import { useNavigationHeader } from '@/hooks/useNavigationHeader'
 import {
+    computeFirstEpisodeTimestamp,
     getAiredEpisodeCount,
     getAnimeStatus,
-    getFirstEpisodeTimestamp,
-    getFirstEpisodeTimestampFromLast,
     getLastEpisodeTimestamp,
 } from '@/utils/time'
 
+import { eq } from 'drizzle-orm'
+import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
+import dayjs from 'dayjs'
+
 export default function EditAnime() {
-    const navigation = useNavigation()
-    useEffect(() => {
-        navigation.setOptions({
-            title: '编辑动漫信息',
-            header: ({
-                options,
-                navigation,
-            }: {
-                options: Record<string, unknown>
-                navigation: { goBack: () => void }
-            }) => <CompactHeader options={options} back navigation={navigation} />,
-        })
-    }, [navigation])
+    useNavigationHeader('编辑动漫信息')
 
     const { id } = useLocalSearchParams<{ id: string }>()
-
     const baseFormRef = useRef<IAnimeFormRef>(null)
 
     const { data, updatedAt } = useLiveQuery(
@@ -89,81 +74,26 @@ export default function EditAnime() {
         return !updatedAt
     }, [updatedAt])
 
+    const { mutate: updateAnimeMution, isPending } = useAnimeMutation({
+        mutationFn: handleUpdateAnimeById,
+        invalidateKeys: [['anime-detail', id], ['settings-calendar']],
+    })
+
     const onSubmit = async (data: AnimeFormValues) => {
-        const { name, cover, totalEpisode } = data
-        const result = await handleValidateAnimeNameIsExist(name, Number(id))
-        if (result) {
+        const exists = await getAnimeByNameExceptItself(data.name, Number(id))
+        if (exists) {
+            baseFormRef.current?.setNameError('该动漫已存在，请勿重复添加。如需修改，请编辑该动漫。')
             await notificationAsync(NotificationFeedbackType.Error)
             return
         }
-        if (data.status === EStatus.serializing) {
-            const { currentEpisode, updateTimeHHmm, updateWeekday } = data
-            if (updateWeekday === '') return
-            updateAnimeMution({
-                animeId: Number(id),
-                name,
-                totalEpisode,
-                cover,
-                firstEpisodeTimestamp: getFirstEpisodeTimestamp({ currentEpisode, updateTimeHHmm, updateWeekday }),
-            })
-        } else if (data.status === EStatus.completed) {
-            const { lastEpisodeYYYYMMDDHHmm } = data
-            updateAnimeMution({
-                animeId: Number(id),
-                name,
-                totalEpisode,
-                cover,
-                firstEpisodeTimestamp: getFirstEpisodeTimestampFromLast(
-                    totalEpisode,
-                    dayjs(lastEpisodeYYYYMMDDHHmm, 'YYYY-MM-DD HH:mm').valueOf(),
-                ),
-            })
-        } else if (data.status === EStatus.toBeUpdated) {
-            const { firstEpisodeYYYYMMDDHHmm } = data
-            updateAnimeMution({
-                animeId: Number(id),
-                name,
-                totalEpisode,
-                cover,
-                firstEpisodeTimestamp: dayjs(firstEpisodeYYYYMMDDHHmm, 'YYYY-MM-DD HH:mm').second(0).valueOf(),
-            })
-        }
-    }
 
-    const { mutate: updateAnimeMution, isPending } = useMutation({
-        mutationFn: handleUpdateAnimeById,
-        onSuccess: () => {
-            queryClient.invalidateQueries({
-                queryKey: ['anime-detail', id],
-            })
-
-            queryClient.invalidateQueries({
-                queryKey: ['settings-calendar'],
-            })
-
-            router.back()
-        },
-        onError: (err) => {
-            alert(err)
-        },
-    })
-
-    // 提交时禁止安卓返回键
-    useEffect(() => {
-        if (!isPending) return
-        const subscription = BackHandler.addEventListener('hardwareBackPress', () => true)
-        return () => subscription.remove()
-    }, [isPending])
-    /**
-     * 校验动漫名是否存在
-     */
-    async function handleValidateAnimeNameIsExist(name: string, id: number) {
-        const result = await getAnimeByNameExceptItself(name, id)
-        if (result) {
-            baseFormRef.current?.setNameError('该动漫已存在，请勿重复添加。如需修改，请编辑该动漫。')
-            return true
-        }
-        return false
+        updateAnimeMution({
+            animeId: Number(id),
+            name: data.name,
+            cover: data.cover,
+            totalEpisode: data.totalEpisode,
+            firstEpisodeTimestamp: computeFirstEpisodeTimestamp(data),
+        })
     }
 
     if (isLoading) {

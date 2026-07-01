@@ -224,6 +224,44 @@ export function isCurrentWeekdayUpdateTimePassed(dateStr: string) {
  * @param updateWeekday ISO 星期（1-7）
  * @returns 首集播出时间戳
  */
+/**
+ * 根据表单数据计算首集播出时间戳（毫秒）
+ *
+ * 替代 addAnime / editAnime 中重复的 3向 if/else 分支：
+ *   - serializing  → getFirstEpisodeTimestamp
+ *   - completed    → getFirstEpisodeTimestampFromLast
+ *   - toBeUpdated  → dayjs(firstEpisodeYYYYMMDDHHmm)
+ *
+ * 调用方保证传入的 status 分支字段已通过表单校验、非空且合法。
+ *
+ * @returns 首集播出时间戳（毫秒）
+ */
+export function computeFirstEpisodeTimestamp(data: {
+    status: number
+    currentEpisode?: number
+    updateTimeHHmm?: string
+    updateWeekday?: number | string
+    totalEpisode?: number
+    lastEpisodeYYYYMMDDHHmm?: string
+    firstEpisodeYYYYMMDDHHmm?: string
+}): number {
+    if (data.status === EStatus.serializing) {
+        return getFirstEpisodeTimestamp({
+            currentEpisode: data.currentEpisode!,
+            updateTimeHHmm: data.updateTimeHHmm!,
+            updateWeekday: Number(data.updateWeekday!),
+        })
+    }
+    if (data.status === EStatus.completed) {
+        return getFirstEpisodeTimestampFromLast(
+            data.totalEpisode!,
+            dayjs(data.lastEpisodeYYYYMMDDHHmm, 'YYYY-MM-DD HH:mm').valueOf(),
+        )
+    }
+    // toBeUpdated
+    return dayjs(data.firstEpisodeYYYYMMDDHHmm, 'YYYY-MM-DD HH:mm').second(0).valueOf()
+}
+
 export function getFirstEpisodeTimestamp({
     currentEpisode,
     updateTimeHHmm,
