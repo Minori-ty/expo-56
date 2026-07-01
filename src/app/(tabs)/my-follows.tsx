@@ -24,7 +24,7 @@ import {
 import { handleDeleteAnime } from '@/api'
 import { parseAnimeData } from '@/api/anime'
 import Loading from '@/components/lottie/Loading'
-import { Modal } from '@/components/Modal'
+import { useModal } from '@/components/Modal'
 import TransparentLoading from '@/components/TransparentLoading'
 import Icon from '@/components/ui/Icon'
 import { db } from '@/db'
@@ -220,6 +220,7 @@ interface IAnimeContainerItemProps {
     timestamp: number
 }
 const AnimeContainerItem = memo(function AnimeContainerItem({ data }: IAnimeContainerItemProps) {
+    const modal = useModal()
     const router = useRouter()
     const { handleDeleteAnimeMutation } = useMyFollowsContext()
     const navigate = useNavigationLock()
@@ -229,7 +230,7 @@ const AnimeContainerItem = memo(function AnimeContainerItem({ data }: IAnimeCont
             onPress={() => navigate(() => router.push(`/animeDetail/${data.id}`))}
             onLongPress={() => {
                 impactAsync(ImpactFeedbackStyle.Medium)
-                Modal.show({
+                modal.show({
                     body: <Text className="text-sm">你确定要删除 &quot;{data.name}&quot; 吗?</Text>,
                     onConfirm: () => handleDeleteAnimeMutation(data.id),
                 })

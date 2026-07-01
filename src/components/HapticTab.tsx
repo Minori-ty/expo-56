@@ -1,4 +1,4 @@
-import * as Haptics from 'expo-haptics'
+import { impactAsync, ImpactFeedbackStyle } from 'expo-haptics'
 import { Pressable, type PressableProps } from 'react-native'
 
 type Props = Omit<PressableProps, 'ref'>
@@ -10,7 +10,7 @@ export function HapticTab(props: Props) {
             onPressIn={(ev) => {
                 if (process.env.EXPO_OS === 'ios') {
                     // Add a soft haptic feedback when pressing down on the tabs.
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                    impactAsync(ImpactFeedbackStyle.Light)
                 }
                 props.onPressIn?.(ev)
             }}

@@ -16,7 +16,8 @@ import Toast from 'react-native-toast-message'
 
 import Error from '@/components/lottie/Error'
 import Loading from '@/components/lottie/Loading'
-import Modal from '@/components/Modal/Modal'
+import { ModalComponent } from '@/components/Modal/Modal'
+import { ModalProvider, useModalState } from '@/components/Modal'
 import { db, expo } from '@/db'
 import { useAppStateRefresh } from '@/hooks/useAppStateRefresh'
 import 'react-native-reanimated'
@@ -30,6 +31,7 @@ import migrations from '../../drizzle/migrations'
 import '../global.css'
 
 export default function RootLayout() {
+    const modalState = useModalState()
     const { success, error } = useMigrations(db, migrations)
     const [loaded] = useFonts({
         SpaceMono: require('../../assets/fonts/SpaceMono-Regular.ttf'),
@@ -71,15 +73,17 @@ export default function RootLayout() {
                     <QueryClientProvider client={queryClient}>
                         <GestureHandlerRootView>
                             <BottomSheetModalProvider>
-                                <ThemeProvider value={DefaultTheme}>
-                                    <StatusBar style="dark" />
-                                    <Stack>
-                                        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                                        <Stack.Screen name="+not-found" />
-                                    </Stack>
-                                    <Toast />
-                                    <Modal />
-                                </ThemeProvider>
+                                <ModalProvider state={modalState}>
+                                    <ThemeProvider value={DefaultTheme}>
+                                        <StatusBar style="dark" />
+                                        <Stack>
+                                            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                                            <Stack.Screen name="+not-found" />
+                                        </Stack>
+                                        <Toast />
+                                        <ModalComponent state={modalState} />
+                                    </ThemeProvider>
+                                </ModalProvider>
                             </BottomSheetModalProvider>
                         </GestureHandlerRootView>
                     </QueryClientProvider>

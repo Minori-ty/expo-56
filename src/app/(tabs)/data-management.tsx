@@ -14,7 +14,7 @@ import { handleAddAnime } from '@/api'
 import { getAnimeList } from '@/api/anime'
 import { deleteCalendarByAnimeId, deleteCalendarByAnimeIds } from '@/api/calendar'
 import Checkbox from '@/components/Checkbox'
-import { Modal } from '@/components/Modal/index'
+import { useModal } from '@/components/Modal'
 import TransparentLoading from '@/components/TransparentLoading'
 import { db } from '@/db'
 import { animeTable } from '@/db/schema'
@@ -32,6 +32,7 @@ import { queryClient } from '@/utils/react-query'
 type CheckboxState = 'unchecked' | 'checked' | 'indeterminate'
 
 export default function DataManagement() {
+    const modal = useModal()
     const [selectedAnimeIdList, setSelectedAnimeIdList] = useState<number[]>([])
     const [selectedJsonFileList, setSelectedJsonFileList] = useState<string[]>([])
 
@@ -284,7 +285,7 @@ export default function DataManagement() {
                 queryKey: ['settings-json-file'],
             })
             setSelectedJsonFileList([])
-            Modal.hide()
+            modal.hide()
         },
         onError: (err) => {
             Toast.show({
@@ -397,7 +398,7 @@ export default function DataManagement() {
                                 <TouchableOpacity
                                     className="flex-row items-center rounded-lg bg-red-100 px-3 py-2"
                                     onPress={() => {
-                                        Modal.show({
+                                        modal.show({
                                             body: (
                                                 <Text className="text-sm">
                                                     你确定要删除{selectedJsonFileList.length}个文件吗
@@ -454,7 +455,7 @@ export default function DataManagement() {
                                         <TouchableOpacity
                                             className="mt-1"
                                             onPress={() => {
-                                                Modal.show({
+                                                modal.show({
                                                     body: (
                                                         <Text className="text-sm">
                                                             你确定要删除文件 {file.name} 吗？
@@ -483,7 +484,7 @@ export default function DataManagement() {
                                 <TouchableOpacity
                                     className="flex-row items-center rounded-lg bg-red-100 px-3 py-2"
                                     onPress={() => {
-                                        Modal.show({
+                                        modal.show({
                                             body: (
                                                 <Text className="text-sm">
                                                     你确定要删除{selectedAnimeIdList.length}个动漫日历事件吗？
@@ -532,7 +533,7 @@ export default function DataManagement() {
                                             />
                                             <TouchableOpacity
                                                 onPress={() => {
-                                                    Modal.show({
+                                                    modal.show({
                                                         body: (
                                                             <Text className="text-sm">
                                                                 确定要删除事件 {item.name} 吗？

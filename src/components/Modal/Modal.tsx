@@ -1,35 +1,19 @@
-import { useEffect, useState } from 'react'
 import { Platform, Pressable, Modal as RNModal, Text, View } from 'react-native'
 
-import { Modal, ModalOptions } from './index'
+import { useModalState } from './index'
 
-function ModalComponent() {
-    const [visible, setVisible] = useState(false)
-    const [options, setOptions] = useState<ModalOptions | null>(null)
+export function ModalComponent({ state }: { state: ReturnType<typeof useModalState> }) {
+    const { options, visible, hide } = state
+
     function handleClose() {
         options?.onClose?.()
-        setVisible(false)
+        hide()
     }
+
     function handleConfirm() {
-        setVisible(false)
+        hide()
         options?.onConfirm?.()
     }
-
-    useEffect(() => {
-        Modal.register({
-            show(opts: ModalOptions) {
-                setOptions(opts)
-                setVisible(true)
-            },
-            hide() {
-                setVisible(false)
-            },
-        })
-
-        return () => {
-            Modal.unregister()
-        }
-    }, [])
 
     return (
         <RNModal
@@ -65,5 +49,3 @@ function ModalComponent() {
         </RNModal>
     )
 }
-
-export default ModalComponent
