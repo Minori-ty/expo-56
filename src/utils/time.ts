@@ -181,7 +181,10 @@ export function getLastEpisodeTimestamp(totalEpisode: number, firstEpisodeTimest
  * @returns 首集播出时间戳（毫秒）
  */
 export function getFirstEpisodeTimestampFromLast(totalEpisode: number, lastEpisodeTimestamp: number) {
-    return dayjs(lastEpisodeTimestamp).subtract(totalEpisode - 1, 'week').second(0).valueOf()
+    return dayjs(lastEpisodeTimestamp)
+        .subtract(totalEpisode - 1, 'week')
+        .second(0)
+        .valueOf()
 }
 
 /**
@@ -236,13 +239,17 @@ export function computeFirstEpisodeTimestamp(data: {
     status: number
     currentEpisode?: number
     updateTimeHHmm?: string
-    updateWeekday?: number | string
+    updateWeekday?: number
     totalEpisode?: number
     lastEpisodeYYYYMMDDHHmm?: string
     firstEpisodeYYYYMMDDHHmm?: string
 }): number {
     if (data.status === EStatus.serializing) {
-        if (data.currentEpisode === undefined || data.updateTimeHHmm === undefined || data.updateWeekday === undefined) {
+        if (
+            data.currentEpisode === undefined ||
+            data.updateTimeHHmm === undefined ||
+            data.updateWeekday === undefined
+        ) {
             throw new Error('serializing 状态下 currentEpisode、updateTimeHHmm、updateWeekday 必填')
         }
         return getFirstEpisodeTimestamp({

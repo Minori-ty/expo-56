@@ -1,10 +1,6 @@
 import { useForm } from '@tanstack/react-form'
 
-import {
-    animeFormSchema,
-    validateAnimeBusiness,
-    type AnimeFormValues,
-} from '../schema'
+import { animeFormSchema, validateAnimeBusiness, type AnimeFormValues } from '../schema'
 
 export interface UseAnimeFormOptions {
     defaultValues: AnimeFormValues
@@ -27,9 +23,12 @@ export function useAnimeForm({ defaultValues, onSubmit, onSubmitInvalid }: UseAn
     return useForm({
         defaultValues,
         validators: {
-            onChange: (ctx) => {
+            onChange: ({ value, formApi }) => {
+                // 表单未被用户操作过，跳过校验，避免刚进入页面就显示一堆错误
+                if (!formApi.state.isDirty) return undefined
+
                 // 1. zod schema 整体校验：safeParse 返回明确的同步结果
-                const parsed = animeFormSchema.safeParse(ctx.value)
+                const parsed = animeFormSchema.safeParse(value)
                 const fields: Record<string, Array<string | { message: string }>> = {}
 
                 if (!parsed.success) {
@@ -43,7 +42,7 @@ export function useAnimeForm({ defaultValues, onSubmit, onSubmitInvalid }: UseAn
                 }
 
                 // 2. 业务校验（跨字段/时间合理性），与 zod 错误合并
-                const business = validateAnimeBusiness(ctx.value)
+                const business = validateAnimeBusiness(value)
                 for (const [k, messages] of Object.entries(business.fields)) {
                     if (!messages) continue
                     const list = fields[k] ?? []

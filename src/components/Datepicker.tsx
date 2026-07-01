@@ -34,11 +34,7 @@ const DatePicker = forwardRef<IDatePickerRef, IDatepickerProps>(
         }))
 
         return (
-            <BottomSheetModal
-                ref={bottomSheetModalRef}
-                enablePanDownToClose
-                onClose={onClose}
-            >
+            <BottomSheetModal ref={bottomSheetModalRef} enablePanDownToClose onClose={onClose}>
                 <BottomSheetView style={styles.contentContainer}>
                     <DateTimePicker
                         styles={defaultStyles}

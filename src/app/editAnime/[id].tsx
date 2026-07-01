@@ -1,3 +1,6 @@
+import dayjs from 'dayjs'
+import { eq } from 'drizzle-orm'
+import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
 import { notificationAsync, NotificationFeedbackType } from 'expo-haptics'
 import { useLocalSearchParams } from 'expo-router'
 import { useMemo, useRef } from 'react'
@@ -18,10 +21,6 @@ import {
     getAnimeStatus,
     getLastEpisodeTimestamp,
 } from '@/utils/time'
-
-import { eq } from 'drizzle-orm'
-import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
-import dayjs from 'dayjs'
 
 export default function EditAnime() {
     useNavigationHeader('编辑动漫信息')

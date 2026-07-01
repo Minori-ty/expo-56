@@ -1,7 +1,7 @@
 import dayjs from 'dayjs'
 import { z } from 'zod'
 
-import { EStatus, EWeekday } from '@/enums'
+import { EStatus, EWeekday, getCurrentWeekday } from '@/enums'
 
 /**
  * 动漫表单 Schema —— Zod4 单一推导
@@ -28,7 +28,6 @@ const updateWeekdayField = z.union([
     z.literal(EWeekday.friday),
     z.literal(EWeekday.saturday),
     z.literal(EWeekday.sunday),
-    z.literal(''),
 ])
 const currentEpisodeField = z.number()
 const updateTimeHHmmField = z.string().regex(/(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]/, '请输入正确的时间格式HH:mm')
@@ -86,7 +85,7 @@ export const formDefaultValues: AnimeFormValues = {
     totalEpisode: 0,
     cover: '',
     status: EStatus.serializing,
-    updateWeekday: '',
+    updateWeekday: getCurrentWeekday(),
     currentEpisode: 0,
     updateTimeHHmm: dayjs().format('YYYY-MM-DD HH:mm'),
     firstEpisodeYYYYMMDDHHmm: undefined,
@@ -121,9 +120,6 @@ export function validateAnimeBusiness(val: AnimeFormValues): {
             if (val.currentEpisode === val.totalEpisode) {
                 addIssue('currentEpisode', '该番剧已完结，请选择已完结状态')
             }
-        }
-        if (val.updateWeekday === '') {
-            addIssue('updateWeekday', '请选择其中一项')
         }
     }
 

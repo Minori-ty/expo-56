@@ -2,8 +2,7 @@
  * 文本输入框公共样式（名称/封面/集数等字段共用）。
  * error 时叠加红色边框 —— 由调用处用 cn(...) 合并。
  */
-export const textInputBaseClass =
-    'h-10 rounded-md border border-[#ccc] p-0 pt-1 pl-2 text-start text-base leading-7'
+export const textInputBaseClass = 'h-10 rounded-md border border-[#ccc] p-0 pt-1 pl-2 text-start text-base leading-7'
 
 export const textInputErrorClass = 'border-red-500'
 
