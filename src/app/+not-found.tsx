@@ -1,7 +1,7 @@
 import { Link, Stack } from 'expo-router'
+import { Text, View } from 'react-native'
 
 import Error from '@/components/lottie/Error'
-import { Text, View } from '@/tw'
 
 export default function NotFound() {
     return (

@@ -5,20 +5,25 @@ import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
 import { notificationAsync, NotificationFeedbackType } from 'expo-haptics'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
 import React, { useEffect, useMemo, useRef } from 'react'
-import { type SubmitHandler } from 'react-hook-form'
 import { BackHandler } from 'react-native'
 
 import { handleUpdateAnimeById } from '@/api'
 import { getAnimeByNameExceptItself, parseAnimeData } from '@/api/anime'
-import BaseAnimeForm, { IBaseFormRef } from '@/components/BaseForm'
+import AnimeForm, { type IAnimeFormRef } from '@/components/Form/AnimeForm'
+import { formDefaultValues, type AnimeFormValues } from '@/components/Form/schema'
 import Loading from '@/components/lottie/Loading'
-import { formDefaultValues, TFormSchema } from '@/components/schema'
 import { CompactHeader } from '@/components/ui/CompactHeader'
 import { db } from '@/db'
 import { animeTable } from '@/db/schema'
 import { EStatus } from '@/enums'
 import { queryClient } from '@/utils/react-query'
-import { getAiredEpisodeCount, getAnimeStatus, getFirstEpisodeTimestamp, getLastEpisodeTimestamp } from '@/utils/time'
+import {
+    getAiredEpisodeCount,
+    getAnimeStatus,
+    getFirstEpisodeTimestamp,
+    getFirstEpisodeTimestampFromLast,
+    getLastEpisodeTimestamp,
+} from '@/utils/time'
 
 export default function EditAnime() {
     const navigation = useNavigation()
@@ -37,7 +42,7 @@ export default function EditAnime() {
 
     const { id } = useLocalSearchParams<{ id: string }>()
 
-    const baseFormRef = useRef<IBaseFormRef>(null)
+    const baseFormRef = useRef<IAnimeFormRef>(null)
 
     const { data, updatedAt } = useLiveQuery(
         db
@@ -46,7 +51,7 @@ export default function EditAnime() {
             .where(eq(animeTable.id, Number(id))),
     )
 
-    const formData = useMemo<TFormSchema>(() => {
+    const formData = useMemo<AnimeFormValues>(() => {
         if (!data[0]) {
             return formDefaultValues
         }
@@ -84,7 +89,7 @@ export default function EditAnime() {
         return !updatedAt
     }, [updatedAt])
 
-    const onSubmit: SubmitHandler<TFormSchema> = async (data) => {
+    const onSubmit = async (data: AnimeFormValues) => {
         const { name, cover, totalEpisode } = data
         const result = await handleValidateAnimeNameIsExist(name, Number(id))
         if (result) {
@@ -108,10 +113,10 @@ export default function EditAnime() {
                 name,
                 totalEpisode,
                 cover,
-                firstEpisodeTimestamp: dayjs(lastEpisodeYYYYMMDDHHmm, 'YYYY-MM-DD HH:mm')
-                    .subtract(totalEpisode - 1, 'week')
-                    .second(0)
-                    .valueOf(),
+                firstEpisodeTimestamp: getFirstEpisodeTimestampFromLast(
+                    totalEpisode,
+                    dayjs(lastEpisodeYYYYMMDDHHmm, 'YYYY-MM-DD HH:mm').valueOf(),
+                ),
             })
         } else if (data.status === EStatus.toBeUpdated) {
             const { firstEpisodeYYYYMMDDHHmm } = data
@@ -165,5 +170,5 @@ export default function EditAnime() {
         return <Loading />
     }
 
-    return <BaseAnimeForm formData={formData} onSubmit={onSubmit} ref={baseFormRef} isSubmitting={isPending} />
+    return <AnimeForm formData={formData} onSubmit={onSubmit} ref={baseFormRef} isSubmitting={isPending} />
 }

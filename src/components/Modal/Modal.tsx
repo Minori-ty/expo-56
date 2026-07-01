@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Platform, Modal as RNModal } from 'react-native'
-
-import { Pressable, Text, View } from '@/tw'
+import { Pressable, Text, View } from 'react-native'
 
 import { Modal, ModalOptions } from './index'
 

@@ -1,4 +1,4 @@
-import { BottomSheetModalProvider } from '@gorhom/bottom-sheet'
+import { BottomSheetModalProvider } from '@expo/ui/community/bottom-sheet'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator'
 import { useDrizzleStudio } from 'expo-drizzle-studio-plugin'
@@ -7,6 +7,7 @@ import { Stack, ThemeProvider } from 'expo-router'
 import { DefaultTheme } from 'expo-router/react-navigation'
 import { StatusBar } from 'expo-status-bar'
 import { startTransition, useEffect } from 'react'
+import { Text } from 'react-native'
 import ErrorBoundary from 'react-native-error-boundary'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { KeyboardProvider } from 'react-native-keyboard-controller'
@@ -18,10 +19,9 @@ import Loading from '@/components/lottie/Loading'
 import Modal from '@/components/Modal/Modal'
 import { db, expo } from '@/db'
 import { useAppStateRefresh } from '@/hooks/useAppStateRefresh'
-import { getCalendarPermission } from '@/permissions'
 import 'react-native-reanimated'
 
-import { Text } from '@/tw'
+import { getCalendarPermission } from '@/permissions'
 import { cleanupOrphanedCalendarEvents } from '@/utils/calendar'
 import { queryClient } from '@/utils/react-query'
 
@@ -63,7 +63,7 @@ export default function RootLayout() {
     }
 
     return (
-        <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }} edges={['top', 'bottom']}>
             <KeyboardProvider>
                 <ErrorBoundary FallbackComponent={Error} onError={errorHandler}>
                     <QueryClientProvider client={queryClient}>

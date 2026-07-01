@@ -1,6 +1,5 @@
 import LottieView from 'lottie-react-native'
-
-import { Text, View } from '@/tw'
+import { Text, View } from 'react-native'
 
 interface IFallbackProps {
     error: {

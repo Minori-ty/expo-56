@@ -1,6 +1,5 @@
 import LottieView from 'lottie-react-native'
-
-import { View } from '@/tw'
+import { View } from 'react-native'
 
 interface ITransparentLoadingProps {
     /** Loading 尺寸，默认 300 */

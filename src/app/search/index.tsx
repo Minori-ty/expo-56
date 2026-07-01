@@ -1,7 +1,8 @@
 import { Enum } from 'enum-plus'
+import { Image } from 'expo-image'
 import { router, useNavigation } from 'expo-router'
 import { useLayoutEffect, useState } from 'react'
-import { StyleSheet } from 'react-native'
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 
 import { getAnimeListByName } from '@/api/anime'
 import Empty from '@/components/lottie/Empty'
@@ -9,8 +10,6 @@ import Icon from '@/components/ui/Icon'
 import { animeTable } from '@/db/schema'
 import { EStatus } from '@/enums'
 import { blurhash } from '@/styles'
-import { ScrollView, Text, TextInput, TouchableOpacity, View } from '@/tw'
-import { Image } from '@/tw/image'
 import { cn } from '@/utils/cn'
 import { getAiredEpisodeCount, getAnimeStatus } from '@/utils/time'
 

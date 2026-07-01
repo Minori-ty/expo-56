@@ -3,17 +3,16 @@ import dayjs from 'dayjs'
 import { notificationAsync, NotificationFeedbackType } from 'expo-haptics'
 import { router, useNavigation } from 'expo-router'
 import React, { useEffect, useLayoutEffect, useRef } from 'react'
-import { type SubmitHandler } from 'react-hook-form'
 import { BackHandler } from 'react-native'
 
 import { handleAddAnime } from '@/api'
 import { getAnimeByName } from '@/api/anime'
-import BaseAnimeForm, { IBaseFormRef } from '@/components/BaseForm'
-import { formDefaultValues, type TFormSchema } from '@/components/schema'
+import AnimeForm, { type IAnimeFormRef } from '@/components/Form/AnimeForm'
+import { formDefaultValues, type AnimeFormValues } from '@/components/Form/schema'
 import { CompactHeader } from '@/components/ui/CompactHeader'
 import { EStatus } from '@/enums'
 import { queryClient } from '@/utils/react-query'
-import { getFirstEpisodeTimestamp } from '@/utils/time'
+import { getFirstEpisodeTimestamp, getFirstEpisodeTimestampFromLast } from '@/utils/time'
 
 export default function AddAnime() {
     const navigation = useNavigation()
@@ -30,8 +29,8 @@ export default function AddAnime() {
         })
     }, [navigation])
 
-    const baseFormRef = useRef<IBaseFormRef>(null)
-    const onSubmit: SubmitHandler<TFormSchema> = async (data) => {
+    const baseFormRef = useRef<IAnimeFormRef>(null)
+    const onSubmit = async (data: AnimeFormValues) => {
         const { name, cover, totalEpisode } = data
         const result = await handleValidateAnimeNameIsExist(name)
         if (result) {
@@ -52,10 +51,10 @@ export default function AddAnime() {
                 name,
                 totalEpisode,
                 cover,
-                firstEpisodeTimestamp: dayjs(lastEpisodeYYYYMMDDHHmm, 'YYYY-MM-DD HH:mm')
-                    .subtract(totalEpisode - 1, 'week')
-                    .second(0)
-                    .valueOf(),
+                firstEpisodeTimestamp: getFirstEpisodeTimestampFromLast(
+                    totalEpisode,
+                    dayjs(lastEpisodeYYYYMMDDHHmm, 'YYYY-MM-DD HH:mm').valueOf(),
+                ),
             })
         } else if (data.status === EStatus.toBeUpdated) {
             const { firstEpisodeYYYYMMDDHHmm } = data
@@ -105,5 +104,5 @@ export default function AddAnime() {
         return false
     }
 
-    return <BaseAnimeForm formData={formDefaultValues} onSubmit={onSubmit} ref={baseFormRef} isSubmitting={isPending} />
+    return <AnimeForm formData={formDefaultValues} onSubmit={onSubmit} ref={baseFormRef} isSubmitting={isPending} />
 }

@@ -1,7 +1,7 @@
 import { type ClassValue } from 'clsx'
 import React, { Fragment } from 'react'
+import { Text, View } from 'react-native'
 
-import { Text, View } from '@/tw'
 import { cn } from '@/utils/cn'
 
 interface IProps {

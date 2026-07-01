@@ -1,4 +1,4 @@
-import { View } from '@/tw'
+import { View } from 'react-native'
 
 // A simple background for the tab bar (web and Android are generally opaque).
 export default function TabBarBackground() {

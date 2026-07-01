@@ -174,6 +174,21 @@ export function getLastEpisodeTimestamp(totalEpisode: number, firstEpisodeTimest
 }
 
 /**
+ * 根据完结时间反推首集播出时间戳
+ *
+ * 公式：首集 = 完结时间 - (totalEpisode - 1) * 7 天，秒清零。
+ * 与 getLastEpisodeTimestamp 互为逆运算，供「已完结」状态提交时统一调用，
+ * 避免该公式在 addAnime / editAnime 各自重复书写。
+ *
+ * @param totalEpisode 总集数
+ * @param lastEpisodeTimestamp 完结时间戳（毫秒）
+ * @returns 首集播出时间戳（毫秒）
+ */
+export function getFirstEpisodeTimestampFromLast(totalEpisode: number, lastEpisodeTimestamp: number) {
+    return dayjs(lastEpisodeTimestamp).subtract(totalEpisode - 1, 'week').second(0).valueOf()
+}
+
+/**
  * 获取本周一 00:00:00 的时间戳
  */
 export function getMondayTimestampInThisWeek(now: number = Date.now()) {

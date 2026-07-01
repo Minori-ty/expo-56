@@ -1,6 +1,5 @@
 import LottieView from 'lottie-react-native'
-
-import { View } from '@/tw'
+import { View } from 'react-native'
 
 export default function Loading() {
     return (

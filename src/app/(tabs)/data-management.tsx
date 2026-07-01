@@ -6,6 +6,7 @@ import { differenceBy } from 'lodash-es'
 import { Calendar, Download, FileText, Trash2, Upload } from 'lucide-react-native'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { BackHandler } from 'react-native'
+import { RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native'
 import Toast from 'react-native-toast-message'
 import { z } from 'zod'
 
@@ -18,7 +19,6 @@ import TransparentLoading from '@/components/TransparentLoading'
 import { db } from '@/db'
 import { animeTable } from '@/db/schema'
 import { themeColorPurple } from '@/styles'
-import { RefreshControl, ScrollView, Text, TouchableOpacity, View } from '@/tw'
 import {
     deleteExportDirJsonFile,
     deleteExportDirJsonFileList,

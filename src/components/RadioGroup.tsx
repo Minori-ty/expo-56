@@ -1,9 +1,8 @@
 import { type ClassValue } from 'clsx'
-import React from 'react'
 import { type TextStyle, type ViewStyle } from 'react-native'
+import { Text, TouchableOpacity, View } from 'react-native'
 
 import { themeColor } from '@/styles'
-import { Text, TouchableOpacity, View } from '@/tw'
 import { cn } from '@/utils/cn'
 
 /**

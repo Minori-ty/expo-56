@@ -1,13 +1,25 @@
-import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet'
+import { BottomSheetModal, BottomSheetView } from '@expo/ui/community/bottom-sheet'
 import { useMutation } from '@tanstack/react-query'
 import { type ClassValue } from 'clsx'
 import dayjs from 'dayjs'
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
 import { Enum } from 'enum-plus'
 import { impactAsync, ImpactFeedbackStyle } from 'expo-haptics'
+import { Image } from 'expo-image'
 import { useNavigation, useRouter } from 'expo-router'
 import React, { createContext, memo, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { BackHandler, Dimensions, StyleSheet } from 'react-native'
+import {
+    BackHandler,
+    Dimensions,
+    FlatList,
+    Pressable,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native'
 
 import { handleDeleteAnime } from '@/api'
 import { parseAnimeData } from '@/api/anime'
@@ -20,8 +32,6 @@ import { animeTable } from '@/db/schema'
 import { EStatus } from '@/enums'
 import { useNavigationLock } from '@/hooks/useNavigationLock'
 import { blurhash, themeColorPurple } from '@/styles'
-import { FlatList, Pressable, RefreshControl, ScrollView, Text, TouchableOpacity, View } from '@/tw'
-import { Image } from '@/tw/image'
 import { TAnimeList } from '@/types'
 import { cn } from '@/utils/cn'
 import { queryClient } from '@/utils/react-query'
@@ -118,10 +128,6 @@ export default function MyFollows() {
 
     const navigate = useNavigationLock()
 
-    function handleClose() {
-        bottomSheetModalRef.current?.close()
-    }
-
     const navigation = useNavigation()
     useLayoutEffect(() => {
         navigation.setOptions({
@@ -154,18 +160,8 @@ export default function MyFollows() {
                 </View>
             ) : null}
 
-            <BottomSheetModal
-                ref={bottomSheetModalRef}
-                enableContentPanningGesture={false}
-                backdropComponent={() => (
-                    <TouchableOpacity
-                        activeOpacity={1}
-                        className="absolute inset-0 bg-[#0000007f]"
-                        onPress={handleClose}
-                    />
-                )}
-            >
-                <BottomSheetView className="h-100 flex-1 bg-gray-100 px-5 pt-5">
+            <BottomSheetModal ref={bottomSheetModalRef} enablePanDownToClose>
+                <BottomSheetView style={styles.sheetContent}>
                     <Text className="my-2 pl-4 text-sm font-medium text-gray-500">筛选状态</Text>
                     <View className="overflow-hidden rounded-2xl bg-white">
                         {EStatusList.items.map((item) => {
@@ -314,6 +310,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         flex: 1,
+    },
+    sheetContent: {
+        height: 400,
+        backgroundColor: '#f3f4f6',
+        paddingHorizontal: 20,
+        paddingTop: 20,
     },
 })
 

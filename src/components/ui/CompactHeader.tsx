@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
+import { Text, TouchableOpacity, View } from 'react-native'
 
 import Icon from '@/components/ui/Icon'
-import { Text, TouchableOpacity, View } from '@/tw'
 
 type HeaderRightFn = (props: { canGoBack: boolean; tintColor?: string }) => ReactNode
 

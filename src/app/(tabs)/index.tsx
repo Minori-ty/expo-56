@@ -1,8 +1,9 @@
 import dayjs from 'dayjs'
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
+import { Image } from 'expo-image'
 import { router } from 'expo-router'
 import { createContext, useContext, useMemo, useState } from 'react'
-import { StyleSheet } from 'react-native'
+import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SceneMap, TabBar, TabView } from 'react-native-tab-view'
 
 import { parseAnimeData } from '@/api/anime'
@@ -13,8 +14,6 @@ import { animeTable } from '@/db/schema'
 import { EStatus, EWeekday } from '@/enums'
 import { useNavigationLock } from '@/hooks/useNavigationLock'
 import { blurhash, themeColorPurple } from '@/styles'
-import { RefreshControl, ScrollView, Text, TouchableOpacity, View } from '@/tw'
-import { Image } from '@/tw/image'
 import type { TAnimeList } from '@/types'
 import {
     getAiredEpisodeCount,
