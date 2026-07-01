@@ -1,5 +1,12 @@
 import { eq } from 'drizzle-orm'
-import * as Calendar from 'expo-calendar'
+import {
+    AlarmMethod,
+    ExpoCalendarEvent,
+    getCalendars,
+    listEvents,
+} from 'expo-calendar'
+import { Alert, Linking, Platform } from 'react-native'
+import Toast from 'react-native-toast-message'
 
 import { db } from '@/db'
 import { settingsTable } from '@/db/schema'
@@ -12,23 +19,55 @@ import { getAnimeStatus, getAiredEpisodeCount, getEpisodeTime } from './time'
  * 获取可修改的默认日历
  */
 async function getWritableCalendar() {
-    const calendars = await Calendar.getCalendars()
+    const calendars = await getCalendars()
     return calendars.find((cal) => cal.allowsModifications) ?? null
 }
 
 /**
  * 批量删除日历事件
+ *
+ * 权限被拒时与 addCalendarEvents 保持一致的用户反馈。
+ *
+ * @returns true 表示全部删除成功；false 表示有失败（含权限被拒）
  */
 export async function deleteCalendarEvents(eventIds: string[]) {
     if (!eventIds || eventIds.length === 0) return false
 
-    const granted = await getCalendarPermission()
-    if (!granted) return false
+    const { granted, canAskAgain } = await getCalendarPermission()
+    if (!granted) {
+        if (!canAskAgain) {
+            Alert.alert(
+                '日历权限已关闭',
+                '日历权限已被永久拒绝，无法删除番剧更新提醒。\n\n请前往系统设置开启日历权限。',
+                [
+                    { text: '取消', style: 'cancel' },
+                    {
+                        text: '去设置',
+                        onPress: () => {
+                            if (Platform.OS === 'ios') {
+                                Linking.openURL('app-settings:')
+                            } else {
+                                Linking.openSettings()
+                            }
+                        },
+                    },
+                ],
+            )
+        } else {
+            Toast.show({
+                type: 'info',
+                text1: '未授权日历权限',
+                text2: '无法删除日历事件，可在系统设置中开启',
+                visibilityTime: 3000,
+            })
+        }
+        return false
+    }
 
     let allSuccess = true
     for (const id of eventIds) {
         try {
-            const event = await Calendar.ExpoCalendarEvent.get(id)
+            const event = await ExpoCalendarEvent.get(id)
             await event.delete()
             console.log('删除日历成功:', id)
         } catch {
@@ -57,10 +96,10 @@ export async function cleanupOrphanedCalendarEvents() {
     const rows = await db.select().from(settingsTable).where(eq(settingsTable.key, CLEANUP_FLAG_KEY))
     if (rows.length > 0) return
 
-    const granted = await getCalendarPermission()
+    const { granted } = await getCalendarPermission()
     if (!granted) return
 
-    const calendars = await Calendar.getCalendars()
+    const calendars = await getCalendars()
     const writableCalendars = calendars.filter((cal) => cal.allowsModifications)
     if (writableCalendars.length === 0) return
 
@@ -69,9 +108,9 @@ export async function cleanupOrphanedCalendarEvents() {
     const startDate = new Date(now.getFullYear() - 5, 0, 1)
     const endDate = new Date(now.getFullYear() + 5, 11, 31)
 
-    let events: Calendar.ExpoCalendarEvent[]
+    let events: ExpoCalendarEvent[]
     try {
-        events = await Calendar.listEvents(writableCalendars, startDate, endDate)
+        events = await listEvents(writableCalendars, startDate, endDate)
     } catch (error) {
         console.log('获取日历事件失败:', error)
         return
@@ -83,7 +122,7 @@ export async function cleanupOrphanedCalendarEvents() {
         let deletedCount = 0
         for (const event of orphanedEvents) {
             try {
-                const calendarEvent = await Calendar.ExpoCalendarEvent.get(event.id)
+                const calendarEvent = await ExpoCalendarEvent.get(event.id)
                 await calendarEvent.delete()
                 deletedCount++
                 console.log(`清理孤立日历事件: ${event.title}`)
@@ -110,15 +149,48 @@ interface ICreateCalendarEventsProps {
  * 与旧版不同：不再创建单条重复事件，而是为每一集创建独立事件，
  * title 格式为 "xxx 第 N 集更新!"
  *
- * @returns eventId 数组；如果失败返回 null
+ * 日历权限被拒时：
+ * - 可再问（canAskAgain=true）→ 返回 null，由上层 Toast 提示
+ * - 永久拒绝（canAskAgain=false）→ 弹窗引导去系统设置，返回 null
+ *
+ * @returns eventId 数组；如果失败（含权限被拒）返回 null
  */
 export async function addCalendarEvents({
     name,
     firstEpisodeTimestamp,
     totalEpisode,
 }: ICreateCalendarEventsProps): Promise<string[] | null> {
-    const granted = await getCalendarPermission()
-    if (!granted) return null
+    const { granted, canAskAgain } = await getCalendarPermission()
+    if (!granted) {
+        if (!canAskAgain) {
+            Alert.alert(
+                '日历权限已关闭',
+                '日历权限已被永久拒绝，无法创建番剧更新提醒。\n\n请前往系统设置开启日历权限。',
+                [
+                    { text: '取消', style: 'cancel' },
+                    {
+                        text: '去设置',
+                        onPress: () => {
+                            if (Platform.OS === 'ios') {
+                                Linking.openURL('app-settings:')
+                            } else {
+                                Linking.openSettings()
+                            }
+                        },
+                    },
+                ],
+            )
+        } else {
+            Toast.show({
+                type: 'info',
+                text1: '未授权日历权限',
+                text2: '不会创建番剧更新提醒，可在系统设置中开启',
+                visibilityTime: 3000,
+            })
+        }
+        // 无论哪种拒绝，都不阻止动漫数据保存，仅跳过日历事件创建
+        return null
+    }
 
     const calendar = await getWritableCalendar()
     if (!calendar) {
@@ -158,7 +230,7 @@ export async function addCalendarEvents({
                 alarms: [
                     {
                         relativeOffset: 0,
-                        method: Calendar.AlarmMethod.ALERT,
+                        method: AlarmMethod.ALERT,
                     },
                 ],
             })

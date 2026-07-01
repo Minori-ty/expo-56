@@ -33,6 +33,9 @@ export async function addCalendarByAnimeId(animeId: number) {
 
 /**
  * 删除动漫的所有日历事件
+ *
+ * 仅在系统日历事件真正删除成功后，才清空 DB 中的 eventIds。
+ * 这样权限被拒时 eventIds 保留作为凭证，等权限恢复后可以重试清理。
  */
 export async function deleteCalendarByAnimeId(animeId: number) {
     return await db.transaction(async (tx) => {
@@ -47,7 +50,11 @@ export async function deleteCalendarByAnimeId(animeId: number) {
             return
         }
 
-        await deleteCalendarEvents(result.eventIds)
+        const deleted = await deleteCalendarEvents(result.eventIds)
+        if (!deleted) {
+            console.log('删除日历事件失败（权限被拒或其他原因），保留 DB 中的 eventIds 记录')
+            throw new Error('删除日历事件失败')
+        }
         await tx.update(animeTable).set({ eventIds: [] }).where(eq(animeTable.id, animeId))
     })
 }

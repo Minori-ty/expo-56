@@ -36,9 +36,11 @@ export default function RootLayout() {
     })
     useDrizzleStudio(expo)
 
-    startTransition(() => {
-        getCalendarPermission()
-    })
+    useEffect(() => {
+        startTransition(() => {
+            getCalendarPermission()
+        })
+    }, [])
     useAppStateRefresh()
 
     useEffect(() => {

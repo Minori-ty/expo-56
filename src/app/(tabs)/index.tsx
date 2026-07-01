@@ -175,7 +175,7 @@ function AnimeCardItem({ time, animeList }: IAnimeCardItemProps) {
             <View className="w-16 items-center justify-start">
                 <Text className="font-medium">{time}</Text>
             </View>
-            <View className="size-full">
+            <View className="flex-1">
                 {animeList.map((item) => {
                     return (
                         <TouchableOpacity

@@ -195,6 +195,7 @@ const AnimeContainer = memo(function AnimeContainer({ list }: IAnimeContainerPro
         <FlatList
             className="bg-white pb-4"
             data={list}
+            extraData={timestamp}
             keyExtractor={(item) => item.id.toString()}
             numColumns={3}
             columnWrapperStyle={{ gap: GAP }}
