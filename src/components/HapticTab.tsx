@@ -1,6 +1,5 @@
 import * as Haptics from 'expo-haptics'
-import { type PressableProps } from 'react-native'
-import { Pressable } from 'react-native'
+import { Pressable, type PressableProps } from 'react-native'
 
 type Props = Omit<PressableProps, 'ref'>
 

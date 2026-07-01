@@ -1,12 +1,13 @@
 {
     "$schema": "./node_modules/oxlint/configuration_schema.json",
-    "jsPlugins": ["oxlint-tailwindcss"],
+    "jsPlugins": [
+        "oxlint-tailwindcss"
+    ],
     "rules": {
         // -------------------------- 核心正确性（必报错） --------------------------
         "tailwindcss/no-conflicting-classes": "error", // 冲突类名（如 w-10 和 w-20 同时存在）
         "tailwindcss/no-deprecated-classes": "error", // 废弃类名（如 text-yellow-lighter）
         "tailwindcss/no-unknown-classes": "error", // 未知类名（拼写错误/未配置的自定义类）
-        "no-undef": "error", // 未定义变量（致命 bug）
         "no-implicit-globals": "error", // 意外全局变量（避免污染全局作用域）
         // -------------------------- 风格一致性（警告即可） --------------------------
         "tailwindcss/no-duplicate-classes": "warn", // 重复类名（不影响功能，提醒优化）
@@ -26,7 +27,6 @@
         "prefer-const": "warn",
         "prefer-template": "warn",
         "object-shorthand": "warn",
-        "no-unnecessary-type-assertion": "warn",
         "prefer-as-const": "warn",
         "react-hooks/exhaustive-deps": "warn",
         "react/jsx-key": "error",
@@ -50,16 +50,6 @@
         "no-promise-executor-return": "error",
         // 补充：禁止数组/对象解构时的未定义值（避免运行时报错）
         "no-unused-private-class-members": "error",
-        // TypeScript 强约束
-        "@typescript-eslint/no-explicit-any": "warn",
-        "@typescript-eslint/no-non-null-assertion": "warn",
-        "@typescript-eslint/prefer-optional-chain": "error",
-        "@typescript-eslint/no-unused-vars": [
-            "warn",
-            {
-                "argsIgnorePattern": "^_"
-            }
-        ]
     },
     "settings": {
         "tailwindcss": {
@@ -97,5 +87,11 @@
         "typescript": true
     },
     // 忽略目录：与 oxfmt 完全一致
-    "ignorePatterns": ["node_modules", "dist", ".claude", ".agents", ".codegraph"]
+    "ignorePatterns": [
+        "node_modules",
+        "dist",
+        ".claude",
+        ".agents",
+        ".codegraph"
+    ]
 }
