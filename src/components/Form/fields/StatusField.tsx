@@ -1,8 +1,8 @@
-import { EStatus } from '@/enums'
 import { RadioGroup } from '@/components/RadioGroup'
+import { EStatus } from '@/enums'
 
 import { FormItem } from '../FormItem'
-import type { FieldProps } from './types'
+import type { FieldProps } from './types.d'
 
 const statusOptions = EStatus.toList()
 

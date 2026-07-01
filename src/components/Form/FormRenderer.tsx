@@ -1,7 +1,7 @@
 import { useSelector } from '@tanstack/react-store'
 
 import { fieldRegistry, type FieldName } from './fieldRegistry'
-import type { AnimeFormApi } from './fields/types'
+import type { AnimeFormApi } from './fields/types.d'
 import { statusFieldMap } from './statusConfig'
 
 /**

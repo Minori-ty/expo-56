@@ -5,11 +5,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { EStatus } from '@/enums'
 
 import {
+    computeFirstEpisodeTimestamp,
     getAiredEpisodeCount,
     getAnimeStatus,
     getEpisodeTime,
     getExpectedEpisodeThisWeek,
     getFirstEpisodeTimestamp,
+    getFirstEpisodeTimestampFromLast,
     getLastEpisodeTime,
     getLastEpisodeTimestamp,
     getMondayTimestampInThisWeek,
@@ -375,5 +377,88 @@ describe('isCurrentWeekdayUpdateTimePassed', () => {
     it('传入相同时间 → false（isAfter 严格大于）', () => {
         vi.setSystemTime(new Date('2026-06-29T10:00:00'))
         expect(isCurrentWeekdayUpdateTimePassed('2026-06-29 10:00')).toBe(false)
+    })
+})
+
+describe('getFirstEpisodeTimestampFromLast（完结反推首集）', () => {
+    it('12集完结 → 首集 = 完结 - 11*7天，秒清零', () => {
+        const last = dayjs('2026-12-31T10:30:45').valueOf()
+        const first = getFirstEpisodeTimestampFromLast(12, last)
+        const firstDay = dayjs(first)
+
+        // 12集 = 首集 + 11周 = 77天
+        // 2026-12-31 - 77天 = 2026-10-15
+        expect(firstDay.format('YYYY-MM-DD')).toBe('2026-10-15')
+        // 秒应该清零
+        expect(firstDay.second()).toBe(0)
+        // 反推验证：首集 + 11周 = 完结（秒也被清零）
+        expect(firstDay.add(11, 'week').valueOf()).toBe(dayjs(last).second(0).valueOf())
+    })
+
+    it('1集完结 → 首集 = 完结时间（不减周）', () => {
+        const last = dayjs('2026-12-31T10:30:45').valueOf()
+        const first = getFirstEpisodeTimestampFromLast(1, last)
+        const firstDay = dayjs(first)
+
+        expect(firstDay.format('YYYY-MM-DD')).toBe('2026-12-31')
+        expect(firstDay.second()).toBe(0)
+    })
+
+    it('100集完结 → 正确计算大跨度', () => {
+        const last = dayjs('2026-12-31T10:30:45').valueOf()
+        const first = getFirstEpisodeTimestampFromLast(100, last)
+        const firstDay = dayjs(first)
+
+        // 100集 = 首集 + 99周，秒清零后验证
+        expect(firstDay.add(99, 'week').valueOf()).toBe(dayjs(last).second(0).valueOf())
+    })
+})
+
+describe('computeFirstEpisodeTimestamp（表单数据反推首集）', () => {
+    beforeEach(() => {
+        vi.useFakeTimers()
+    })
+    afterEach(() => {
+        vi.useRealTimers()
+    })
+
+    it('连载中状态 → 用当前集数和更新时间反推', () => {
+        vi.setSystemTime(new Date('2026-06-29T10:00:00'))
+
+        const result = computeFirstEpisodeTimestamp({
+            status: EStatus.serializing,
+            currentEpisode: 180,
+            updateWeekday: 6,
+            updateTimeHHmm: '2026-06-29 10:00',
+        })
+
+        // 第180集应该是上周六
+        const ep180 = dayjs(result).add(179, 'week')
+        expect(ep180.format('YYYY-MM-DD')).toBe('2026-06-27')
+        expect(ep180.isoWeekday()).toBe(6)
+    })
+
+    it('已完结状态 → 用完结时间反推', () => {
+        const result = computeFirstEpisodeTimestamp({
+            status: EStatus.completed,
+            totalEpisode: 12,
+            lastEpisodeYYYYMMDDHHmm: '2026-12-31 10:30',
+        })
+
+        // 首集 + 11周 = 完结时间
+        const first = dayjs(result)
+        const last = dayjs(result).add(11, 'week')
+        expect(last.format('YYYY-MM-DD HH:mm')).toBe('2026-12-31 10:30')
+    })
+
+    it('即将更新状态 → 直接使用首播时间，秒清零', () => {
+        const result = computeFirstEpisodeTimestamp({
+            status: EStatus.toBeUpdated,
+            firstEpisodeYYYYMMDDHHmm: '2026-12-31 10:30:45',
+        })
+
+        const first = dayjs(result)
+        expect(first.format('YYYY-MM-DD HH:mm')).toBe('2026-12-31 10:30')
+        expect(first.second()).toBe(0)
     })
 })

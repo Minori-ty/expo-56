@@ -5,9 +5,9 @@ import { LastEpisodeField } from './fields/LastEpisodeField'
 import { NameField } from './fields/NameField'
 import { StatusField } from './fields/StatusField'
 import { TotalEpisodeField } from './fields/TotalEpisodeField'
+import type { FieldComponent } from './fields/types.d'
 import { UpdateTimeField } from './fields/UpdateTimeField'
 import { UpdateWeekdayField } from './fields/UpdateWeekdayField'
-import type { FieldComponent } from './fields/types'
 
 /**
  * 字段名 —— 同时作为 fieldRegistry 的 key 与 statusFieldMap 的元素类型。

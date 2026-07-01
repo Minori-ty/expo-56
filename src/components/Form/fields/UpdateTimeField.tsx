@@ -8,7 +8,7 @@ import { cn } from '@/utils/cn'
 
 import { FormItem } from '../FormItem'
 import { fieldSchemas } from '../schema'
-import type { FieldProps } from './types'
+import type { FieldProps } from './types.d'
 import { firstFieldError } from './useFieldError'
 
 export function UpdateTimeField({ form, label }: FieldProps) {

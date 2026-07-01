@@ -53,9 +53,7 @@ export function getAnimeStatus(totalEpisode: number, firstEpisodeTimestamp: numb
         return EStatus.toBeUpdated
     }
 
-    const aired = Math.floor((now - firstEpisodeTimestamp) / INTERVAL) + 1
-
-    if (aired >= totalEpisode) {
+    if (Math.floor((now - firstEpisodeTimestamp) / INTERVAL) + 1 >= totalEpisode) {
         return EStatus.completed
     }
 
@@ -84,9 +82,7 @@ export function getAiredEpisodeCount(totalEpisode: number, firstEpisodeTimestamp
 
     const diffDays = dayjs(now).diff(firstEpisodeTimestamp, 'day')
 
-    const count = Math.floor(diffDays / 7) + 1
-
-    return Math.max(0, Math.min(totalEpisode, count))
+    return Math.max(0, Math.min(totalEpisode, Math.floor(diffDays / 7) + 1))
 }
 
 /**
@@ -246,19 +242,28 @@ export function computeFirstEpisodeTimestamp(data: {
     firstEpisodeYYYYMMDDHHmm?: string
 }): number {
     if (data.status === EStatus.serializing) {
+        if (data.currentEpisode === undefined || data.updateTimeHHmm === undefined || data.updateWeekday === undefined) {
+            throw new Error('serializing 状态下 currentEpisode、updateTimeHHmm、updateWeekday 必填')
+        }
         return getFirstEpisodeTimestamp({
-            currentEpisode: data.currentEpisode!,
-            updateTimeHHmm: data.updateTimeHHmm!,
-            updateWeekday: Number(data.updateWeekday!),
+            currentEpisode: data.currentEpisode,
+            updateTimeHHmm: data.updateTimeHHmm,
+            updateWeekday: Number(data.updateWeekday),
         })
     }
     if (data.status === EStatus.completed) {
+        if (data.totalEpisode === undefined || data.lastEpisodeYYYYMMDDHHmm === undefined) {
+            throw new Error('completed 状态下 totalEpisode、lastEpisodeYYYYMMDDHHmm 必填')
+        }
         return getFirstEpisodeTimestampFromLast(
-            data.totalEpisode!,
+            data.totalEpisode,
             dayjs(data.lastEpisodeYYYYMMDDHHmm, 'YYYY-MM-DD HH:mm').valueOf(),
         )
     }
     // toBeUpdated
+    if (data.firstEpisodeYYYYMMDDHHmm === undefined) {
+        throw new Error('toBeUpdated 状态下 firstEpisodeYYYYMMDDHHmm 必填')
+    }
     return dayjs(data.firstEpisodeYYYYMMDDHHmm, 'YYYY-MM-DD HH:mm').second(0).valueOf()
 }
 

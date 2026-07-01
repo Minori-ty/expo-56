@@ -5,7 +5,7 @@ import { EWeekday } from '@/enums'
 import { cn } from '@/utils/cn'
 
 import { FormItem } from '../FormItem'
-import type { FieldProps } from './types'
+import type { FieldProps } from './types.d'
 import { firstFieldError } from './useFieldError'
 
 export function UpdateWeekdayField({ form, label }: FieldProps) {
