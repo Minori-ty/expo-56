@@ -16,7 +16,7 @@
     "test": "vitest run",
     "db": "npx drizzle-kit generate",
     "check": "npx tsc --noEmit",
-    "prepare": "husky install"
+    "prepare": "node -e \"if (!process.env.CI) require('husky')\""
   },
   "dependencies": {
     "@expo/ui": "~56.0.19",
