@@ -76,7 +76,6 @@ const config = {
                     },
                 },
             ],
-            'expo-sharing',
             [
                 'expo-file-system',
                 {
