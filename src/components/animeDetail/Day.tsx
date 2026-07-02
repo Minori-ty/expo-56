@@ -3,11 +3,10 @@ import { useMemo } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import type { CalendarDay } from 'react-native-ui-datepicker'
 
+import { useAnimeDetailContext } from '@/contexts/animeDetailContext'
+import { checkEpisodeUpdate } from '@/hooks/checkEpisodeUpdate'
 import { cn } from '@/utils/cn'
 import { getAiredEpisodeCount } from '@/utils/time'
-
-import { checkEpisodeUpdate } from './_checkEpisodeUpdate'
-import { useAnimeDetailContext } from './_context'
 
 /**
  * 日历单元格组件。

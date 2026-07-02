@@ -12,13 +12,15 @@ import DateTimePicker, { type CalendarComponents, type DateType, useDefaultStyle
 
 import { handleGetAnimeById } from '@/api/anime'
 import { addCalendarByAnimeId, deleteCalendarByAnimeId } from '@/api/calendar'
+import { Day } from '@/components/animeDetail/Day'
 import Loading from '@/components/lottie/Loading'
 import TransparentLoading from '@/components/TransparentLoading'
 import { CompactHeader } from '@/components/ui/CompactHeader'
 import Icon from '@/components/ui/Icon'
-import { db } from '@/db'
 import 'dayjs/locale/zh-cn'
 
+import { animeDetailContext } from '@/contexts/animeDetailContext'
+import { db } from '@/db'
 import { animeTable } from '@/db/schema'
 import { EStatus, EWeekday } from '@/enums'
 import { useNavigationLock } from '@/hooks/useNavigationLock'
@@ -26,9 +28,6 @@ import { blurhash, themeColorPurple } from '@/styles'
 import { cn } from '@/utils/cn'
 import { queryClient } from '@/utils/react-query'
 import { getAiredEpisodeCount, getAnimeStatus } from '@/utils/time'
-
-import { animeDetailContext } from './_context'
-import { Day } from './_Day'
 
 function AnimeDetail() {
     const { id } = useLocalSearchParams<{ id: string }>()

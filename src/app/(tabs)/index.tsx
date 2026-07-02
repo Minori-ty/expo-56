@@ -75,7 +75,6 @@ export default function Index() {
 
     const renderScene = ({ route }: { route: any }) => {
         const updateWeekday = weekdayMap[route.key]
-        // Use updatedAt as key to force remount of scene when data updates (fixes layout re-use issues)
         return <TabViewComponent key={String(updatedAt ?? 'init')} updateWeekday={updateWeekday} />
     }
 

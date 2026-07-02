@@ -4,7 +4,7 @@ import type { DeepExpand } from 'types-tools'
 
 import { db } from '@/db'
 import { animeTable } from '@/db/schema'
-import { EWeekday } from '@/enums'
+import { EWeekday, getCurrentWeekday } from '@/enums'
 import { TTx } from '@/types'
 import { getLastEpisodeTimestamp } from '@/utils/time'
 
@@ -166,7 +166,7 @@ export function parseAnimeData(data: IParseAnimeData): DeepExpand<IAnime> {
     const { id, name, totalEpisode, cover, firstEpisodeTimestamp: firstSec, eventIds, createdAt } = data
     // Convert seconds from DB to ms for time.ts
     const firstEpisodeTimestamp = firstSec * MS_PER_SEC
-    const updateWeekday = dayjs(firstEpisodeTimestamp).isoWeekday() as typeof EWeekday.valueType
+    const updateWeekday = getCurrentWeekday()
     const updateTimeHHmm = dayjs(firstEpisodeTimestamp).format('YYYY-MM-DD HH:mm')
     const lastEpisodeTimestamp = getLastEpisodeTimestamp(totalEpisode, firstEpisodeTimestamp)
 
