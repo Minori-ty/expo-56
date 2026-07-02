@@ -1,18 +1,14 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import dayjs from 'dayjs'
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
 import { useNavigation } from 'expo-router'
-import { differenceBy } from 'lodash-es'
 import { Calendar, Download, FileText, Trash2, Upload } from 'lucide-react-native'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { BackHandler } from 'react-native'
 import { RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native'
 import Toast from 'react-native-toast-message'
-import { z } from 'zod'
 
-import { handleAddAnime } from '@/api'
-import { getAnimeList } from '@/api/anime'
 import { deleteCalendarByAnimeId, deleteCalendarByAnimeIds } from '@/api/calendar'
+import { exportAnimeToJsonFile, importAnimeFromJsonFile } from '@/api/data-management'
 import Checkbox from '@/components/Checkbox'
 import { useModal } from '@/components/Modal'
 import TransparentLoading from '@/components/TransparentLoading'
@@ -22,14 +18,19 @@ import { themeColorPurple } from '@/styles'
 import {
     deleteExportDirJsonFile,
     deleteExportDirJsonFileList,
-    exportJsonFileToDownloads,
     getSavedExportDir,
-    importJsonFile,
     scanExportDirJsonFile,
 } from '@/utils/file'
 import { queryClient } from '@/utils/react-query'
 
 type CheckboxState = 'unchecked' | 'checked' | 'indeterminate'
+
+/** 字节数格式化（B / KB / MB） */
+function formatFileSize(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
 
 export default function DataManagement() {
     const modal = useModal()
@@ -77,15 +78,13 @@ export default function DataManagement() {
             queryClient.invalidateQueries({
                 queryKey: ['settings-calendar'],
             })
-            const index = selectedAnimeIdList.indexOf(id)
-            if (index !== -1) {
-                selectedAnimeIdList.splice(index, 1)
-            }
+            // 不可变更新：不要直接 splice state 数组，否则会破坏 React 引用相等语义。
+            setSelectedAnimeIdList((prev) => prev.filter((x) => x !== id))
         },
         onError: (err) => {
             Toast.show({
                 type: 'error',
-                text1: `获取日历事件失败 ${err}`,
+                text1: `获取日历事件失败 ${err instanceof Error ? err.message : String(err)}`,
             })
         },
     })
@@ -148,28 +147,8 @@ export default function DataManagement() {
         }
     }
 
-    async function exportDataToJsonFile() {
-        const data = await getAnimeList()
-        type AnimeRow = (typeof animeTable)['$inferSelect']
-        // ⚠️ 导出时 firstEpisodeTimestamp 为秒（DB 存储格式），不是毫秒
-        // 重新导入时需要在 handleImportJsonFileToData 中 ×1000 转换
-        const res = data.map(
-            ({ eventIds: _eventIds, updatedAt: _updatedAt, createdAt: _createdAt, ...reset }: AnimeRow) => {
-                return {
-                    ...reset,
-                }
-            },
-        )
-        const ok = await exportJsonFileToDownloads(
-            { animeList: res },
-            `anime_data_${dayjs().format('YYYY_MM_DD')}.json`,
-        )
-        if (!ok) return
-        return dayjs().format('YYYY_MM_DD')
-    }
-
     const { mutate: exportDataToJsonFileMutation, isPending: isExportDataToJsonFileMutationLoading } = useMutation({
-        mutationFn: exportDataToJsonFile,
+        mutationFn: exportAnimeToJsonFile,
         onSuccess: (date) => {
             if (!date) return
             queryClient.invalidateQueries({
@@ -186,56 +165,22 @@ export default function DataManagement() {
 
             Toast.show({
                 type: 'error',
-                text1: `导出失败！${err}`,
+                text1: `导出失败！${err instanceof Error ? err.message : String(err)}`,
             })
         },
     })
 
-    const validateJsonData = z.object({
-        animeList: z.array(
-            z.object({
-                id: z.number(),
-                name: z.string(),
-                totalEpisode: z.number(),
-                cover: z.string(),
-                firstEpisodeTimestamp: z.number().gte(0),
-            }),
-        ),
-    })
-
-    async function handleImportJsonFileToData() {
-        const jsonData = await importJsonFile()
-        const result = validateJsonData.safeParse(jsonData)
-        if (!result.success) {
-            Toast.show({
-                type: 'error',
-                text1: 'json数据校验失败，不符合格式',
-            })
-            return
-        }
-        const data = await getAnimeList()
-        const res = differenceBy(jsonData.animeList, data, 'name')
-        // ⚠️ JSON 导出时 firstEpisodeTimestamp 是秒（DB 存储格式）
-        // handleAddAnime 期望毫秒输入（内部会 /1000 转回秒存 DB）
-        // 因此这里必须 ×1000 秒→毫秒，否则存入库的将是错误值
-        const animeList = res.map(({ id: _id, firstEpisodeTimestamp, ...reset }) => ({
-            ...reset,
-            firstEpisodeTimestamp: firstEpisodeTimestamp * 1000,
-        }))
-
-        return await Promise.all(
-            animeList.map((item) => {
-                handleAddAnime(item)
-
-                return Promise.resolve()
-            }),
-        )
-    }
-
     const { mutate: handleImportJsonFileToDataMution, isPending: handleImportJsonFileToDataMutionLoading } =
         useMutation({
-            mutationFn: handleImportJsonFileToData,
-            onSuccess: () => {
+            mutationFn: async () => {
+                const result = await importAnimeFromJsonFile()
+                if (!result.ok) {
+                    Toast.show({ type: 'error', text1: 'json数据校验失败，不符合格式' })
+                }
+                return result
+            },
+            onSuccess: (result) => {
+                if (!result.ok) return
                 queryClient.invalidateQueries({
                     queryKey: ['schedule'],
                 })
@@ -262,15 +207,13 @@ export default function DataManagement() {
                 queryKey: ['settings-json-file'],
             })
 
-            const index = selectedJsonFileList.indexOf(fileName)
-            if (index !== -1) {
-                selectedJsonFileList.splice(index, 1)
-            }
+            // 不可变更新
+            setSelectedJsonFileList((prev) => prev.filter((x) => x !== fileName))
         },
         onError: (err) => {
             Toast.show({
                 type: 'error',
-                text1: err.message,
+                text1: err instanceof Error ? err.message : String(err),
             })
         },
     })
@@ -290,16 +233,10 @@ export default function DataManagement() {
         onError: (err) => {
             Toast.show({
                 type: 'error',
-                text1: err.message,
+                text1: err instanceof Error ? err.message : String(err),
             })
         },
     })
-
-    const formatFileSize = (bytes: number) => {
-        if (bytes < 1024) return `${bytes} B`
-        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-    }
 
     const handleFileSelectAll = (state: CheckboxState) => {
         if (state === 'checked') {

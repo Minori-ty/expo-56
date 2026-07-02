@@ -47,5 +47,9 @@ function UpdateWeekdayFieldContent({
 }
 
 export function UpdateWeekdayField({ form, label }: FieldProps) {
-    return <form.Field name="updateWeekday">{(field) => <UpdateWeekdayFieldContent field={field} label={label} />}</form.Field>
+    return (
+        <form.Field name="updateWeekday">
+            {(field) => <UpdateWeekdayFieldContent field={field} label={label} />}
+        </form.Field>
+    )
 }

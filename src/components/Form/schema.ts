@@ -36,12 +36,8 @@ const currentEpisodeField = z.number()
 // 保证既允许 `HH:mm` 也允许 `YYYY-MM-DD HH:mm`。修改此行前请先确认
 // api/anime.ts:parseAnimeData 与 utils/time.ts:getFirstEpisodeTimestamp 的用法。
 const updateTimeHHmmField = z.string().regex(/(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]/, '请输入正确的时间格式HH:mm')
-const firstEpisodeField = z
-    .string('请选择首播时间')
-    .min(1, '请选择首播时间')
-const lastEpisodeField = z
-    .string('请选择完结时间')
-    .min(1, '请选择完结时间')
+const firstEpisodeField = z.string('请选择首播时间').min(1, '请选择首播时间')
+const lastEpisodeField = z.string('请选择完结时间').min(1, '请选择完结时间')
 
 // ─── 公共字段 ────────────────────────────────────────────────────────────────
 const baseFields = {

@@ -6,14 +6,9 @@ import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
 import { Image } from 'expo-image'
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router'
 import { Bell, BellOff, CalendarCheck, CalendarClock, Clock } from 'lucide-react-native'
-import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import DateTimePicker, {
-    type CalendarComponents,
-    type CalendarDay,
-    type DateType,
-    useDefaultStyles,
-} from 'react-native-ui-datepicker'
+import DateTimePicker, { type CalendarComponents, type DateType, useDefaultStyles } from 'react-native-ui-datepicker'
 
 import { handleGetAnimeById } from '@/api/anime'
 import { addCalendarByAnimeId, deleteCalendarByAnimeId } from '@/api/calendar'
@@ -32,18 +27,8 @@ import { cn } from '@/utils/cn'
 import { queryClient } from '@/utils/react-query'
 import { getAiredEpisodeCount, getAnimeStatus } from '@/utils/time'
 
-interface IAnimeDetailContext {
-    firstEpisodeTimestamp: number
-    lastEpisodeTimestamp: number
-    totalEpisode: number
-}
-const animeDetailContext = createContext<IAnimeDetailContext | null>(null)
-
-const useAnimeDetailContext = () => {
-    const ctx = useContext(animeDetailContext)
-    if (!ctx) throw new Error('缺少provider')
-    return ctx
-}
+import { animeDetailContext } from './_context'
+import { Day } from './_Day'
 
 function AnimeDetail() {
     const { id } = useLocalSearchParams<{ id: string }>()
@@ -275,12 +260,21 @@ function AnimeDetail() {
                                         <View
                                             className="h-full rounded-full bg-blue-500"
                                             style={{
-                                                width: `${Math.round((currentEpisode / anime.totalEpisode) * 100)}%`,
+                                                // totalEpisode=0 时避免除零得到 NaN（渲染成 "NaN%"）
+                                                width: `${
+                                                    anime.totalEpisode > 0
+                                                        ? Math.round((currentEpisode / anime.totalEpisode) * 100)
+                                                        : 0
+                                                }%`,
                                             }}
                                         />
                                     </View>
                                     <Text className="mt-1 text-xs text-gray-500">
-                                        完成度 {Math.round((currentEpisode / anime.totalEpisode) * 100)}%
+                                        完成度{' '}
+                                        {anime.totalEpisode > 0
+                                            ? Math.round((currentEpisode / anime.totalEpisode) * 100)
+                                            : 0}
+                                        %
                                     </Text>
                                 </View>
 
@@ -423,91 +417,10 @@ function AnimeDetail() {
 
 export default AnimeDetail
 
-function Day(day: CalendarDay) {
-    const { isSelected, isCurrentMonth, isToday } = day
-    const { totalEpisode, firstEpisodeTimestamp } = useAnimeDetailContext()
-
-    const episode = useMemo(() => {
-        return checkEpisodeUpdate({
-            date: day.date,
-            totalEpisode,
-            firstEpisodeYYYYMMDDHHmm: dayjs(firstEpisodeTimestamp).format('YYYY-MM-DD HH:mm'),
-            currentEpisode: getAiredEpisodeCount(totalEpisode, firstEpisodeTimestamp),
-        })
-    }, [day.date, totalEpisode, firstEpisodeTimestamp])
-
-    return (
-        <View
-            className={cn(
-                // oxlint-disable-next-line tailwindcss/no-unknown-classes
-                'will-change-variable relative w-full flex-1 items-center rounded border border-transparent bg-white',
-                isSelected && 'border border-blue-500',
-                isCurrentMonth && isSelected && isToday && 'bg-blue-500',
-            )}
-        >
-            <Text
-                className={cn(
-                    // oxlint-disable-next-line tailwindcss/no-unknown-classes
-                    'will-change-variable top-2',
-                    isSelected && isToday && 'text-white',
-                    !isCurrentMonth && 'text-gray-200',
-                    isCurrentMonth && !isSelected && isToday && 'text-blue-500',
-                )}
-            >
-                {day.text}
-            </Text>
-            {
-                <View className="absolute bottom-2 w-full">
-                    <Text
-                        className={cn(
-                            // oxlint-disable-next-line tailwindcss/no-unknown-classes
-                            'will-change-variable text-center',
-                            !isCurrentMonth && 'text-gray-200',
-                            isSelected && isToday && 'text-white',
-                            isCurrentMonth && episode && 'text-orange-500',
-                        )}
-                        style={styles.episodeText}
-                    >
-                        {episode}
-                    </Text>
-                </View>
-            }
-        </View>
-    )
-}
-
-interface ICheckEpisodeUpdate {
-    firstEpisodeYYYYMMDDHHmm: string
-    totalEpisode: number
-    date: string
-    currentEpisode: number
-}
-function checkEpisodeUpdate({ date, firstEpisodeYYYYMMDDHHmm, totalEpisode }: ICheckEpisodeUpdate): string {
-    const firstDate = dayjs(firstEpisodeYYYYMMDDHHmm, 'YYYYMMDDHHmm')
-    const targetDate = dayjs(date)
-
-    const diffInWeeks = targetDate.startOf('day').diff(firstDate.startOf('day'), 'week')
-
-    if (diffInWeeks < 0 || diffInWeeks >= totalEpisode) {
-        return ''
-    }
-
-    const expectedUpdateDate = firstDate.add(diffInWeeks, 'week')
-
-    if (targetDate.isSame(expectedUpdateDate, 'day')) {
-        return `第${diffInWeeks + 1}集`
-    }
-
-    return ''
-}
-
 const styles = StyleSheet.create({
     cover: {
         width: 128,
         height: 192,
         borderRadius: 12,
-    },
-    episodeText: {
-        fontSize: 6,
     },
 })

@@ -1,10 +1,5 @@
 import { eq } from 'drizzle-orm'
-import {
-    AlarmMethod,
-    ExpoCalendarEvent,
-    getCalendars,
-    listEvents,
-} from 'expo-calendar'
+import { AlarmMethod, ExpoCalendarEvent, getCalendars, listEvents } from 'expo-calendar'
 import { Alert, Linking, Platform } from 'react-native'
 import Toast from 'react-native-toast-message'
 

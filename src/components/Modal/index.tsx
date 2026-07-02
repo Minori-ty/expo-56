@@ -47,12 +47,6 @@ export function useModalState() {
     return { options, visible, show, hide }
 }
 
-export function ModalProvider({
-    children,
-    state,
-}: {
-    children: ReactNode
-    state: ReturnType<typeof useModalState>
-}) {
+export function ModalProvider({ children, state }: { children: ReactNode; state: ReturnType<typeof useModalState> }) {
     return <ModalContext.Provider value={{ show: state.show, hide: state.hide }}>{children}</ModalContext.Provider>
 }

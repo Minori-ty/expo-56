@@ -1,8 +1,6 @@
 {
     "$schema": "./node_modules/oxlint/configuration_schema.json",
-    "jsPlugins": [
-        "oxlint-tailwindcss"
-    ],
+    "jsPlugins": ["oxlint-tailwindcss"],
     "rules": {
         // -------------------------- 核心正确性（必报错） --------------------------
         "tailwindcss/no-conflicting-classes": "error", // 冲突类名（如 w-10 和 w-20 同时存在）
@@ -49,7 +47,7 @@
         // 补充：禁止条件判断中的类型错误（如 if ('string') 这类永远为 true 的判断）
         "no-promise-executor-return": "error",
         // 补充：禁止数组/对象解构时的未定义值（避免运行时报错）
-        "no-unused-private-class-members": "error",
+        "no-unused-private-class-members": "error"
     },
     "settings": {
         "tailwindcss": {
@@ -87,11 +85,5 @@
         "typescript": true
     },
     // 忽略目录：与 oxfmt 完全一致
-    "ignorePatterns": [
-        "node_modules",
-        "dist",
-        ".claude",
-        ".agents",
-        ".codegraph"
-    ]
+    "ignorePatterns": ["node_modules", "dist", ".claude", ".agents", ".codegraph"]
 }

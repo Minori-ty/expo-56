@@ -67,6 +67,7 @@ The form for adding/editing anime uses a **field registry + status-driven render
 ### Time calculations (`src/utils/time.ts`)
 
 Core anime scheduling math: episode times are linear (7-day intervals from the first episode). Key functions:
+
 - `getAnimeStatus(totalEpisode, firstEpisodeTimestamp)` → `EStatus` (serializing/completed/toBeUpdated)
 - `getAiredEpisodeCount(totalEpisode, firstEpisodeTimestamp)` → current episode number
 - `getFirstEpisodeTimestamp()` — back-calculates the first episode from current episode + update day/time
