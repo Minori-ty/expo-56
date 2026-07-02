@@ -30,6 +30,11 @@ const updateWeekdayField = z.union([
     z.literal(EWeekday.sunday),
 ])
 const currentEpisodeField = z.number()
+// 字段名叫 updateTimeHHmm 是历史遗留（DB/API 沿用），实际存储的是
+// `YYYY-MM-DD HH:mm` 完整字符串，`getFirstEpisodeTimestamp()`（utils/time.ts）
+// 也是靠 dayjs 从完整字符串取 hour()/minute()。正则**故意不加 ^…$ 锚定**，
+// 保证既允许 `HH:mm` 也允许 `YYYY-MM-DD HH:mm`。修改此行前请先确认
+// api/anime.ts:parseAnimeData 与 utils/time.ts:getFirstEpisodeTimestamp 的用法。
 const updateTimeHHmmField = z.string().regex(/(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]/, '请输入正确的时间格式HH:mm')
 const firstEpisodeField = z
     .string('请选择首播时间')
