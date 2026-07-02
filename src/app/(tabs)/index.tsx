@@ -4,7 +4,7 @@ import { Image } from 'expo-image'
 import { router } from 'expo-router'
 import { createContext, useContext, useMemo, useState } from 'react'
 import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import { SceneMap, TabBar, TabView } from 'react-native-tab-view'
+import { TabBar, TabView } from 'react-native-tab-view'
 
 import { parseAnimeData } from '@/api/anime'
 import Empty from '@/components/lottie/Empty'
@@ -44,12 +44,6 @@ const routes = EWeekday.items.map((item) => {
     }
 })
 
-// Build SceneMap dynamically from EWeekday.items so keys match route keys
-const scenes: Record<string, () => React.JSX.Element> = {}
-for (const item of EWeekday.items) {
-    scenes[item.key] = () => <TabViewComponent updateWeekday={item.value} />
-}
-const renderScene = SceneMap(scenes)
 export default function Index() {
     const [index, setIndex] = useState<number>(dayjs().isoWeekday() - 1)
 
@@ -75,6 +69,15 @@ export default function Index() {
     const isLoading = useMemo(() => {
         return !updatedAt
     }, [updatedAt])
+
+    // Map route.key to weekday value for rendering scenes
+    const weekdayMap = useMemo(() => Object.fromEntries(EWeekday.items.map((i) => [i.key, i.value])), [])
+
+    const renderScene = ({ route }: { route: any }) => {
+        const updateWeekday = weekdayMap[route.key]
+        // Use updatedAt as key to force remount of scene when data updates (fixes layout re-use issues)
+        return <TabViewComponent key={String(updatedAt ?? 'init')} updateWeekday={updateWeekday} />
+    }
 
     return (
         <scheduleContext.Provider value={{ list, isLoading }}>
@@ -157,8 +160,8 @@ function TabViewComponent({ updateWeekday }: { updateWeekday: typeof EWeekday.va
             }
             className="bg-white"
         >
-            {sortedTimes.map((time, index) => {
-                return <AnimeCardItem time={time} animeList={mapSchedule[time]} key={index} />
+            {sortedTimes.map((time) => {
+                return <AnimeCardItem time={time} animeList={mapSchedule[time]} key={time} />
             })}
         </ScrollView>
     )
@@ -182,7 +185,7 @@ function AnimeCardItem({ time, animeList }: IAnimeCardItemProps) {
                             key={item.id}
                             activeOpacity={0.5}
                             onPress={() => navigate(() => router.push(`/animeDetail/${item.id}`))}
-                            className="mb-3 h-28 flex-1 flex-row"
+                            className="mb-3 h-28 flex-row"
                         >
                             <Image
                                 source={item.cover}
