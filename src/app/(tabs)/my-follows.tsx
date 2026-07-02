@@ -193,16 +193,16 @@ const AnimeContainer = memo(function AnimeContainer({ list }: IAnimeContainerPro
     }
     return (
         <FlatList
+            key={timestamp}
             className="bg-white pb-4"
             data={list}
-            extraData={timestamp}
             keyExtractor={(item) => item.id.toString()}
             numColumns={3}
             columnWrapperStyle={{ gap: GAP }}
             showsHorizontalScrollIndicator={false}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ gap: GAP, paddingHorizontal: GAP, paddingBottom: 20 }}
-            renderItem={({ item }) => <AnimeContainerItem data={item} timestamp={timestamp} />}
+            renderItem={({ item }) => <AnimeContainerItem data={item} />}
             refreshControl={
                 <RefreshControl
                     refreshing={isLoading}
@@ -217,7 +217,6 @@ const AnimeContainer = memo(function AnimeContainer({ list }: IAnimeContainerPro
 
 interface IAnimeContainerItemProps {
     data: TAnimeList[number]
-    timestamp: number
 }
 const AnimeContainerItem = memo(function AnimeContainerItem({ data }: IAnimeContainerItemProps) {
     const modal = useModal()
