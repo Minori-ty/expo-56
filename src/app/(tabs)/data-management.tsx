@@ -1,10 +1,9 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
-import { useNavigation } from 'expo-router'
-import { Calendar, Download, FileText, Trash2, Upload } from 'lucide-react-native'
+import { Link, useNavigation } from 'expo-router'
+import { Calendar, Download, FileText, Settings, Trash2, Upload } from 'lucide-react-native'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react'
-import { BackHandler } from 'react-native'
-import { RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native'
+import { BackHandler, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native'
 import Toast from 'react-native-toast-message'
 
 import { deleteCalendarByAnimeId, deleteCalendarByAnimeIds } from '@/api/calendar'
@@ -487,6 +486,16 @@ export default function DataManagement() {
                                 })}
                             </View>
                         )}
+                    </View>
+
+                    {/* 设置按钮 */}
+                    <View className="mt-6 rounded-lg bg-white p-4 shadow-sm">
+                        <Link href="/settings" className="flex-row items-center justify-between">
+                            <View className="flex-row items-center">
+                                <Settings size={20} color="#374151" />
+                                <Text className="ml-2 text-lg font-semibold text-gray-900">设置</Text>
+                            </View>
+                        </Link>
                     </View>
                 </View>
             </ScrollView>

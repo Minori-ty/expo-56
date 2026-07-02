@@ -5,6 +5,7 @@ import {
     CalendarCheck,
     CalendarClock,
     Check,
+    ChevronRight,
     Clock,
     Heart,
     Hourglass,
@@ -35,6 +36,7 @@ const iconMap = {
     ArrowLeft,
     Check,
     Pencil,
+    ChevronRight,
 } as const
 
 const Icon: React.FC<IconProps> = memo(({ name, className, size = 26, color }) => {
