@@ -1,6 +1,13 @@
 {
     "$schema": "./node_modules/oxlint/configuration_schema.json",
-    "jsPlugins": ["oxlint-tailwindcss"],
+    "jsPlugins": [
+        "oxlint-tailwindcss"
+    ],
+    "plugins": [
+        "vue",
+        "typescript",
+        "oxc"
+    ],
     "rules": {
         // -------------------------- 核心正确性（必报错） --------------------------
         "tailwindcss/no-conflicting-classes": "error", // 冲突类名（如 w-10 和 w-20 同时存在）
@@ -85,5 +92,12 @@
         "typescript": true
     },
     // 忽略目录：与 oxfmt 完全一致
-    "ignorePatterns": ["node_modules", "dist", ".claude", ".agents", ".codegraph"]
+    "ignorePatterns": [
+        "node_modules",
+        "dist",
+        ".claude",
+        ".agents",
+        ".codegraph",
+        ".expo"
+    ]
 }
