@@ -119,6 +119,9 @@ jobs:
                   echo "$COMMIT_MESSAGES" >> $GITHUB_ENV
                   echo "EOF" >> $GITHUB_ENV
                   echo "提交信息已存储到环境变量"
+            - name: 生成版本信息 JSON
+              run: |
+                echo "{\"version\":\"${{ env.VERSION }}\",\"download_url\":\"https://github.com/${{ github.repository }}/releases\"}" > app_version.json
 
             - name: 发布 Release
               uses: softprops/action-gh-release@v3
@@ -132,4 +135,6 @@ jobs:
                       ***时间 ${{ env.FORMATTED_TIME }}***
                       ## What's Changed
                       ${{ env.COMMIT_MESSAGES }}
-                  files: 'v${{ env.VERSION }}.apk'
+                  files: |
+                    'v${{ env.VERSION }}.apk'
+                    app_version.json
