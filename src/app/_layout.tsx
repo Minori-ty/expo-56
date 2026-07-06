@@ -7,16 +7,16 @@ import { StatusBar } from 'expo-status-bar'
 import ErrorBoundary from 'react-native-error-boundary'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { KeyboardProvider } from 'react-native-keyboard-controller'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 
 import Error from '@/components/lottie/Error'
 import { ModalProvider, useModalState } from '@/components/Modal'
 import { ModalComponent } from '@/components/Modal/Modal'
 import { expo } from '@/db'
-import { useAppStateRefresh } from '@/hooks/useAppStateRefresh'
 import 'react-native-reanimated'
 
+import { useAppStateRefresh } from '@/hooks/useAppStateRefresh'
 import { queryClient } from '@/utils/react-query'
 
 import '../global.css'
@@ -30,13 +30,10 @@ function DrizzleStudio() {
     return null
 }
 
-export default function RootLayout() {
+function Providers({ children }: { children: React.ReactNode }) {
     const modalState = useModalState()
-
-    useAppStateRefresh()
-
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }} edges={['top', 'bottom']}>
+        <SafeAreaProvider>
             <KeyboardProvider>
                 <ErrorBoundary FallbackComponent={Error} onError={errorHandler}>
                     <QueryClientProvider client={queryClient}>
@@ -44,12 +41,7 @@ export default function RootLayout() {
                             <BottomSheetModalProvider>
                                 <ModalProvider state={modalState}>
                                     <ThemeProvider value={DefaultTheme}>
-                                        <StatusBar style="dark" />
-                                        {__DEV__ && <DrizzleStudio />}
-                                        <Stack>
-                                            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                                            <Stack.Screen name="+not-found" />
-                                        </Stack>
+                                        {children}
                                         <Toast />
                                         <ModalComponent state={modalState} />
                                     </ThemeProvider>
@@ -59,6 +51,20 @@ export default function RootLayout() {
                     </QueryClientProvider>
                 </ErrorBoundary>
             </KeyboardProvider>
-        </SafeAreaView>
+        </SafeAreaProvider>
+    )
+}
+
+export default function RootLayout() {
+    useAppStateRefresh()
+    return (
+        <Providers>
+            <StatusBar style="dark" />
+            {__DEV__ && <DrizzleStudio />}
+            <Stack>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="+not-found" />
+            </Stack>
+        </Providers>
     )
 }
