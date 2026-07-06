@@ -7,7 +7,7 @@ import { StatusBar } from 'expo-status-bar'
 import ErrorBoundary from 'react-native-error-boundary'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { KeyboardProvider } from 'react-native-keyboard-controller'
-import { SafeAreaProvider } from 'react-native-safe-area-context'
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 
 import Error from '@/components/lottie/Error'
@@ -34,23 +34,25 @@ function Providers({ children }: { children: React.ReactNode }) {
     const modalState = useModalState()
     return (
         <SafeAreaProvider>
-            <KeyboardProvider>
-                <ErrorBoundary FallbackComponent={Error} onError={errorHandler}>
-                    <QueryClientProvider client={queryClient}>
-                        <GestureHandlerRootView>
-                            <BottomSheetModalProvider>
-                                <ModalProvider state={modalState}>
-                                    <ThemeProvider value={DefaultTheme}>
-                                        {children}
-                                        <Toast />
-                                        <ModalComponent state={modalState} />
-                                    </ThemeProvider>
-                                </ModalProvider>
-                            </BottomSheetModalProvider>
-                        </GestureHandlerRootView>
-                    </QueryClientProvider>
-                </ErrorBoundary>
-            </KeyboardProvider>
+            <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }} edges={['top']}>
+                <KeyboardProvider>
+                    <ErrorBoundary FallbackComponent={Error} onError={errorHandler}>
+                        <QueryClientProvider client={queryClient}>
+                            <GestureHandlerRootView>
+                                <BottomSheetModalProvider>
+                                    <ModalProvider state={modalState}>
+                                        <ThemeProvider value={DefaultTheme}>
+                                            {children}
+                                            <Toast />
+                                            <ModalComponent state={modalState} />
+                                        </ThemeProvider>
+                                    </ModalProvider>
+                                </BottomSheetModalProvider>
+                            </GestureHandlerRootView>
+                        </QueryClientProvider>
+                    </ErrorBoundary>
+                </KeyboardProvider>
+            </SafeAreaView>
         </SafeAreaProvider>
     )
 }
