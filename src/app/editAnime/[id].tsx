@@ -8,7 +8,7 @@ import { useMemo, useRef } from 'react'
 import { handleUpdateAnimeById } from '@/api'
 import { getAnimeByNameExceptItself, parseAnimeData } from '@/api/anime'
 import AnimeForm, { type IAnimeFormRef } from '@/components/Form/AnimeForm'
-import { formDefaultValues, type AnimeFormValues } from '@/components/Form/schema'
+import { getFormDefaultValues, type AnimeFormValues } from '@/components/Form/schema'
 import Loading from '@/components/lottie/Loading'
 import { db } from '@/db'
 import { animeTable } from '@/db/schema'
@@ -37,7 +37,7 @@ export default function EditAnime() {
 
     const formData = useMemo<AnimeFormValues>(() => {
         if (!data[0]) {
-            return formDefaultValues
+            return getFormDefaultValues()
         }
         const result = parseAnimeData(data[0])
         const { firstEpisodeTimestamp, totalEpisode, ...reset } = result

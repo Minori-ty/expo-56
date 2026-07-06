@@ -33,11 +33,13 @@ import { EStatus } from '@/enums'
 import { useNavigationLock } from '@/hooks/useNavigationLock'
 import { blurhash, themeColorPurple } from '@/styles'
 import { TAnimeList } from '@/types'
-import { cn } from '@/utils/cn'
 import { queryClient } from '@/utils/react-query'
 import { getAiredEpisodeCount, getAnimeStatus } from '@/utils/time'
 
 const GAP = 10
+const SCREEN_WIDTH = Dimensions.get('window').width
+const ITEM_WIDTH = (SCREEN_WIDTH - GAP * 4) / 3
+const ITEM_HEIGHT = ITEM_WIDTH * 1.5
 
 interface IMyFollowsContext {
     isLoading: boolean
@@ -199,10 +201,6 @@ const AnimeContainer = memo(function AnimeContainer({ list }: IAnimeContainerPro
     const { isLoading } = useMyFollowsContext()
     const [timestamp, setTimestamp] = useState(dayjs().unix())
 
-    function onRefetch() {
-        console.log(dayjs().unix())
-        setTimestamp(dayjs().unix())
-    }
     return (
         <FlatList
             key={timestamp}
@@ -210,7 +208,7 @@ const AnimeContainer = memo(function AnimeContainer({ list }: IAnimeContainerPro
             data={list}
             keyExtractor={(item) => item.id.toString()}
             numColumns={3}
-            columnWrapperStyle={{ gap: GAP }}
+            columnWrapperStyle={{ gap: GAP, alignItems: 'flex-start' }}
             showsHorizontalScrollIndicator={false}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ gap: GAP, paddingHorizontal: GAP, paddingBottom: 20 }}
@@ -218,11 +216,14 @@ const AnimeContainer = memo(function AnimeContainer({ list }: IAnimeContainerPro
             refreshControl={
                 <RefreshControl
                     refreshing={isLoading}
-                    onRefresh={onRefetch}
+                    onRefresh={() => setTimestamp(dayjs().unix())}
                     className="text-theme"
                     colors={[themeColorPurple]}
                 />
             }
+            removeClippedSubviews={true}
+            maxToRenderPerBatch={9}
+            windowSize={5}
         />
     )
 })
@@ -247,15 +248,9 @@ const AnimeContainerItem = memo(function AnimeContainerItem({ data }: IAnimeCont
                 })
             }}
             delayLongPress={300}
-            style={{ width: (Dimensions.get('window').width - GAP * 4) / 3 }}
+            style={{ width: ITEM_WIDTH }}
         >
-            <View
-                className={cn(
-                    'overflow-hidden rounded-lg',
-                    // oxlint-disable-next-line tailwindcss/no-unknown-classes
-                    `h-[${((Dimensions.get('window').width - GAP * 4) / 3) * 1.5}px]`,
-                )}
-            >
+            <View style={{ width: ITEM_WIDTH, height: ITEM_HEIGHT, overflow: 'hidden', borderRadius: 8 }}>
                 <Image
                     source={data.cover}
                     placeholder={{ blurhash }}
@@ -306,7 +301,7 @@ interface IUpdateLabelProps {
 function UpdateLabel({ status }: IUpdateLabelProps) {
     return (
         <View
-            className={cn('absolute bottom-0 left-0 h-8 items-center justify-center rounded-tr-lg px-2')}
+            className="absolute bottom-0 left-0 h-8 items-center justify-center rounded-tr-lg px-2"
             style={{ backgroundColor: EStatus.raw(status).color }}
         >
             <Text className="truncate text-white">{EStatus.raw(status).label}</Text>
@@ -316,8 +311,8 @@ function UpdateLabel({ status }: IUpdateLabelProps) {
 
 const styles = StyleSheet.create({
     cover: {
-        width: (Dimensions.get('window').width - GAP * 4) / 3,
-        height: ((Dimensions.get('window').width - GAP * 4) / 3) * 1.5,
+        width: ITEM_WIDTH,
+        height: ITEM_HEIGHT,
     },
     center: {
         justifyContent: 'center',

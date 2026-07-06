@@ -4,7 +4,7 @@ import { useRef } from 'react'
 import { handleAddAnime } from '@/api'
 import { getAnimeByName } from '@/api/anime'
 import AnimeForm, { type IAnimeFormRef } from '@/components/Form/AnimeForm'
-import { formDefaultValues, type AnimeFormValues } from '@/components/Form/schema'
+import { getFormDefaultValues, type AnimeFormValues } from '@/components/Form/schema'
 import { useAnimeMutation } from '@/hooks/useAnimeMutation'
 import { useNavigationHeader } from '@/hooks/useNavigationHeader'
 import { computeFirstEpisodeTimestamp } from '@/utils/time'
@@ -35,5 +35,7 @@ export default function AddAnime() {
         })
     }
 
-    return <AnimeForm formData={formDefaultValues} onSubmit={onSubmit} ref={baseFormRef} isSubmitting={isPending} />
+    return (
+        <AnimeForm formData={getFormDefaultValues()} onSubmit={onSubmit} ref={baseFormRef} isSubmitting={isPending} />
+    )
 }

@@ -82,20 +82,24 @@ export const animeFormSchema = z.discriminatedUnion('status', [serializingSchema
 export type AnimeFormValues = z.infer<typeof animeFormSchema>
 
 /**
- * 表单默认值 —— 类型由 Schema 推导，单值。
- * 与原 formDefaultValues 行为一致（默认连载中状态）。
+ * 获取表单默认值（每次调用重新计算当前时间，避免模块 import 时锁死时间戳）。
  */
-export const formDefaultValues: AnimeFormValues = {
-    name: '',
-    totalEpisode: 0,
-    cover: '',
-    status: EStatus.serializing,
-    updateWeekday: getCurrentWeekday(),
-    currentEpisode: 0,
-    updateTimeHHmm: dayjs().format('YYYY-MM-DD HH:mm'),
-    firstEpisodeYYYYMMDDHHmm: undefined,
-    lastEpisodeYYYYMMDDHHmm: undefined,
+export function getFormDefaultValues(): AnimeFormValues {
+    return {
+        name: '',
+        totalEpisode: 0,
+        cover: '',
+        status: EStatus.serializing,
+        updateWeekday: getCurrentWeekday(),
+        currentEpisode: 0,
+        updateTimeHHmm: dayjs().format('YYYY-MM-DD HH:mm'),
+        firstEpisodeYYYYMMDDHHmm: undefined,
+        lastEpisodeYYYYMMDDHHmm: undefined,
+    }
 }
+
+/** @deprecated 模块级常量在 import 时求值，请改用 getFormDefaultValues() */
+export const formDefaultValues: AnimeFormValues = getFormDefaultValues()
 
 /**
  * 跨字段业务校验 —— 从旧 schema.ts 的 superRefine 迁移而来，逻辑 100% 一致。
