@@ -10,7 +10,7 @@ export default function Error({ error }: IFallbackProps) {
     return (
         <View className="w-full flex-1 items-center justify-center bg-white">
             <LottieView
-                source={require('@/assets/lottie/error.json')}
+                source={require('@assets/lottie/error.json')}
                 autoPlay
                 loop
                 style={{ width: 150, height: 150 }}

@@ -1,32 +1,18 @@
 {
-  "extends": "expo/tsconfig.base",
-  "compilerOptions": {
-    "strict": true,
-    "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@/assets/*": [
-        "./assets/*"
-      ]
+    "extends": "expo/tsconfig.base",
+    "compilerOptions": {
+        "types": ["node"],
+        "strict": true,
+        "paths": {
+            "@/*": ["./src/*"],
+            "@assets/*": ["./assets/*"],
+            "@drizzle/*": ["./drizzle/*"]
+        },
+        "incremental": true,
+        "tsBuildInfoFile": ".tsbuildinfo",
+        "diagnostics": true,
+        "extendedDiagnostics": true
     },
-    "incremental": true,
-    "tsBuildInfoFile": ".tsbuildinfo",
-    "diagnostics": true,
-    "extendedDiagnostics": true
-  },
-  "include": [
-    "src",
-    ".expo/types/**/*.ts",
-    "expo-env.d.ts",
-    "nativewind-env.d.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "android",
-    "ios",
-    "dist",
-    "build",
-    "coverage"
-  ]
+    "include": ["src", ".expo/types/**/*.ts", "expo-env.d.ts", "nativewind-env.d.ts"],
+    "exclude": ["node_modules", "android", "ios", "dist", "build", "coverage"]
 }

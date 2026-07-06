@@ -13,7 +13,7 @@ export default function TransparentLoading({ size = 300 }: ITransparentLoadingPr
     return (
         <View className="w-full flex-1 items-center justify-center">
             <LottieView
-                source={require('@/assets/lottie/loading.json')}
+                source={require('@assets/lottie/loading.json')}
                 autoPlay
                 loop
                 style={{ width: size, height: size }}
