@@ -56,7 +56,7 @@ const AnimeForm = forwardRef<IAnimeFormRef, IAnimeFormProps>(function AnimeForm(
     return (
         <>
             <KeyboardAwareScrollView
-                bottomOffset={100}
+                bottomOffset={20}
                 showsVerticalScrollIndicator={false}
                 style={{ paddingHorizontal: 16, backgroundColor: 'white', paddingBottom: 80 }}
             >

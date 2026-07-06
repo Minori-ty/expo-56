@@ -20,6 +20,7 @@
     },
     "dependencies": {
         "@expo/ui": "~57.0.2",
+        "@expo/vector-icons": "^15.0.2",
         "@react-native-picker/picker": "^2.11.4",
         "@tailwindcss/postcss": "^4.3.2",
         "@tanstack/react-form": "^1.33.0",

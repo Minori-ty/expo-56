@@ -1,6 +1,7 @@
+import { FontAwesome } from '@expo/vector-icons'
 import { nativeApplicationVersion } from 'expo-application'
 import { useNavigation } from 'expo-router'
-import { RefreshCw } from 'lucide-react-native'
+import { Info, RefreshCw, Upload } from 'lucide-react-native'
 import { useCallback, useEffect, useLayoutEffect, useState } from 'react'
 import { Alert, Linking, Text, TouchableOpacity, View } from 'react-native'
 import Animated, {
@@ -104,7 +105,10 @@ export default function Settings() {
 
                     <View className="space-y-3">
                         <View className="flex-row items-center justify-between py-3">
-                            <Text className="text-gray-600">版本号</Text>
+                            <View className="flex-row items-center gap-2">
+                                <Info size={18} />
+                                <Text>版本号</Text>
+                            </View>
                             <Text className="font-medium text-gray-900">v{localVersion}</Text>
                         </View>
 
@@ -113,13 +117,16 @@ export default function Settings() {
                             onPress={checkUpdate}
                             disabled={checking}
                         >
-                            <Text className="text-gray-600">检查更新</Text>
+                            <View className="flex-row items-center gap-2">
+                                <Upload size={18} />
+                                <Text>检查更新</Text>
+                            </View>
                             {checking ? (
                                 <Animated.View style={animatedIconStyle}>
-                                    <RefreshCw size={20} color="#6B7280" />
+                                    <RefreshCw size={20} />
                                 </Animated.View>
                             ) : (
-                                <Icon name="ChevronRight" />
+                                <Icon name="ChevronRight" size={20} />
                             )}
                         </TouchableOpacity>
 
@@ -129,8 +136,11 @@ export default function Settings() {
                                 Linking.openURL('https://github.com/Minori-ty/expo-56')
                             }}
                         >
-                            <Text className="text-gray-600">开源主页</Text>
-                            <Icon name="ChevronRight" />
+                            <View className="flex-row items-center gap-2">
+                                <FontAwesome name="github" size={18} />
+                                <Text>开源主页</Text>
+                            </View>
+                            <Icon name="ChevronRight" size={20} />
                         </TouchableOpacity>
                     </View>
                 </View>
