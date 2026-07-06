@@ -28,7 +28,7 @@ jobs:
 
       - name: 安装 npm 依赖
         run: |
-          npm ci
+          npm i
 
       - name: 检查 EXPO_TOKEN 是否存在
         run: |
