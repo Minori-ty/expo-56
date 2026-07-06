@@ -1,7 +1,17 @@
 import { nativeApplicationVersion } from 'expo-application'
 import { useNavigation } from 'expo-router'
-import { useCallback, useLayoutEffect, useState } from 'react'
+import { RefreshCw } from 'lucide-react-native'
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react'
 import { Alert, Linking, Text, TouchableOpacity, View } from 'react-native'
+import Animated, {
+    Easing,
+    cancelAnimation,
+    useAnimatedStyle,
+    useSharedValue,
+    withRepeat,
+    withTiming,
+} from 'react-native-reanimated'
+import Toast from 'react-native-toast-message'
 
 import { CompactHeader } from '@/components/ui/CompactHeader'
 import Icon from '@/components/ui/Icon'
@@ -23,6 +33,24 @@ export default function Settings() {
     const localVersion = nativeApplicationVersion ?? '0.0.0'
     const navigation = useNavigation()
     const [checking, setChecking] = useState(false)
+
+    // 旋转动画：checking 时 360° 无限旋转，停止时归零
+    const rotation = useSharedValue(0)
+    const animatedIconStyle = useAnimatedStyle(() => ({
+        transform: [{ rotate: `${rotation.value}deg` }],
+    }))
+    useEffect(() => {
+        if (checking) {
+            rotation.value = withRepeat(
+                withTiming(360, { duration: 1000, easing: Easing.linear }),
+                -1, // 无限
+            )
+        } else {
+            cancelAnimation(rotation)
+            rotation.value = withTiming(0, { duration: 0 })
+        }
+        return () => cancelAnimation(rotation)
+    }, [checking, rotation])
 
     useLayoutEffect(() => {
         navigation.setOptions({
@@ -58,7 +86,7 @@ export default function Settings() {
                     },
                 ])
             } else {
-                Alert.alert('检查更新', '当前已是最新版本')
+                Toast.show({ type: 'success', text1: '当前已是最新版本', visibilityTime: 2000 })
             }
         } catch (e) {
             Alert.alert('检查更新失败', e instanceof Error ? e.message : '网络请求出错')
@@ -75,7 +103,7 @@ export default function Settings() {
                     <Text className="mb-4 text-lg font-semibold text-gray-900">关于应用</Text>
 
                     <View className="space-y-3">
-                        <View className="flex-row items-center justify-between">
+                        <View className="flex-row items-center justify-between py-3">
                             <Text className="text-gray-600">版本号</Text>
                             <Text className="font-medium text-gray-900">v{localVersion}</Text>
                         </View>
@@ -85,8 +113,14 @@ export default function Settings() {
                             onPress={checkUpdate}
                             disabled={checking}
                         >
-                            <Text className="text-gray-600">{checking ? '检查中...' : '检查更新'}</Text>
-                            <Icon name="ChevronRight" />
+                            <Text className="text-gray-600">检查更新</Text>
+                            {checking ? (
+                                <Animated.View style={animatedIconStyle}>
+                                    <RefreshCw size={20} color="#6B7280" />
+                                </Animated.View>
+                            ) : (
+                                <Icon name="ChevronRight" />
+                            )}
                         </TouchableOpacity>
 
                         <TouchableOpacity

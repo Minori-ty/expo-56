@@ -1,140 +1,139 @@
 name: release
 
 on:
-    push:
-        branches:
-            - master
+  push:
+    branches:
+      - master
 
 permissions:
-    contents: write
-    pull-requests: write
-    repository-projects: write
+  contents: write
+  pull-requests: write
+  repository-projects: write
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
+  build:
+    runs-on: ubuntu-latest
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      NODE_ENV: production
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 10 # 获取最近10个提交
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: "npm"
+
+      - name: 安装 npm 依赖
+        run: |
+          npm i -g eas-cli
+          npm i
+
+      - name: 检查 EXPO_TOKEN 是否存在
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "EXPO_TOKEN 未设置"
+            exit 1
+          else
+            echo "EXPO_TOKEN 已设置"
+          fi
+
+      - name: 启动java 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: "temurin"
+          java-version: 21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-overwrite-existing: false
+          cache-cleanup: on-success
+          gradle-home-cache-includes: |
+            caches
+            wrapper
+            build-cache
+          build-scan-publish: true
+          # 自动同意服务条款 (注意这里是 of-use)
+          build-scan-terms-of-use-url: "https://gradle.com/help/legal-terms-of-use"
+          build-scan-terms-of-use-agree: "yes"
+
+      - name: 安装 Android SDK
+        uses: android-actions/setup-android@v4
+
+      - name: 安装 安卓开发工具
+        run: |
+          sdkmanager "platforms;android-36" \
+                     "build-tools;36.0.0" \
+                     "ndk;27.1.12297006" \
+                     "cmake;3.22.1"
+
+      - name: 打包expo应用
+        run: |
+          npx expo prebuild -p android && chmod +x android/gradlew && cd android && ./gradlew assembleRelease
+          # eas build --platform android --local
+
+      - name: 获取版本号
+        id: version
+        run: echo "VERSION=$(npm pkg get version | tr -d '\"')" >> $GITHUB_ENV
+
+      - name: 重命名apk
+        run: |
+          # 定义目标文件名
+          TARGET_NAME="v${{ env.VERSION }}.apk"
+
+          # 情况1：检查 gradle 打包生成的固定路径是否存在
+          if [ -f "android/app/build/outputs/apk/release/app-release.apk" ]; then
+            echo "检测到 gradle 产物，正在重命名..."
+            mv "android/app/build/outputs/apk/release/app-release.apk" "$TARGET_NAME"
+          else
+            # 情况2：在根目录下查找 eas 本地打包生成的 apk
+            echo "未检测到 gradle 产物，尝试在根目录查找 eas 产物..."
+            APK_FILE=$(ls -1 *.apk 2>/dev/null | head -n 1)
+            if [ -z "$APK_FILE" ]; then
+              echo "❌ 未找到任何 APK 文件"
+              exit 1
+            fi
+            echo "检测到 eas 产物: $APK_FILE，正在重命名..."
+            mv "$APK_FILE" "$TARGET_NAME"
+          fi
+
+          echo "✅ 重命名完成: $TARGET_NAME"
+
+      - name: 获取当前时间
+        run: |
+          # 使用 date 命令格式化时间
+          export TZ='Asia/Shanghai'
+          current_time=$(date +"%Y-%m-%d %H:%M")
+          echo "FORMATTED_TIME=$current_time" >> $GITHUB_ENV
+
+      - name: 获取最近10个提交信息并存储到环境变量
+        id: get-commits
+        run: |
+          # 将提交信息收集到环境变量，保留换行符
+          COMMIT_MESSAGES=$(git log -n 10 --pretty=format:"- %s by %an in %h")
+          echo "COMMIT_MESSAGES<<EOF" >> $GITHUB_ENV
+          echo "$COMMIT_MESSAGES" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+          echo "提交信息已存储到环境变量"
+      - name: 生成版本信息 JSON
+        run: |
+          echo "{\"version\":\"${{ env.VERSION }}\",\"download_url\":\"https://github.com/${{ github.repository }}/releases\"}" > app_version.json
+
+      - name: 发布 Release
+        uses: softprops/action-gh-release@v3
         env:
-            EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-            NODE_ENV: production
-        steps:
-            - uses: actions/checkout@v7
-              with:
-                  fetch-depth: 10 # 获取最近10个提交
-
-            - uses: actions/setup-node@v6
-              with:
-                  node-version: 22
-                  cache: 'npm'
-
-            - name: 安装 npm 依赖
-              run: |
-                  npm i -g eas-cli
-                  npm i
-
-            - name: 检查 EXPO_TOKEN 是否存在
-              run: |
-                  if [ -z "$EXPO_TOKEN" ]; then
-                    echo "EXPO_TOKEN 未设置"
-                    exit 1
-                  else
-                    echo "EXPO_TOKEN 已设置"
-                  fi
-
-            - name: 启动java 21
-              uses: actions/setup-java@v5
-              with:
-                  distribution: 'temurin'
-                  java-version: 21
-                  cache: gradle
-
-            - name: Setup Gradle
-              uses: gradle/actions/setup-gradle@v6
-              with:
-                  cache-overwrite-existing: false
-                  cache-cleanup: on-success
-                  gradle-home-cache-includes: |
-                      caches
-                      wrapper
-                      build-cache
-                  build-scan-publish: true
-                  # 自动同意服务条款 (注意这里是 of-use)
-                  build-scan-terms-of-use-url: 'https://gradle.com/help/legal-terms-of-use'
-                  build-scan-terms-of-use-agree: 'yes'
-
-            - name: 安装 Android SDK
-              uses: android-actions/setup-android@v4
-
-            - name: 安装 安卓开发工具
-              run: |
-                  sdkmanager "platforms;android-36" \
-                             "build-tools;36.0.0" \
-                             "ndk;27.1.12297006" \
-                             "cmake;3.22.1"
-
-            - name: 打包expo应用
-              run: |
-                  npx expo prebuild -p android && chmod +x android/gradlew && cd android && ./gradlew assembleRelease
-                  # eas build --platform android --local
-
-            - name: 获取版本号
-              id: version
-              run: echo "VERSION=$(npm pkg get version | tr -d '\"')" >> $GITHUB_ENV
-
-            - name: 重命名apk
-              run: |
-                  # 定义目标文件名
-                  TARGET_NAME="v${{ env.VERSION }}.apk"
-
-                  # 情况1：检查 gradle 打包生成的固定路径是否存在
-                  if [ -f "android/app/build/outputs/apk/release/app-release.apk" ]; then
-                    echo "检测到 gradle 产物，正在重命名..."
-                    mv "android/app/build/outputs/apk/release/app-release.apk" "$TARGET_NAME"
-                  else
-                    # 情况2：在根目录下查找 eas 本地打包生成的 apk
-                    echo "未检测到 gradle 产物，尝试在根目录查找 eas 产物..."
-                    APK_FILE=$(ls -1 *.apk 2>/dev/null | head -n 1)
-                    if [ -z "$APK_FILE" ]; then
-                      echo "❌ 未找到任何 APK 文件"
-                      exit 1
-                    fi
-                    echo "检测到 eas 产物: $APK_FILE，正在重命名..."
-                    mv "$APK_FILE" "$TARGET_NAME"
-                  fi
-
-                  echo "✅ 重命名完成: $TARGET_NAME"
-
-            - name: 获取当前时间
-              run: |
-                  # 使用 date 命令格式化时间
-                  export TZ='Asia/Shanghai'
-                  current_time=$(date +"%Y-%m-%d %H:%M")
-                  echo "FORMATTED_TIME=$current_time" >> $GITHUB_ENV
-
-            - name: 获取最近10个提交信息并存储到环境变量
-              id: get-commits
-              run: |
-                  # 将提交信息收集到环境变量，保留换行符
-                  COMMIT_MESSAGES=$(git log -n 10 --pretty=format:"- %s by %an in %h")
-                  echo "COMMIT_MESSAGES<<EOF" >> $GITHUB_ENV
-                  echo "$COMMIT_MESSAGES" >> $GITHUB_ENV
-                  echo "EOF" >> $GITHUB_ENV
-                  echo "提交信息已存储到环境变量"
-            - name: 生成版本信息 JSON
-              run: |
-                echo "{\"version\":\"${{ env.VERSION }}\",\"download_url\":\"https://github.com/${{ github.repository }}/releases\"}" > app_version.json
-
-            - name: 发布 Release
-              uses: softprops/action-gh-release@v3
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              with:
-                  name: v${{ env.VERSION }}
-                  tag_name: v${{ env.VERSION }}
-                  body: |
-                      # 发布版本 v${{ env.VERSION }}
-                      ***时间 ${{ env.FORMATTED_TIME }}***
-                      ## What's Changed
-                      ${{ env.COMMIT_MESSAGES }}
-                  files: |
-                    'v${{ env.VERSION }}.apk'
-                    app_version.json
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          name: v${{ env.VERSION }}
+          tag_name: v${{ env.VERSION }}
+          body: |
+            # 发布版本 v${{ env.VERSION }}
+            ***时间 ${{ env.FORMATTED_TIME }}***
+            ## What's Changed
+            ${{ env.COMMIT_MESSAGES }}
+          files: |
+            v${{ env.VERSION }}.apk
+            app_version.json
