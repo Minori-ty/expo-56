@@ -70,7 +70,7 @@ export default function Settings() {
         if (checking) return
         setChecking(true)
         try {
-            const resp = await fetch(UPDATE_JSON_URL)
+            const resp = await fetch(UPDATE_JSON_URL, { signal: AbortSignal.timeout(5_000) })
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
 
             const data: { version: string; download_url: string } = await resp.json()

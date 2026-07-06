@@ -326,7 +326,6 @@ const styles = StyleSheet.create({
     },
     sheetContent: {
         height: 400,
-        backgroundColor: '#f3f4f6',
         paddingHorizontal: 20,
         paddingTop: 20,
     },

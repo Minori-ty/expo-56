@@ -37,7 +37,10 @@ const DatePicker = forwardRef<IDatePickerRef, IDatepickerProps>(
             <BottomSheetModal ref={bottomSheetModalRef} enablePanDownToClose onClose={onClose}>
                 <BottomSheetView style={styles.contentContainer}>
                     <DateTimePicker
-                        styles={defaultStyles}
+                        styles={{
+                            ...defaultStyles,
+                            time_selected_indicator: { backgroundColor: 'transparent' },
+                        }}
                         mode="single"
                         date={date}
                         onChange={(params) => onChange(params.date)}
