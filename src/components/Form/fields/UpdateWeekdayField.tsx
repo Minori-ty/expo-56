@@ -2,7 +2,7 @@ import { Picker } from '@react-native-picker/picker'
 import { useEffect } from 'react'
 import { View } from 'react-native'
 
-import { EWeekday, getCurrentWeekday } from '@/enums'
+import { EWeekday, getWeekday } from '@/enums'
 import { cn } from '@/utils/cn'
 
 import { FormItem } from '../FormItem'
@@ -29,7 +29,7 @@ function UpdateWeekdayFieldContent({
 
     useEffect(() => {
         if (!field.state.value) {
-            field.handleChange(getCurrentWeekday())
+            field.handleChange(getWeekday())
         }
     }, [field.state.value, field.handleChange])
 

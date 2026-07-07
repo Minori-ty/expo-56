@@ -1,7 +1,7 @@
 import dayjs from 'dayjs'
 import { z } from 'zod'
 
-import { EStatus, EWeekday, getCurrentWeekday } from '@/enums'
+import { EStatus, EWeekday, getWeekday } from '@/enums'
 
 /**
  * 动漫表单 Schema —— Zod4 单一推导
@@ -90,7 +90,7 @@ export function getFormDefaultValues(): AnimeFormValues {
         totalEpisode: 0,
         cover: '',
         status: EStatus.serializing,
-        updateWeekday: getCurrentWeekday(),
+        updateWeekday: getWeekday(),
         currentEpisode: 0,
         updateTimeHHmm: dayjs().format('YYYY-MM-DD HH:mm'),
         firstEpisodeYYYYMMDDHHmm: undefined,
