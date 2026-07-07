@@ -72,20 +72,22 @@ export async function handleUpdateAnimeById(data: DeepExpand<Omit<IUpdateAnimeBy
         const status = getAnimeStatus(totalEpisode, firstEpisodeTimestamp)
         const { eventIds } = result
 
-        // 删除旧的日历事件
+        let newEventIds: string[] = []
+
+        // 仅在动漫有注册日历事件时，才进行删除→重新注册
         if (eventIds && eventIds.length > 0) {
             await deleteCalendarEvents(eventIds)
-        }
 
-        let newEventIds: string[] = []
-        if (status !== EStatus.completed) {
-            const ids = await addCalendarEvents({
-                name,
-                firstEpisodeTimestamp,
-                totalEpisode,
-            })
-            if (ids) newEventIds = ids
+            if (status !== EStatus.completed) {
+                const ids = await addCalendarEvents({
+                    name,
+                    firstEpisodeTimestamp,
+                    totalEpisode,
+                })
+                if (ids) newEventIds = ids
+            }
         }
+        // 无日历事件时直接更新动漫数据，跳过日历操作
 
         await updateAnimeById(tx, {
             animeId: data.animeId,

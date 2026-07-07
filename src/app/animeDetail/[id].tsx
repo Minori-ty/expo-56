@@ -72,12 +72,7 @@ function AnimeDetail() {
         return data[0].eventIds && data[0].eventIds.length > 0 ? true : false
     }, [data])
 
-    const [firstEpisodeYYYYMMDDHHmm, setFirstEpisodeYYYYMMDDHHmm] = useState<DateType>(
-        anime.firstEpisodeTimestamp && dayjs().format('YYYY-MM-DD HH:mm'),
-    )
-    useEffect(() => {
-        setFirstEpisodeYYYYMMDDHHmm(dayjs(anime.firstEpisodeTimestamp))
-    }, [isLoading, anime])
+    const [firstEpisodeYYYYMMDDHHmm, setFirstEpisodeYYYYMMDDHHmm] = useState<DateType>(dayjs())
 
     const navigate = useNavigationLock()
 
@@ -115,7 +110,6 @@ function AnimeDetail() {
                     queryKey: ['settings-calendar'],
                 })
             },
-            onError: () => {},
         })
 
     function handleUnsubscribe() {

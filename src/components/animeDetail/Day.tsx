@@ -31,18 +31,17 @@ export function Day(day: CalendarDay) {
         <View
             className={cn(
                 // oxlint-disable-next-line tailwindcss/no-unknown-classes
-                'will-change-variable relative w-full flex-1 items-center rounded border border-transparent bg-white',
-                isSelected && 'border border-blue-500',
-                isCurrentMonth && isSelected && isToday && 'bg-blue-500',
+                'will-change-variable relative w-full flex-1 items-center rounded border',
+                isToday ? 'border-blue-500 bg-blue-500' : 'border-transparent bg-white',
+                isSelected && !isToday && 'border-blue-500',
             )}
         >
             <Text
                 className={cn(
                     // oxlint-disable-next-line tailwindcss/no-unknown-classes
                     'will-change-variable top-2',
-                    isSelected && isToday && 'text-white',
+                    isToday && 'text-white',
                     !isCurrentMonth && 'text-gray-200',
-                    isCurrentMonth && !isSelected && isToday && 'text-blue-500',
                 )}
             >
                 {day.text}
@@ -53,8 +52,8 @@ export function Day(day: CalendarDay) {
                         // oxlint-disable-next-line tailwindcss/no-unknown-classes
                         'will-change-variable text-center',
                         !isCurrentMonth && 'text-gray-200',
-                        isSelected && isToday && 'text-white',
-                        isCurrentMonth && episode && 'text-orange-500',
+                        isToday && 'text-white',
+                        !isToday && isCurrentMonth && episode && 'text-orange-500',
                     )}
                     style={styles.episodeText}
                 >

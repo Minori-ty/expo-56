@@ -40,6 +40,8 @@ const DatePicker = forwardRef<IDatePickerRef, IDatepickerProps>(
                         styles={{
                             ...defaultStyles,
                             time_selected_indicator: { backgroundColor: 'transparent' },
+                            today: { backgroundColor: '#B9D5F7' },
+                            today_label: { color: '#000' },
                         }}
                         mode="single"
                         date={date}

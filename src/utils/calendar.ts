@@ -4,7 +4,7 @@ import { Alert, Linking, Platform } from 'react-native'
 import Toast from 'react-native-toast-message'
 
 import { db } from '@/db'
-import { settingsTable } from '@/db/schema'
+import { animeTable, settingsTable } from '@/db/schema'
 import { EStatus } from '@/enums'
 import { getCalendarPermission } from '@/permissions'
 
@@ -130,6 +130,60 @@ export async function cleanupOrphanedCalendarEvents() {
 
     // 写入标记，避免再次扫描
     await db.insert(settingsTable).values({ key: CLEANUP_FLAG_KEY, value: '1' })
+}
+
+/**
+ * 清理已过期的日历事件（每集的开始时间已过）。
+ *
+ * 每次 app 启动后执行（由 (tabs)/_layout.tsx 调用）。
+ * 遍历所有有 eventIds 的动漫，逐事件检查是否过期，过期则删除并更新 DB。
+ */
+export async function cleanupExpiredCalendarEvents() {
+    const { granted } = await getCalendarPermission()
+    if (!granted) return
+
+    const now = Date.now()
+
+    // 读取所有有日历事件的动漫
+    const animeList = await db.select().from(animeTable)
+    let totalDeleted = 0
+
+    for (const anime of animeList) {
+        const eventIds = anime.eventIds
+        if (!eventIds || eventIds.length === 0) continue
+
+        const expiredIds: string[] = []
+
+        for (const eventId of eventIds) {
+            try {
+                const event = await ExpoCalendarEvent.get(eventId)
+                const eventEndDate = event.endDate
+                const endTime = eventEndDate
+                    ? typeof eventEndDate === 'string'
+                        ? new Date(eventEndDate).getTime()
+                        : eventEndDate.getTime()
+                    : 0
+                if (endTime <= now) {
+                    await event.delete()
+                    expiredIds.push(eventId)
+                    totalDeleted++
+                    console.log(`清理过期日历事件: ${event.title}`)
+                }
+            } catch {
+                // 事件已被删除或不存在，也记为需清理
+                expiredIds.push(eventId)
+            }
+        }
+
+        if (expiredIds.length > 0) {
+            const remainingIds = eventIds.filter((id) => !expiredIds.includes(id))
+            await db.update(animeTable).set({ eventIds: remainingIds }).where(eq(animeTable.id, anime.id))
+        }
+    }
+
+    if (totalDeleted > 0) {
+        console.log(`过期日历事件清理完成，共删除 ${totalDeleted} 个`)
+    }
 }
 
 interface ICreateCalendarEventsProps {

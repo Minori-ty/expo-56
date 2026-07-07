@@ -12,7 +12,7 @@ import Icon from '@/components/ui/Icon'
 import TabBarBackground from '@/components/ui/TabBarBackground'
 import { db } from '@/db'
 import { themeColorPurple } from '@/styles'
-import { cleanupOrphanedCalendarEvents } from '@/utils/calendar'
+import { cleanupExpiredCalendarEvents, cleanupOrphanedCalendarEvents } from '@/utils/calendar'
 
 export function SuspenseFallback() {
     return <Loading />
@@ -29,6 +29,7 @@ export default function TabLayout() {
         if (success) {
             timer = setTimeout(() => {
                 cleanupOrphanedCalendarEvents().catch(console.error)
+                cleanupExpiredCalendarEvents().catch(console.error)
             }, 0)
         }
         return () => clearTimeout(timer)
