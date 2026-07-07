@@ -166,7 +166,7 @@ export function parseAnimeData(data: IParseAnimeData): DeepExpand<IAnime> {
     const { id, name, totalEpisode, cover, firstEpisodeTimestamp: firstSec, eventIds, createdAt } = data
     // Convert seconds from DB to ms for time.ts
     const firstEpisodeTimestamp = firstSec * MS_PER_SEC
-    const updateWeekday = getCurrentWeekday()
+    const updateWeekday = getCurrentWeekday(firstEpisodeTimestamp)
     const updateTimeHHmm = dayjs(firstEpisodeTimestamp).format('YYYY-MM-DD HH:mm')
     const lastEpisodeTimestamp = getLastEpisodeTimestamp(totalEpisode, firstEpisodeTimestamp)
 
