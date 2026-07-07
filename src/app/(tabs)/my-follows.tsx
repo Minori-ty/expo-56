@@ -5,8 +5,18 @@ import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
 import { Enum } from 'enum-plus'
 import { impactAsync, ImpactFeedbackStyle } from 'expo-haptics'
 import { Image } from 'expo-image'
-import { useNavigation, useRouter } from 'expo-router'
-import { createContext, memo, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useNavigation, useRouter, useFocusEffect } from 'expo-router'
+import {
+    useCallback,
+    createContext,
+    memo,
+    useContext,
+    useEffect,
+    useLayoutEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react'
 import {
     BackHandler,
     Dimensions,
@@ -88,6 +98,14 @@ export default function MyFollows() {
     const bottomSheetModalRef = useRef<BottomSheetModal>(null)
     const [status, setStatus] = useState<typeof EStatusList.valueType>(EStatusList.all)
     const [sort, setSort] = useState<typeof ESortList.valueType>(ESortList.positive)
+    const [focusKey, setFocusKey] = useState(0)
+
+    // 每次 tab 获得焦点时强制刷新（解决从 add/edit 返回后 useLiveQuery 不更新的问题）
+    useFocusEffect(
+        useCallback(() => {
+            setFocusKey((k) => k + 1)
+        }, []),
+    )
 
     const { data, updatedAt } = useLiveQuery(db.select().from(animeTable))
     const list = useMemo(() => {
@@ -106,7 +124,7 @@ export default function MyFollows() {
                     return b.createdAt - a.createdAt || b.id - a.id
                 }
             })
-    }, [data, status, sort])
+    }, [data, status, sort, focusKey])
 
     const isLoading = useMemo(() => {
         return !updatedAt
