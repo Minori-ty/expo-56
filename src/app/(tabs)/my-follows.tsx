@@ -216,7 +216,6 @@ interface IAnimeContainerProps {
     list: TAnimeList
 }
 const AnimeContainer = memo(function AnimeContainer({ list }: IAnimeContainerProps) {
-    const { isLoading } = useMyFollowsContext()
     const [timestamp, setTimestamp] = useState(dayjs().unix())
 
     return (
@@ -233,7 +232,7 @@ const AnimeContainer = memo(function AnimeContainer({ list }: IAnimeContainerPro
             renderItem={({ item }) => <AnimeContainerItem data={item} />}
             refreshControl={
                 <RefreshControl
-                    refreshing={isLoading}
+                    refreshing={false}
                     onRefresh={() => setTimestamp(dayjs().unix())}
                     className="text-theme"
                     colors={[themeColorPurple]}
