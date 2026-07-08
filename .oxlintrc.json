@@ -1,13 +1,7 @@
 {
     "$schema": "./node_modules/oxlint/configuration_schema.json",
-    "jsPlugins": [
-        "oxlint-tailwindcss"
-    ],
-    "plugins": [
-        "vue",
-        "typescript",
-        "oxc"
-    ],
+    "jsPlugins": ["oxlint-tailwindcss"],
+    "plugins": ["vue", "typescript", "oxc"],
     "rules": {
         // -------------------------- 核心正确性（必报错） --------------------------
         "tailwindcss/no-conflicting-classes": "error", // 冲突类名（如 w-10 和 w-20 同时存在）
@@ -25,7 +19,7 @@
         "no-unused-vars": "warn", // 未使用变量（开发阶段允许，提测前修复）
         // -------------------------- 补充实用规则（可选） --------------------------
         "no-debugger": "error",
-        "no-console": "warn",
+        "no-console": "allow",
         "no-constant-condition": "warn",
         "no-self-assign": "error",
         "no-var": "error",
@@ -92,12 +86,5 @@
         "typescript": true
     },
     // 忽略目录：与 oxfmt 完全一致
-    "ignorePatterns": [
-        "node_modules",
-        "dist",
-        ".claude",
-        ".agents",
-        ".codegraph",
-        ".expo"
-    ]
+    "ignorePatterns": ["node_modules", "dist", ".claude", ".agents", ".codegraph", ".expo"]
 }

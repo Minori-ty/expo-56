@@ -30,7 +30,7 @@ export function ModalComponent({ state }: { state: ReturnType<typeof useModalSta
                     onPress={handleClose}
                 >
                     {/* 阻止事件冒泡到外层 */}
-                    <Pressable onPress={() => {}}>
+                    <Pressable>
                         <View className="w-80 rounded-3xl bg-white px-5 pt-8 pb-9">
                             <Text className="mb-4 text-xl font-bold">{options?.title ?? '确认删除'}</Text>
                             {options?.body}
