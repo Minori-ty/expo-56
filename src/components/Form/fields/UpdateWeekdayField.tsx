@@ -2,8 +2,9 @@ import { Picker } from '@react-native-picker/picker'
 import { useEffect } from 'react'
 import { View } from 'react-native'
 
-import { EWeekday, getWeekday } from '@/enums'
+import { EWeekday } from '@/enums'
 import { cn } from '@/utils/cn'
+import { getWeekday } from '@/utils/time'
 
 import { FormItem } from '../FormItem'
 import type { FieldProps } from './types.d'

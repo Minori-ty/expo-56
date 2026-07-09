@@ -2,7 +2,7 @@ import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { EStatus } from '@/enums'
+import { EStatus, EWeekday } from '@/enums'
 
 import {
     computeFirstEpisodeTimestamp,
@@ -16,6 +16,7 @@ import {
     getLastEpisodeTimestamp,
     getMondayTimestampInThisWeek,
     getSundayTimestampInThisWeek,
+    getWeekday,
     isCurrentWeekdayUpdateTimePassed,
     isUpdatedInThisWeek,
 } from './time'
@@ -23,14 +24,13 @@ import {
 dayjs.extend(isoWeek)
 
 // ─── 统一基准时间：2026-07-02 周四 10:00 ────────────────────────────────────────
-const NOW = new Date('2026-07-02T10:00:00')
 // ISO 周：周一 2026-06-29 ～ 周日 2026-07-05
 
 /** 设置 fake timers 到统一基准时间 */
-function useFakeNow() {
+function useFakeNow(now?: Date) {
     beforeEach(() => {
         vi.useFakeTimers()
-        vi.setSystemTime(NOW)
+        vi.setSystemTime(now ?? new Date('2026-07-02T10:00:00'))
     })
     afterEach(() => {
         vi.useRealTimers()
@@ -51,21 +51,21 @@ describe('getEpisodeTime（第 n 集播出时间）', () => {
     it('第10集 = 首集 + 9×7天', () => {
         const first = dayjs('2026-01-01T12:00:00').valueOf()
         const result = getEpisodeTime(first, 10)
-        const expected = dayjs(first).add(9 * 7, 'day')
+        const expected = dayjs('2026-03-05T12:00:00') // +63 days
         expect(result.valueOf()).toBe(expected.valueOf())
     })
 
     it('第0集会前移7天（调用方负责边界，函数仅做数学计算）', () => {
         const first = dayjs('2026-01-01T12:00:00').valueOf()
         const result = getEpisodeTime(first, 0)
-        const expected = dayjs(first).add(-7, 'day')
+        const expected = dayjs('2025-12-25T12:00:00') // -7 days
         expect(result.valueOf()).toBe(expected.valueOf())
     })
 
     it('大集数不会溢出', () => {
         const first = dayjs('2020-01-01').valueOf()
         const result = getEpisodeTime(first, 1000)
-        const expected = dayjs(first).add(999 * 7, 'day')
+        const expected = dayjs('2039-02-23') // +999×7 days
         expect(result.valueOf()).toBe(expected.valueOf())
     })
 })
@@ -74,7 +74,7 @@ describe('getLastEpisodeTime', () => {
     it('总集数12 → 最后一集 = 第12集时间', () => {
         const first = dayjs('2026-01-01').valueOf()
         const last = getLastEpisodeTime(first, 12)
-        const expected = getEpisodeTime(first, 12)
+        const expected = dayjs('2026-03-19') // +77 days
         expect(last.valueOf()).toBe(expected.valueOf())
     })
 })
@@ -88,7 +88,7 @@ describe('getFirstEpisodeTimestampFromLast（完结反推首集）', () => {
         expect(firstDay.format('YYYY-MM-DD')).toBe('2026-10-15')
         expect(firstDay.second()).toBe(0)
         // 首集 + 11周 = 完结（秒也被清零）
-        expect(firstDay.add(11, 'week').valueOf()).toBe(dayjs(last).second(0).valueOf())
+        expect(firstDay.add(11, 'week').valueOf()).toBe(dayjs('2026-12-31T10:30:00').valueOf())
     })
 
     it('1集完结 → 首集 = 完结时间（不减周）', () => {
@@ -105,7 +105,7 @@ describe('getFirstEpisodeTimestampFromLast（完结反推首集）', () => {
         const first = getFirstEpisodeTimestampFromLast(100, last)
         const firstDay = dayjs(first)
 
-        expect(firstDay.add(99, 'week').valueOf()).toBe(dayjs(last).second(0).valueOf())
+        expect(firstDay.add(99, 'week').valueOf()).toBe(dayjs('2026-12-31T10:30:00').valueOf())
     })
 })
 
@@ -113,7 +113,7 @@ describe('getLastEpisodeTimestamp（长期稳定性）', () => {
     it('last episode = first + (n-1)×7', () => {
         const first = dayjs('2026-04-01T10:00:00').valueOf()
         const result = getLastEpisodeTimestamp(10, first)
-        const expected = dayjs(first).add(9 * 7, 'day')
+        const expected = dayjs('2026-06-03T10:00:00') // +63 days
         expect(result).toBe(expected.valueOf())
     })
 
@@ -125,9 +125,9 @@ describe('getLastEpisodeTimestamp（长期稳定性）', () => {
     })
 
     it('时间再往前推1000天仍然正确', () => {
-        const first = dayjs('2026-04-01T10:00:00').add(-1000, 'day').valueOf()
+        const first = dayjs('2023-07-06T10:00:00').valueOf() // 2026-04-01 - 1000 days
         const result = getLastEpisodeTimestamp(10, first)
-        const expected = dayjs(first).add(9 * 7, 'day')
+        const expected = dayjs('2023-09-07T10:00:00') // +63 days
         expect(dayjs(result).isSame(expected)).toBe(true)
     })
 })
@@ -192,24 +192,33 @@ describe('getAnimeStatus（时间跨度）', () => {
     useFakeNow()
 
     it('远未来（提前100天）→ 即将更新', () => {
-        const first = dayjs(NOW).add(100, 'day')
-        expect(getAnimeStatus(10, first.valueOf())).toBe(EStatus.toBeUpdated)
+        // NOW + 100d = 2026-10-10
+        const first = dayjs('2026-10-10').valueOf()
+        expect(getAnimeStatus(10, first)).toBe(EStatus.toBeUpdated)
     })
 
     it('刚开播（当天）→ 连载中', () => {
-        const first = dayjs(NOW)
-        expect(getAnimeStatus(10, first.valueOf())).toBe(EStatus.serializing)
+        const first = dayjs('2026-07-02').valueOf()
+        expect(getAnimeStatus(10, first)).toBe(EStatus.serializing)
     })
 
     it('刚好卡在最后一集当天 → 已完结', () => {
-        // 10集，首集 = NOW - 9×7天 = 第10集刚好今天
-        const first = dayjs(NOW).add(-9 * 7, 'day')
-        expect(getAnimeStatus(10, first.valueOf())).toBe(EStatus.completed)
+        // 10集，首集 = 2026-07-02 - 63d = 2026-04-30，第10集刚好 2026-07-02
+        const first = dayjs('2026-04-30').valueOf()
+        expect(getAnimeStatus(10, first)).toBe(EStatus.completed)
     })
 
     it('完结后很久（+200天）→ 已完结稳定', () => {
-        const first = dayjs(NOW).add(-200, 'day')
-        expect(getAnimeStatus(10, first.valueOf())).toBe(EStatus.completed)
+        // NOW - 200d = 2025-12-14
+        const first = dayjs('2025-12-14').valueOf()
+        expect(getAnimeStatus(10, first)).toBe(EStatus.completed)
+    })
+
+    it('差 1ms 到最后一集 → 仍是连载中', () => {
+        // 12集，首集 = 2026-07-02 - 77d + 1ms = 2026-04-16T10:00:00.001
+        // 第12集在 2026-07-02T10:00:00.001，还没到
+        const first = dayjs('2026-04-16T10:00:00.001').valueOf()
+        expect(getAnimeStatus(12, first)).toBe(EStatus.serializing)
     })
 })
 
@@ -217,36 +226,38 @@ describe('getAiredEpisodeCount（时间分段验证）', () => {
     useFakeNow()
 
     it('刚开播当天 → 1', () => {
-        const first = dayjs(NOW)
-        expect(getAiredEpisodeCount(10, first.valueOf())).toBe(1)
+        const first = dayjs('2026-07-02').valueOf()
+        expect(getAiredEpisodeCount(10, first)).toBe(1)
     })
 
     it('第2集临界点：6天→1，8天→2', () => {
-        const first6 = dayjs(NOW).add(-6, 'day')
-        const first8 = dayjs(NOW).add(-8, 'day')
+        const first6 = dayjs('2026-06-26').valueOf() // NOW - 6d
+        const first8 = dayjs('2026-06-24').valueOf() // NOW - 8d
 
-        expect(getAiredEpisodeCount(10, first6.valueOf())).toBe(1)
-        expect(getAiredEpisodeCount(10, first8.valueOf())).toBe(2)
+        expect(getAiredEpisodeCount(10, first6)).toBe(1)
+        expect(getAiredEpisodeCount(10, first8)).toBe(2)
     })
 
     it('第5集稳定区间 → diff正确累积', () => {
-        const first = dayjs(NOW).add(-(4 * 7 + 1), 'day')
-        expect(getAiredEpisodeCount(10, first.valueOf())).toBe(5)
+        // NOW - 29d = 2026-06-03
+        const first = dayjs('2026-06-03').valueOf()
+        expect(getAiredEpisodeCount(10, first)).toBe(5)
     })
 
     it('完结后 + 100×7天 → 仍然是 totalEpisode', () => {
-        const first = dayjs(NOW).add(-(200 * 7), 'day')
-        expect(getAiredEpisodeCount(10, first.valueOf())).toBe(10)
+        // NOW - 1400d = 2022-09-02
+        const first = dayjs('2022-09-02').valueOf()
+        expect(getAiredEpisodeCount(10, first)).toBe(10)
     })
 
     it('刚好7天 → 第2集', () => {
-        const first = dayjs(NOW).add(-7, 'day')
-        expect(getAiredEpisodeCount(10, first.valueOf())).toBe(2)
+        const first = dayjs('2026-06-25').valueOf() // NOW - 7d
+        expect(getAiredEpisodeCount(10, first)).toBe(2)
     })
 
     it('超过总集数不溢出', () => {
-        const first = dayjs(NOW).add(-(200 * 7), 'day')
-        expect(getAiredEpisodeCount(5, first.valueOf())).toBe(5)
+        const first = dayjs('2022-09-02').valueOf() // NOW - 1400d
+        expect(getAiredEpisodeCount(5, first)).toBe(5)
     })
 })
 
@@ -254,34 +265,36 @@ describe('isUpdatedInThisWeek（跨周测试）', () => {
     useFakeNow()
 
     it('本周内刚好有一集 → true', () => {
-        // 首集 = 本周一之前7天 → 第2集落在本周一
-        const weekStart = dayjs(NOW).startOf('isoWeek') // 2026-06-29
-        const first = weekStart.add(-7, 'day') // 2026-06-22
-        expect(isUpdatedInThisWeek(10, first.valueOf())).toBe(true)
+        // 首集 = 2026-06-22（本周一 6/29 前7天），第2集落在本周一 6/29
+        const first = dayjs('2026-06-22').valueOf()
+        expect(isUpdatedInThisWeek(10, first)).toBe(true)
     })
 
     it('跨周边界（上周末）→ false', () => {
         // 第2集在上周播完，总共2集 → 本周无更新
-        const weekStart = dayjs(NOW).startOf('isoWeek') // 2026-06-29
-        const first = weekStart.add(-14, 'day') // 2026-06-15
-        expect(isUpdatedInThisWeek(2, first.valueOf())).toBe(false)
+        const first = dayjs('2026-06-15').valueOf() // 本周一 6/29 前14天
+        expect(isUpdatedInThisWeek(2, first)).toBe(false)
     })
 
     it('多周跨度（100天前）→ false', () => {
-        const first = dayjs(NOW).add(-100, 'day')
-        expect(isUpdatedInThisWeek(3, first.valueOf())).toBe(false)
+        const first = dayjs('2026-03-24').valueOf() // NOW - 100d
+        expect(isUpdatedInThisWeek(3, first)).toBe(false)
     })
 
     it('周一边界 → true', () => {
-        const monday = dayjs(NOW).startOf('isoWeek') // 2026-06-29
-        expect(isUpdatedInThisWeek(10, monday.valueOf())).toBe(true)
+        const monday = dayjs('2026-06-29').valueOf()
+        expect(isUpdatedInThisWeek(10, monday)).toBe(true)
     })
 
     it('周日边界 → true', () => {
-        // 首集在上周日之前7天 → 第2集落在上周日（即本 ISO 周最后一天）
-        const sunday = dayjs(NOW).endOf('isoWeek') // 2026-07-05
-        const first = sunday.add(-7, 'day') // 2026-06-28
-        expect(isUpdatedInThisWeek(10, first.valueOf())).toBe(true)
+        // 首集 = 2026-06-28（本周日 7/5 前7天），第2集落在本周日 7/5
+        const first = dayjs('2026-06-28').valueOf()
+        expect(isUpdatedInThisWeek(10, first)).toBe(true)
+    })
+
+    it('首集在未来 → false', () => {
+        const first = dayjs('2026-08-01').valueOf() // NOW + 30d
+        expect(isUpdatedInThisWeek(10, first)).toBe(false)
     })
 })
 
@@ -289,22 +302,36 @@ describe('getExpectedEpisodeThisWeek（极端场景）', () => {
     useFakeNow()
 
     it('刚开播本周 → 1', () => {
-        const first = dayjs(NOW)
-        const result = getExpectedEpisodeThisWeek(10, first.valueOf(), EStatus.serializing)
+        const first = dayjs('2026-07-02').valueOf()
+        const result = getExpectedEpisodeThisWeek(10, first, EStatus.serializing)
         expect(result).toBe(1)
     })
 
     it('跨月 + 本周尾部 → 不越界', () => {
-        const first = dayjs(NOW).add(-200, 'day')
-        const result = getExpectedEpisodeThisWeek(5, first.valueOf(), EStatus.serializing)
+        // NOW - 200d = 2025-12-14
+        const first = dayjs('2025-12-14').valueOf()
+        const result = getExpectedEpisodeThisWeek(5, first, EStatus.serializing)
         expect(result).toBe(5)
     })
 
     it('连载中 → 返回合理范围', () => {
-        const first = dayjs(NOW).add(-(3 * 7 + 1), 'day')
-        const result = getExpectedEpisodeThisWeek(10, first.valueOf(), EStatus.serializing)
+        // NOW - 22d = 2026-06-10
+        const first = dayjs('2026-06-10').valueOf()
+        const result = getExpectedEpisodeThisWeek(10, first, EStatus.serializing)
         expect(result).toBeGreaterThanOrEqual(1)
         expect(result).toBeLessThanOrEqual(10)
+    })
+
+    it('已完结状态 → 返回 totalEpisode', () => {
+        const first = dayjs('2025-12-14').valueOf() // NOW - 200d
+        const result = getExpectedEpisodeThisWeek(12, first, EStatus.completed)
+        expect(result).toBe(12)
+    })
+
+    it('未开播（now < first）→ 返回 1', () => {
+        const first = dayjs('2026-08-21').valueOf() // NOW + 50d
+        const result = getExpectedEpisodeThisWeek(12, first, EStatus.toBeUpdated)
+        expect(result).toBe(1)
     })
 })
 
@@ -401,5 +428,102 @@ describe('computeFirstEpisodeTimestamp（表单数据反推首集）', () => {
         const first = dayjs(result)
         expect(first.format('YYYY-MM-DD HH:mm')).toBe('2026-12-31 10:30')
         expect(first.second()).toBe(0)
+    })
+
+    // ── 异常分支 ──
+
+    it('连载中状态缺少 currentEpisode → 抛出异常', () => {
+        expect(() =>
+            computeFirstEpisodeTimestamp({
+                status: EStatus.serializing,
+                updateWeekday: 6,
+                updateTimeHHmm: '10:00',
+            }),
+        ).toThrow('serializing 状态下 currentEpisode、updateTimeHHmm、updateWeekday 必填')
+    })
+
+    it('连载中状态缺少 updateTimeHHmm → 抛出异常', () => {
+        expect(() =>
+            computeFirstEpisodeTimestamp({
+                status: EStatus.serializing,
+                currentEpisode: 10,
+                updateWeekday: 6,
+            }),
+        ).toThrow('serializing 状态下 currentEpisode、updateTimeHHmm、updateWeekday 必填')
+    })
+
+    it('连载中状态缺少 updateWeekday → 抛出异常', () => {
+        expect(() =>
+            computeFirstEpisodeTimestamp({
+                status: EStatus.serializing,
+                currentEpisode: 10,
+                updateTimeHHmm: '10:00',
+            }),
+        ).toThrow('serializing 状态下 currentEpisode、updateTimeHHmm、updateWeekday 必填')
+    })
+
+    it('已完结状态缺少 totalEpisode → 抛出异常', () => {
+        expect(() =>
+            computeFirstEpisodeTimestamp({
+                status: EStatus.completed,
+                lastEpisodeYYYYMMDDHHmm: '2026-12-31 10:30',
+            }),
+        ).toThrow('completed 状态下 totalEpisode、lastEpisodeYYYYMMDDHHmm 必填')
+    })
+
+    it('已完结状态缺少 lastEpisodeYYYYMMDDHHmm → 抛出异常', () => {
+        expect(() =>
+            computeFirstEpisodeTimestamp({
+                status: EStatus.completed,
+                totalEpisode: 12,
+            }),
+        ).toThrow('completed 状态下 totalEpisode、lastEpisodeYYYYMMDDHHmm 必填')
+    })
+
+    it('即将更新状态缺少 firstEpisodeYYYYMMDDHHmm → 抛出异常', () => {
+        expect(() =>
+            computeFirstEpisodeTimestamp({
+                status: EStatus.toBeUpdated,
+            }),
+        ).toThrow('toBeUpdated 状态下 firstEpisodeYYYYMMDDHHmm 必填')
+    })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// getWeekday
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('getWeekday（星期获取）', () => {
+    useFakeNow()
+
+    it('当前时间 → 返回当前星期（周四 = 4）', () => {
+        vi.setSystemTime(new Date('2026-07-02T10:00:00')) // 周四
+        expect(getWeekday()).toBe(EWeekday.thursday)
+    })
+
+    it('传入时间戳 → 返回对应星期', () => {
+        // 2026-07-06 = 周一
+        const monday = dayjs('2026-07-06').valueOf()
+        expect(getWeekday(monday)).toBe(EWeekday.monday)
+
+        // 2026-07-12 = 周日
+        const sunday = dayjs('2026-07-12').valueOf()
+        expect(getWeekday(sunday)).toBe(EWeekday.sunday)
+    })
+
+    it('覆盖所有星期 1-7', () => {
+        // 2026-06-29 是周一
+        expect(getWeekday(dayjs('2026-06-29').valueOf())).toBe(EWeekday.monday)
+        expect(getWeekday(dayjs('2026-06-30').valueOf())).toBe(EWeekday.tuesday)
+        expect(getWeekday(dayjs('2026-07-01').valueOf())).toBe(EWeekday.wednesday)
+        expect(getWeekday(dayjs('2026-07-02').valueOf())).toBe(EWeekday.thursday)
+        expect(getWeekday(dayjs('2026-07-03').valueOf())).toBe(EWeekday.friday)
+        expect(getWeekday(dayjs('2026-07-04').valueOf())).toBe(EWeekday.saturday)
+        expect(getWeekday(dayjs('2026-07-05').valueOf())).toBe(EWeekday.sunday)
+    })
+
+    it('传入毫秒级时间戳不影响结果', () => {
+        const d = dayjs('2026-07-01T23:59:59.999').valueOf() // 周三
+        expect(getWeekday(d)).toBe(EWeekday.wednesday)
     })
 })

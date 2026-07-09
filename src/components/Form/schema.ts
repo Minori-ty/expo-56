@@ -1,7 +1,8 @@
 import dayjs from 'dayjs'
 import { z } from 'zod'
 
-import { EStatus, EWeekday, getWeekday } from '@/enums'
+import { EStatus, EWeekday } from '@/enums'
+import { getWeekday } from '@/utils/time'
 
 /**
  * 动漫表单 Schema —— Zod4 单一推导

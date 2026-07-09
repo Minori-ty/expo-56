@@ -4,9 +4,9 @@ import type { DeepExpand } from 'types-tools'
 
 import { db } from '@/db'
 import { animeTable } from '@/db/schema'
-import { EWeekday, getWeekday } from '@/enums'
+import { EWeekday } from '@/enums'
 import { TTx } from '@/types'
-import { getLastEpisodeTimestamp } from '@/utils/time'
+import { getLastEpisodeTimestamp, getWeekday } from '@/utils/time'
 
 export interface IAddAnimeData {
     name: string
